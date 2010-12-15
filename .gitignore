@@ -11,3 +11,47 @@ Makefile.target
 doc/html
 patches-*
 tools/tunslip6
+
+# eclipse stuff
+.project
+.cproject
+.settings
+
+# CVS stuff
+CVS
+.#*
+
+# SVN stuff
+.svn
+
+# sdcc build stuff
+contiki-sensinode.lib
+*.asm
+*.ihx
+*.hex
+*.mem
+*.map
+*.lnk
+*.lst
+*.rel
+*.rst
+*.sym
+*.sensinode
+obj_sensinode
+
+# untracked contiki dirs
+backyard
+core/cfs
+core/ctk
+core/loader
+cpu/*
+!cpu/cc2430
+cpu/cc2430/converter/converter
+platform/*
+!platform/sensinode
+examples/*
+!examples/sensinode
+apps
+doc
+tools
+secondary

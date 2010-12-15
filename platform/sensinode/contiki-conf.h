@@ -153,10 +153,17 @@ typedef unsigned short clock_time_t;
 #define SICSLOWPAN_CONF_COMPRESSION          SICSLOWPAN_COMPRESSION_HC06
 #define SICSLOWPAN_CONF_FRAG                 0 /* About 2KB of CODE if 1 */
 #define SICSLOWPAN_CONF_MAXAGE               8
-#define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS    2
 
-/* 0: Use the default contiki context. 1: Use our custom one */
-#define SICSLOWPAN_CONF_ALT_CONTEXT          1
+/* Define our IPv6 prefixes/contexts here */
+#define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS    1
+#define SICSLOWPAN_CONF_ADDR_CONTEXT_0 { \
+  addr_contexts[0].prefix[0] = 0x20; \
+  addr_contexts[0].prefix[1] = 0x01; \
+  addr_contexts[0].prefix[2] = 0x04; \
+  addr_contexts[0].prefix[3] = 0x70; \
+  addr_contexts[0].prefix[4] = 0x00; \
+  addr_contexts[0].prefix[5] = 0x55; \
+}
 
 #define MAC_CONF_CHANNEL_CHECK_RATE          8
 #define QUEUEBUF_CONF_NUM                    8
