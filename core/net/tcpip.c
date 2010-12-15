@@ -40,6 +40,7 @@
  * \author  Julien Abeille <jabeille@cisco.com> (IPv6 related code)
  */
 #include "contiki-net.h"
+#include "sys/cc.h"
 
 #include "net/uip-split.h"
 
@@ -79,7 +80,7 @@ void uip_log(char *msg);
 extern struct uip_fallback_interface UIP_FALLBACK_INTERFACE;
 #endif
 #if UIP_CONF_IPV6_RPL
-void rpl_init(void);
+void rpl_init(void) __banked;
 #endif
 process_event_t tcpip_event;
 #if UIP_CONF_ICMP6
@@ -164,7 +165,7 @@ unsigned char tcpip_is_forwarding; /* Forwarding right now? */
 #endif /* UIP_CONF_IP_FORWARD */
 
 PROCESS(tcpip_process, "TCP/IP stack");
-
+static int i;
 /*---------------------------------------------------------------------------*/
 static void
 start_periodic_tcp_timer(void)
@@ -317,7 +318,7 @@ udp_attach(struct uip_udp_conn *conn,
 }
 /*---------------------------------------------------------------------------*/
 struct uip_udp_conn *
-udp_new(const uip_ipaddr_t *ripaddr, u16_t port, void *appstate)
+udp_new(const uip_ipaddr_t *ripaddr, u16_t port, void *appstate) __banked
 {
   struct uip_udp_conn *c;
   uip_udp_appstate_t *s;
@@ -383,8 +384,7 @@ eventhandler(process_event_t ev, process_data_t data)
   static unsigned char i;
   register struct listenport *l;
 #endif /*UIP_TCP*/
-  struct process *p;
-   
+  static struct process * CC_DATA p;
   switch(ev) {
     case PROCESS_EVENT_EXITED:
       /* This is the event we get if a process has exited. We go through
@@ -539,7 +539,15 @@ eventhandler(process_event_t ev, process_data_t data)
 void
 tcpip_input(void)
 {
+#if SHORTCUTS_CONF_NETSTACK
+/* calling process_post_sync, adds many bytes onto stack with the
+ * only affect being process.c::process_current modified and restored
+ * this is unnessary overhead, since it always leads to packet_input
+ */
+  packet_input();
+#else
   process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
+#endif
   uip_len = 0;
 #if UIP_CONF_IPV6
   uip_ext_len = 0;
@@ -548,10 +556,10 @@ tcpip_input(void)
 /*---------------------------------------------------------------------------*/
 #if UIP_CONF_IPV6
 void
-tcpip_ipv6_output(void)
+tcpip_ipv6_output(void) __banked
 {
-  uip_ds6_nbr_t *nbr = NULL;
-  uip_ipaddr_t* nexthop;
+  static uip_ds6_nbr_t * CC_DATA nbr = NULL;
+  static uip_ipaddr_t* CC_DATA nexthop;
   
   if(uip_len == 0) {
     return;
@@ -704,7 +712,7 @@ tcpip_poll_tcp(struct uip_conn *conn)
 void
 tcpip_uipcall(void)
 {
-  register uip_udp_appstate_t *ts;
+  static uip_udp_appstate_t * CC_DATA ts;
   
 #if UIP_UDP
   if(uip_conn != NULL) {
@@ -742,7 +750,12 @@ tcpip_uipcall(void)
 #endif /* UIP_TCP */
   
   if(ts->p != NULL) {
+#if SHORTCUTS_CONF_NETSTACK
+    /* Directly invoke the relevant thread to reduce stack usage by 15 bytes */
+    ts->p->thread(&ts->p->pt, tcpip_event, ts->state);
+#else
     process_post_synch(ts->p, tcpip_event, ts->state);
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/

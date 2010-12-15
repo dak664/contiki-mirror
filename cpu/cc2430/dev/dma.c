@@ -11,7 +11,6 @@
 #include <stdio.h>
 
 #include "contiki.h"
-#include "banked.h"
 
 #include "dev/dma.h"
 #include "cc2430_sfr.h"

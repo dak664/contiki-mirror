@@ -479,7 +479,7 @@ void
  *    
  */
 void
-uip_nd6_ns_input(void);
+uip_nd6_ns_input(void) __banked;
 
 /**
  * \brief Send a neighbor solicitation, send a Neighbor Advertisement 
@@ -502,7 +502,7 @@ uip_nd6_ns_input(void);
  *   a SLLAO option, otherwise no.
  */
 void
-uip_nd6_ns_output(uip_ipaddr_t *src, uip_ipaddr_t *dest, uip_ipaddr_t *tgt); 
+uip_nd6_ns_output(uip_ipaddr_t *src, uip_ipaddr_t *dest, uip_ipaddr_t *tgt) __banked; 
 
 /**
  * \brief Process a Neighbor Advertisement
@@ -522,7 +522,7 @@ uip_nd6_ns_output(uip_ipaddr_t *src, uip_ipaddr_t *dest, uip_ipaddr_t *tgt);
  *
  */
 void
-uip_nd6_na_input(void);
+uip_nd6_na_input(void) __banked;
 
 #if UIP_CONF_ROUTER
 #if UIP_ND6_SEND_RA
@@ -530,14 +530,14 @@ uip_nd6_na_input(void);
  * \brief Process a Router Solicitation
  * 
  */
-void uip_nd6_rs_input(void);
+void uip_nd6_rs_input(void) __banked;
 
 /**
  * \brief send a Router Advertisement
  *
  * Only for router, for periodic as well as sollicited RA
  */
-void uip_nd6_ra_output(uip_ipaddr_t *dest);
+void uip_nd6_ra_output(uip_ipaddr_t *dest) __banked;
 #endif /* UIP_ND6_SEND_RA */
 #endif /*UIP_CONF_ROUTER*/
 
@@ -552,7 +552,7 @@ void uip_nd6_ra_output(uip_ipaddr_t *dest);
  * possible option is SLLAO, MUST NOT be included if source = unspecified
  * SHOULD be included otherwise
  */
-void uip_nd6_rs_output(void);
+void uip_nd6_rs_output(void) __banked;
 
 /**
  *
@@ -565,7 +565,7 @@ void uip_nd6_rs_output(void);
  * - If prefix option: start autoconf, add prefix to prefix list
  */
 void
-uip_nd6_ra_input(void);
+uip_nd6_ra_input(void) __banked;
 /** @} */
 
 

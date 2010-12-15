@@ -94,8 +94,19 @@ static struct ctimer transmit_timer;
 
 static uint8_t rdc_is_transmitting;
 
-static void packet_sent(void *ptr, int status, int num_transmissions);
+/* This shortcut is only meant to be used with sicslowmac and null RDC */
+#define CSMA_SHORTCUT 1
+#ifndef CSMA_SHORTCUT
+#define CSMA_SHORTCUT SHORTCUTS_CONF_NETSTACK
+#endif
 
+#if CSMA_SHORTCUT
+static void packet_sent(void *ptr, int status, int num_transmissions);
+static void packet_sent_cb(void *ptr, int status);
+static int mac_status;
+#else
+static void packet_sent(void *ptr, int status, int num_transmissions);
+#endif
 /*---------------------------------------------------------------------------*/
 static clock_time_t
 default_timebase(void)
@@ -174,8 +185,22 @@ free_queued_packet(void)
   }
 }
 /*---------------------------------------------------------------------------*/
+#if CSMA_SHORTCUT
+/* Rename and redefine the original callback and hook our own to the driver
+ * The original will get called by send_packet to reduce stack depth */
 static void
 packet_sent(void *ptr, int status, int num_transmissions)
+{
+  mac_status = status;
+  return;
+}
+/*---------------------------------------------------------------------------*/
+static void
+packet_sent_cb(void *ptr, int status)
+#else
+static void
+packet_sent(void *ptr, int status, int num_transmissions)
+#endif
 {
   struct queued_packet *q = ptr;
   clock_time_t time = 0;
@@ -246,7 +271,13 @@ packet_sent(void *ptr, int status, int num_transmissions)
              status, q->transmissions, q->collisions);
       /*      queuebuf_to_packetbuf(q->buf);*/
       free_queued_packet();
+#if SHORTCUTS_CONF_NETSTACK
+      if(sent) {
+        sent(cptr, status, num_tx);
+      }
+#else
       mac_call_sent_callback(sent, cptr, status, num_tx);
+#endif
     }
   } else {
     if(status == MAC_TX_OK) {
@@ -256,7 +287,13 @@ packet_sent(void *ptr, int status, int num_transmissions)
     }
     /*    queuebuf_to_packetbuf(q->buf);*/
     free_queued_packet();
+#if SHORTCUTS_CONF_NETSTACK
+    if(sent) {
+      sent(cptr, status, num_tx);
+    }
+#else
     mac_call_sent_callback(sent, cptr, status, num_tx);
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -310,6 +347,9 @@ send_packet(mac_callback_t sent, void *ptr)
            packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS));
   }
   NETSTACK_RDC.send(sent, ptr);
+#if CSMA_SHORTCUT
+  packet_sent_cb(ptr, mac_status);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static void

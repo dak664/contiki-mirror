@@ -73,6 +73,12 @@ static void dao_input(void);
 static void dao_ack_input(void);
 
 static uint8_t dao_sequence;
+static uip_ipaddr_t addr;
+static uip_ipaddr_t prefix;
+static rpl_dio_t dio;
+static uip_ipaddr_t from;
+static uip_ipaddr_t dao_sender_addr;
+
 /*---------------------------------------------------------------------------*/
 static int
 get_global_addr(uip_ipaddr_t *addr)
@@ -132,10 +138,10 @@ dis_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-dis_output(uip_ipaddr_t *addr)
+dis_output(uip_ipaddr_t *addr) __banked
 {
   unsigned char *buffer;
-  uip_ipaddr_t tmpaddr;
+  static uip_ipaddr_t tmpaddr;
 
   /* DAG Information Solicitation  - 2 bytes reserved */
   /*      0                   1                   2        */
@@ -162,11 +168,9 @@ dio_input(void)
 {
   unsigned char *buffer;
   uint8_t buffer_length;
-  rpl_dio_t dio;
   uint8_t subopt_type;
   int i;
   int len;
-  uip_ipaddr_t from;
   uip_ds6_nbr_t *nbr;
 
   dio.dag_intdoubl = DEFAULT_DIO_INTERVAL_DOUBLINGS;
@@ -341,11 +345,10 @@ dio_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-dio_output(rpl_dag_t *dag, uip_ipaddr_t *uc_addr)
+dio_output(rpl_dag_t *dag, uip_ipaddr_t *uc_addr) __banked
 {
   unsigned char *buffer;
   int pos;
-  uip_ipaddr_t addr;
 
   /* DAG Information Object */
   pos = 0;
@@ -458,21 +461,19 @@ dio_output(rpl_dag_t *dag, uip_ipaddr_t *uc_addr)
 static void
 dao_input(void)
 {
-  uip_ipaddr_t dao_sender_addr;
   rpl_dag_t *dag;
   unsigned char *buffer;
-  uint16_t sequence;
-  uint8_t instance_id;
-  uint32_t lifetime;
-  uint8_t prefixlen;
+  static uint16_t sequence;
+  static uint8_t instance_id;
+  static uint32_t lifetime;
+  static uint8_t prefixlen;
   uint8_t flags;
   uint8_t subopt_type;
   uint8_t pathcontrol;
   uint8_t pathsequence;
-  uip_ipaddr_t prefix;
   uip_ds6_route_t *rep;
-  uint8_t buffer_length;
-  int pos;
+  static uint8_t buffer_length;
+  static int pos;
   int len;
   int i;
   int learned_from;
@@ -601,13 +602,11 @@ dao_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-dao_output(rpl_parent_t *n, uint32_t lifetime)
+dao_output(rpl_parent_t *n, uint32_t lifetime) __banked
 {
   rpl_dag_t *dag;
   unsigned char *buffer;
   uint8_t prefixlen;
-  uip_ipaddr_t addr;
-  uip_ipaddr_t prefix;
   int pos;
 
   /* Destination Advertisement Object */
@@ -718,7 +717,7 @@ dao_ack_output(rpl_dag_t *dag, uip_ipaddr_t *dest, uint8_t sequence)
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_rpl_input(void)
+uip_rpl_input(void) __banked
 {
   PRINTF("Received an RPL control message\n");
   switch(UIP_ICMP_BUF->icode) {

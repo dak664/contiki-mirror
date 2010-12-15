@@ -41,6 +41,7 @@
 #define NEIGHBOR_INFO_H
 
 #include "net/rime.h"
+#include "sys/cc.h"
 
 /* ETX_DIVISOR is the value that a fix-point representation of the ETX 
    should be divided by in order to obtain the integer representation. */
@@ -62,7 +63,7 @@ typedef uint8_t link_metric_t;
  *
  * \param numtx The amount of transmissions made for this packet.
  */
-void neighbor_info_packet_sent(int status, int numtx);
+void neighbor_info_packet_sent(int status, int numtx) __banked;
 
 /**
  * Notify the neighbor information module that a packet was received.
@@ -71,7 +72,7 @@ void neighbor_info_packet_sent(int status, int numtx);
  *
  * \param numtx The amount of transmissions made for this packet.
  */
-void neighbor_info_packet_received(void);
+void neighbor_info_packet_received(void) __banked;
 
 /**
  * Subscribe to notifications of changed neighbor information.

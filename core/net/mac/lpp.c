@@ -566,11 +566,11 @@ dutycycle(void *ptr)
        queued_packets_list being zero), we should turn the radio
        off. Othersize, we keep the radio on. */
     if(num_packets_to_send() == 0) {
+      int current_off_time;
       
       /* If we are not listening for announcements, we turn the radio
 	 off and wait until we send the next probe. */
       if(is_listening == 0) {
-        int current_off_time;
         if(!NETSTACK_RADIO.receiving_packet()) {
           turn_radio_off();
           compower_accumulate(&compower_idle_activity);

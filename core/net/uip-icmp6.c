@@ -66,7 +66,7 @@ static uip_ipaddr_t tmp_ipaddr;
 
 /*---------------------------------------------------------------------------*/
 void
-uip_icmp6_echo_request_input(void)
+uip_icmp6_echo_request_input(void) __banked
 {
   /*
    * we send an echo reply. It is trivial if there was no extension
@@ -126,7 +126,8 @@ uip_icmp6_echo_request_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_icmp6_error_output(u8_t type, u8_t code, u32_t param) {
+uip_icmp6_error_output(u8_t type, u8_t code, u32_t param) __banked
+{
   uip_ext_len = 0;
 
  /* check if originating packet is not an ICMP error*/
@@ -144,7 +145,7 @@ uip_icmp6_error_output(u8_t type, u8_t code, u32_t param) {
     uip_len = UIP_LINK_MTU; 
 
   memmove((uint8_t *)UIP_ICMP6_ERROR_BUF + UIP_ICMP6_ERROR_LEN,
-          (void *)UIP_IP_BUF, uip_len - UIP_IPICMPH_LEN - UIP_ICMP6_ERROR_LEN);
+          (uint8_t *)UIP_IP_BUF, uip_len - UIP_IPICMPH_LEN - UIP_ICMP6_ERROR_LEN);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
@@ -197,7 +198,7 @@ uip_icmp6_error_output(u8_t type, u8_t code, u32_t param) {
 
 /*---------------------------------------------------------------------------*/
 void
-uip_icmp6_send(uip_ipaddr_t *dest, int type, int code, int payload_len)
+uip_icmp6_send(uip_ipaddr_t *dest, uint8_t type, uint8_t code, uint8_t payload_len) __banked
 {
 
   UIP_IP_BUF->vtc = 0x60;

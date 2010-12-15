@@ -46,11 +46,11 @@
 #include "sys/clock.h"
 #include "sys/etimer.h"
 #include "cc2430_sfr.h"
-
+#include "sys/energest.h"
 
 /*Sleep timer runs on the 32k RC osc. */
 /* One clock tick is 7.8 ms */
-#define TICK_VAL (32768/128)
+#define TICK_VAL (32768/128)  /* 256 */
 
 #define MAX_TICKS (~((clock_time_t)0) / 2)
 
@@ -103,7 +103,7 @@ clock_seconds(void)
 void
 clock_init(void)
 {
-  CLKCON = OSC32K |  TICKSPD2|TICKSPD1|TICKSPD0;	/*tickspeed 250 kHz*/
+  CLKCON = OSC32K | TICKSPD2|TICKSPD1;	/*tickspeed 500 kHz for timers[1-4]*/
   
   /*Initialize tick value*/
   timer_value = ST0;									/*sleep timer 0. low bits [7:0]*/
@@ -121,6 +121,8 @@ void
 cc2430_clock_ISR( void ) __interrupt (ST_VECTOR)
 {
   IEN0_EA = 0;	/*interrupt disable*/
+  ENERGEST_ON(ENERGEST_TYPE_IRQ);
+
   /* When using the cooperative scheduler the timer 2 ISR is only
      required to increment the RTOS tick count. */
   
@@ -154,6 +156,7 @@ cc2430_clock_ISR( void ) __interrupt (ST_VECTOR)
   }
   
   IRCON &= ~STIF;		/*IRCON.STIF=Sleep timer interrupt flag. This flag called this interrupt func, now reset it*/
+  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   IEN0_EA = 1;		/*interrupt enable*/
 }
 /*---------------------------------------------------------------------------*/

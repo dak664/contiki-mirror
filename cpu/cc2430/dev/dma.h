@@ -8,7 +8,6 @@
 
 #ifndef __DMA_H
 #define __DMA_H
-#include "banked.h"
 #include "cc2430_sfr.h"
 
 /** DMA triggers */

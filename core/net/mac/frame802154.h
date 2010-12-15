@@ -64,6 +64,7 @@
 
 #include "contiki-conf.h"
 #include "net/rime/rimeaddr.h"
+#include "sys/cc.h"
 
 #ifdef IEEE802154_CONF_PANID
 #define IEEE802154_PANID           IEEE802154_CONF_PANID
@@ -161,9 +162,9 @@ typedef struct {
 
 /* Prototypes */
 
-uint8_t frame802154_hdrlen(frame802154_t *p);
-uint8_t frame802154_create(frame802154_t *p, uint8_t *buf, uint8_t buf_len);
-uint8_t frame802154_parse(uint8_t *data, uint8_t length, frame802154_t *pf);
+uint8_t frame802154_hdrlen(frame802154_t *p) __banked;
+uint8_t frame802154_create(frame802154_t *p, uint8_t *buf, uint8_t buf_len) __banked;
+uint8_t frame802154_parse(uint8_t *data, uint8_t length, frame802154_t *pf) __banked;
 
 /** @} */
 #endif /* FRAME_802154_H */

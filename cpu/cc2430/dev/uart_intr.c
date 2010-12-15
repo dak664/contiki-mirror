@@ -17,9 +17,16 @@
 
 #include "dev/leds.h"
 #include "dev/uart.h"
+#include "sys/energest.h"
 
+#if UART_ZERO_ENABLE
 static int (*uart0_input_handler)(unsigned char c);
+#endif
+#if UART_ONE_ENABLE
 static int (*uart1_input_handler)(unsigned char c);
+#endif
+
+#if UART_ZERO_ENABLE
 /*---------------------------------------------------------------------------*/
 void
 uart0_set_input(int (*input)(unsigned char c))
@@ -31,16 +38,20 @@ uart0_set_input(int (*input)(unsigned char c))
 void
 uart0_rxISR(void) __interrupt (URX0_VECTOR)
 {
+  ENERGEST_ON(ENERGEST_TYPE_IRQ);
   TCON_URX0IF = 0;
   if(uart0_input_handler != NULL) {
     uart0_input_handler(U0BUF);
   }
+  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void
 uart0_txISR( void ) __interrupt (UTX0_VECTOR)
 {
 }
+#endif
+#if UART_ONE_ENABLE
 /*---------------------------------------------------------------------------*/
 void
 uart1_set_input(int (*input)(unsigned char c))
@@ -51,10 +62,12 @@ uart1_set_input(int (*input)(unsigned char c))
 void
 uart1_rxISR(void) __interrupt (URX1_VECTOR)
 {
+  ENERGEST_ON(ENERGEST_TYPE_IRQ);
   TCON_URX1IF = 0;
   if(uart1_input_handler != NULL) {
     uart1_input_handler(U1BUF);
   }
+  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -62,3 +75,4 @@ uart1_txISR( void ) __interrupt (UTX1_VECTOR)
 {
 }
 /*---------------------------------------------------------------------------*/
+#endif

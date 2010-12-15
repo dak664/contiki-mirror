@@ -45,8 +45,8 @@
 #include "net/uip.h"
 #include <stdio.h>
 
-void uip_debug_ipaddr_print(const uip_ipaddr_t *addr);
-void uip_debug_lladdr_print(const uip_lladdr_t *addr);
+void uip_debug_ipaddr_print(const uip_ipaddr_t *addr) __banked;
+void uip_debug_lladdr_print(const uip_lladdr_t *addr) __banked;
 
 #define DEBUG_NONE      0
 #define DEBUG_PRINT     1

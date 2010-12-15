@@ -5,16 +5,22 @@ AS       = sdcc
 AR	   = sdcclib
 OBJCOPY  = objcopy
 STRIP    = strip
+PACKIHX  = packihx
 
-CFLAGS  += --std-c99 --model-large --stack-auto -DSDCC_CC2430 
+CFLAGS  += --std-c99 --stack-auto -DSDCC_CC2430
+LDFLAGS += --stack-auto -DSDCC_CC2430 --out-fmt-ihx 
 ASFLAGS += -plosgff
-LDFLAGS += --model-large --stack-auto -DSDCC_CC2430 --out-fmt-ihx
-LDFLAGS += --xram-loc 57344 --xram-size 8192
-##LDFLAGS += -L /home/user/local/share/sdcc/lib/large-stack-auto
+ifdef MEMORY_MODEL
+CFLAGS += $(MEMORY_MODEL)
+LDFLAGS += $(MEMORY_MODEL)
+else 
+CFLAGS += --model-large
+LDFLAGS += --model-large
+endif
+LDFLAGS += --xram-loc 57344 --xram-size 7936
 ##LDFLAGS += --verbose
 ##LDFLAGS += -V
 AROPTS   = -a
-##HAVE_BANKING=1
 ifeq ($(HAVE_BANKING),1)
 #banking
 LDFLAGS += --code-size 0x20000 
@@ -27,15 +33,30 @@ LDFLAGS += -Wl-r
 CFLAGS += -DHAVE_SDCC_BANKING
 #use this in $(call code_segment,$<) to get segment for a source file.
 code_segment = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | perl ${CONTIKI_CPU}/segment.rules.pl $1 ) CSEG )
+FINAL_TARGET = %_linear.hex
+#bank switching file conversion 
+%_linear.hex: %.ihx
+	$(CONTIKI)/cpu/cc2430/converter/converter -f $< $@
 
+%.$(TARGET): %_linear.hex
+	cp ${@:.${TARGET}=_linear.hex} $@
+	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${@:.${TARGET}=.map} | uniq
+	@egrep -A 5 'Other memory' ${@:.${TARGET}=.mem}
 else
 #no banking
 LDFLAGS += --code-loc 0000 --code-size 65500
 code_segment =
+FINAL_TARGET = %.hex
+%.hex: %.ihx
+	$(PACKIHX) $< > $@
+	
+%.$(TARGET): %.hex
+	cp ${@:.${TARGET}=.hex} $@
+	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${@:.${TARGET}=.map} | uniq
 endif 
 
 ### CPU-dependent cleanup files
-CLEAN += *.lnk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *_linear.hex
+CLEAN += *.lnk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex *.sensinode
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS = . dev
@@ -43,11 +64,12 @@ CONTIKI_CPU_DIRS = . dev
 ### CPU-dependent source files
 CONTIKI_SOURCEFILES += bus.c clock.c uart.c cc2430_rf.c dma.c
 CONTIKI_SOURCEFILES += uart_init.c uart_intr.c cc2430_rf_intr.c dma_intr.c adc.c
+CONTIKI_SOURCEFILES += watchdog-cc2430.c rtimer-arch.c slip-arch.c slip.c
 CONTIKI_ASMFILES +=
 
-CONTIKI_ASMOBJECTFILES = ${addprefix $(OBJECTDIR)/,$(CONTIKI_ASMFILES:.S=.o)}
+CONTIKI_ASMOBJECTFILES = ${addprefix $(OBJECTDIR)/,$(CONTIKI_ASMFILES:.S=.rel)}
 
-CONTIKI_CASMOBJECTFILES = ${addprefix $(OBJECTDIR)/,$(CONTIKI_CASMFILES:.cS=.o)}
+CONTIKI_CASMOBJECTFILES = ${addprefix $(OBJECTDIR)/,$(CONTIKI_CASMFILES:.cS=.rel)}
 
 CONTIKI_PLATFORM_DIRS = $(PLATFORM_APPDIRS) \
 	 ${addprefix $(CONTIKI)/platform/$(TARGET)/, $(CONTIKI_TARGET_DIRS)}
@@ -55,39 +77,53 @@ CONTIKI_PLATFORM_DIRS = $(PLATFORM_APPDIRS) \
 CONTIKI_CPU_DIRS_LIST    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
 
+oname = ${patsubst %.c,%.rel,${patsubst %.S,%.rel,$(1)}}
+
+CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
+
+PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
+
 ### Compilation rules
 
 
-SEGMENT_RULE_FILES = ${foreach dir, ${CONTIKI_PLATFORM_DIRS} ${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} } 
+SEGMENT_RULE_FILES = ${foreach dir, . ${CONTIKI_PLATFORM_DIRS} ${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} } 
 ${OBJECTDIR}/segment.rules: ${SEGMENT_RULE_FILES}
 	echo ${SEGMENT_RULE_FILES}
 	cat ${SEGMENT_RULE_FILES} > $@
 
-
+CUSTOM_RULE_LINK=1
 CUSTOM_RULE_C_TO_OBJECTDIR_O=1
 CUSTOM_RULE_ALLOBJS_TO_TARGETLIB=1
 
 ifdef CUSTOM_RULE_C_TO_OBJECTDIR_O
 ifeq ($(HAVE_BANKING),1)
-$(OBJECTDIR)/%.o: %.c ${OBJECTDIR}/segment.rules
+$(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
 	@echo "Compile:"$<" to segment " $(call code_segment,$<)
-	$(CC) $(CFLAGS) -MM -c $< > $(@:.o=.d)
+	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
+	echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
+	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
+	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+		-e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
+	echo rm -f $(@:.rel=.$$$$)
 	$(CC) $(call code_segment,$<) $(CFLAGS) -c $< -o $@
-	@$(FINALIZE_DEPENDENCY)
 else
-$(OBJECTDIR)/%.o: %.c
+$(OBJECTDIR)/%.rel: %.c
+	@echo "Compile:"$<" to segment " $(call code_segment,$<)
+	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
+	echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
+	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
+	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+		-e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
+	echo rm -f $(@:.rel=.$$$$)
 	$(CC) $(CFLAGS) -c $< -o $@
-	$(CC) $(CFLAGS) -MM -c $< > $(@:.o=.d)
-	@$(FINALIZE_DEPENDENCY)
 endif
 endif
-
-$(OBJECTDIR)/%.rel: $(OBJECTDIR)/%.o
-	cp $< $@
 
 
 ifdef CUSTOM_RULE_CS_TO_OBJECTDIR_O
-$(OBJECTDIR)/%.o: %.cS
+$(OBJECTDIR)/%.rel: %.cS
 	cp $< $(OBJECTDIR)/$*.c
 	$(CC) $(CFLAGS) -E $(OBJECTDIR)/$*.c > $(OBJECTDIR)/tmp
 	perl -pe "s/^#(.*)/;$$1/" $(OBJECTDIR)/tmp > $(OBJECTDIR)/$*.S
@@ -100,22 +136,15 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) $(CONTIKI_A
 	rm -f $@
 	for target in $^; do echo $$target >> $@; done
 
-%.$(TARGET): %.ihx %_linear.hex
+.PRECIOUS: %.$(TARGET)
+.PRECIOUS: %.ihx %.rel %_linear.hex %.hex %.ihex
 
-# .rel is the object file default suffix under sdcc
-%.rel: %.co
-	mv $< $@
+#build app/example local object files 
+%.rel: %.c
+	$(CC) $(CFLAGS) -DAUTOSTART_ENABLE -c $< -o $@
 
+%.ihex: %.ihx
 # .ihx is the sdcc binary output file
-.PRECIOUS: %.ihx %.rel %_linear.hex
+%.ihx: %.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib
+	$(CC) $(LDFLAGS) -o $@ $(CONTIKI_TARGET_MAIN) $*.rel -llibsdcc.lib -lcontiki-$(TARGET).lib
 
-# .ihx is the sdcc binary output file
-%.ihx: %.rel $(CONTIKI_TARGET_MAIN:.o=.rel) contiki-$(TARGET).lib
-	$(CC) $(LDFLAGS) -o $@ $(CONTIKI_TARGET_MAIN:.o=.rel) $*.rel -llibsdcc.lib -lcontiki-$(TARGET).lib
-
-%_linear.hex: %.ihx
-	$(CONTIKI)/cpu/cc2430/converter/converter -f $< $@
-
-# Force the compilation of %.$(TARGET) to compile the %.ihx file.
-%.$(TARGET): %.ihx %_linear.hex
-	@

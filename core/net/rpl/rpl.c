@@ -55,11 +55,14 @@
 rpl_stats_t rpl_stats;
 #endif
 
+static uip_ipaddr_t ipaddr;
+static rpl_parent_t *p;
+static rpl_parent_t *parent;
 /************************************************************************/
 extern uip_ds6_route_t uip_ds6_routing_table[UIP_DS6_ROUTE_NB];
 /************************************************************************/
 void
-rpl_purge_routes(void)
+rpl_purge_routes(void) __banked
 {
   int i;
 
@@ -122,9 +125,7 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
 static void
 rpl_link_neighbor_callback(const rimeaddr_t *addr, int known, int etx)
 {
-  uip_ipaddr_t ipaddr;
   rpl_dag_t *dag;
-  rpl_parent_t *parent;
 
   uip_ip6addr(&ipaddr, 0xfe80, 0, 0, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, (uip_lladdr_t *)addr);
@@ -166,10 +167,9 @@ rpl_link_neighbor_callback(const rimeaddr_t *addr, int known, int etx)
 }
 /************************************************************************/
 void
-rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
+rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr) __banked
 {
   rpl_dag_t *dag;
-  rpl_parent_t *p;
 
   /* This only handles one DODAG - if multiple we need to check all */
   dag = rpl_get_dag(RPL_ANY_INSTANCE);
@@ -197,7 +197,7 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
 }
 /************************************************************************/
 void
-rpl_init(void)
+rpl_init(void) __banked
 {
   uip_ipaddr_t rplmaddr;
   PRINTF("RPL started\n");

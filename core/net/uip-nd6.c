@@ -73,7 +73,6 @@
 #include "net/uip-nd6.h"
 #include "net/uip-ds6.h"
 #include "lib/random.h"
-
 /*------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -152,8 +151,9 @@ create_llao(uint8_t *llao, uint8_t type) {
 
 
 void
-uip_nd6_ns_input(void)
+uip_nd6_ns_input(void) __banked
 {
+  u8_t flags;
   PRINTF("Received NS from");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF("to");
@@ -162,8 +162,6 @@ uip_nd6_ns_input(void)
   PRINT6ADDR((uip_ipaddr_t *) (&UIP_ND6_NS_BUF->tgtipaddr));
   PRINTF("\n");
   UIP_STAT(++uip_stat.nd6.recv);
-
-  u8_t flags;
 
 #if UIP_CONF_IPV6_CHECKS
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
@@ -325,7 +323,7 @@ discard:
 
 /*------------------------------------------------------------------*/
 void
-uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
+uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt) __banked
 {
   uip_ext_len = 0;
   UIP_IP_BUF->vtc = 0x60;
@@ -386,8 +384,13 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
 
 /*------------------------------------------------------------------*/
 void
-uip_nd6_na_input(void)
+uip_nd6_na_input(void) __banked
 {
+  u8_t is_llchange;
+  u8_t is_router;
+  u8_t is_solicited;
+  u8_t is_override;
+
   PRINTF("Received NA from");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF("to");
@@ -401,11 +404,11 @@ uip_nd6_na_input(void)
    * booleans. the three last one are not 0 or 1 but 0 or 0x80, 0x40, 0x20
    * but it works. Be careful though, do not use tests such as is_router == 1 
    */
-  u8_t is_llchange = 0;
-  u8_t is_router = ((UIP_ND6_NA_BUF->flagsreserved & UIP_ND6_NA_FLAG_ROUTER));
-  u8_t is_solicited =
+  is_llchange = 0;
+  is_router = ((UIP_ND6_NA_BUF->flagsreserved & UIP_ND6_NA_FLAG_ROUTER));
+  is_solicited =
     ((UIP_ND6_NA_BUF->flagsreserved & UIP_ND6_NA_FLAG_SOLICITED));
-  u8_t is_override =
+  is_override =
     ((UIP_ND6_NA_BUF->flagsreserved & UIP_ND6_NA_FLAG_OVERRIDE));
 
 #if UIP_CONF_IPV6_CHECKS
@@ -533,7 +536,7 @@ discard:
 #if UIP_ND6_SEND_RA
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_rs_input(void)
+uip_nd6_rs_input(void) __banked
 {
 
   PRINTF("Received RS from");
@@ -570,7 +573,7 @@ uip_nd6_rs_input(void)
 #endif /*UIP_CONF_IPV6_CHECKS */
     switch (UIP_ND6_OPT_HDR_BUF->type) {
     case UIP_ND6_OPT_SLLAO:
-      nd6_opt_llao = UIP_ND6_OPT_HDR_BUF;
+      nd6_opt_llao = (uint8_t *)UIP_ND6_OPT_HDR_BUF;
       break;
     default:
       PRINTF("ND option not supported in RS\n");
@@ -589,7 +592,7 @@ uip_nd6_rs_input(void)
       if((nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr)) == NULL) {
         /* we need to add the neighbor */
         uip_ds6_nbr_add(&UIP_IP_BUF->srcipaddr,
-                        &nd6_opt_llao[UIP_ND6_OPT_DATA_OFFSET], 0, NBR_STALE);
+                        (uip_lladdr_t *)&nd6_opt_llao[UIP_ND6_OPT_DATA_OFFSET], 0, NBR_STALE);
       } else {
         /* If LL address changed, set neighbor state to stale */
         if(memcmp(&nd6_opt_llao[UIP_ND6_OPT_DATA_OFFSET],
@@ -615,7 +618,7 @@ discard:
 
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_ra_output(uip_ipaddr_t * dest)
+uip_nd6_ra_output(uip_ipaddr_t * dest) __banked
 {
 
   UIP_IP_BUF->vtc = 0x60;
@@ -703,7 +706,7 @@ uip_nd6_ra_output(uip_ipaddr_t * dest)
 #if !UIP_CONF_ROUTER
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_rs_output(void)
+uip_nd6_rs_output(void) __banked
 {
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
@@ -743,7 +746,7 @@ uip_nd6_rs_output(void)
 
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_ra_input(void)
+uip_nd6_ra_input(void) __banked
 {
   PRINTF("Received RA from");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);

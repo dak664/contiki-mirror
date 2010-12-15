@@ -17,17 +17,27 @@
 #ifdef MODEL_N711
 #define SENSINODE_MODEL "N711 NanoSensor (CC2431-F128)"
 #endif
+#ifdef MODEL_N740
+#define SENSINODE_MODEL "N740 NanoSensor (CC2431-F128)"
+#endif
 
 #ifndef SENSINODE_MODEL
 #define MODEL_N100
-#define SENSINODE_MODEL "Sensinode N100 (CC2431-F128)"
+#define SENSINODE_MODEL "N100 Module (CC2431-F128)"
 #endif
 
-/* All current models use these LED pins */
+/* 
+ * N740 has a serial-parallel chip onboard
+ * Defines and functions to control it
+ */
+#ifdef MODEL_N740
+#include "dev/n740-ser-par.h"
+
+#else
+/* All other models use these LED pins */
 #define LED1_PIN 	P0_4
 #define LED2_PIN	P0_5
-
-/* Buttons */
+#endif
 
 #ifdef MODEL_N711
 #define BUTTON1_PIN		P0_6

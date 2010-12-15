@@ -142,7 +142,7 @@ adv_packet_received(struct broadcast_conn *ibc, const rimeaddr_t *from)
   if(adata.num / sizeof(struct announcement_data) > sizeof(struct announcement_msg)) {
     /* The number of announcements is too large - corrupt packet has
        been received. */
-    printf("adata.num way out there: %d\n", adata.num);
+    PRINTF("adata.num way out there: %d\n", adata.num);
     return;
   }
   

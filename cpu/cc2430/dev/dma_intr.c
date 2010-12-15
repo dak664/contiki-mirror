@@ -14,7 +14,6 @@
 
 #include "dev/dma.h"
 #include "cc2430_sfr.h"
-#include "banked.h"
 
 extern struct process * dma_callback[4];
 

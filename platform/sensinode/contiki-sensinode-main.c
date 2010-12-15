@@ -5,36 +5,39 @@
 #include "sys/autostart.h"
 
 #include "dev/serial-line.h"
+#include "dev/slip.h"
 #include "dev/bus.h"
 #include "dev/leds.h"
 #include "dev/uart.h"
 #include "dev/models.h"
 #include "dev/cc2430_rf.h"
-#include "net/mac/sicslowmac.h"
-#include "net/mac/frame802154.h"
+#include "dev/watchdog.h"
 #include "net/rime.h"
+#include "net/netstack.h"
+#include "sensinode-debug.h"
+#include "dev/watchdog-cc2430.h"
+#include "dev/sensinode-sensors.h"
+#include "contiki-lib.h"
+#include "contiki-net.h"
 
-volatile int i, a;
+static volatile int i, a;
 unsigned short node_id = 0;			/* Manually sets MAC address when > 0 */
 
-/*---------------------------------------------------------------------------*/
-static void
-print_processes(struct process * const processes[])
-{
-  printf("Starting");
-  while(*processes != NULL) {
-    printf(" '%s'", (*processes)->name);
-    processes++;
-  }
-  printf("\n");
-}
-/*---------------------------------------------------------------------------*/
-void
-putchar(char c)
-{
-  /* UART1 used for debugging on Sensinode products. */
-  uart1_writeb(c);
-}
+#if UIP_CONF_IPV6
+static uip_ds6_addr_t *lladdr;
+static uip_ipaddr_t ipaddr;
+#endif
+
+#if SHORTCUTS_CONF_NETSTACK
+static int len;
+#endif
+
+#ifdef STARTUP_CONF_VERBOSE
+#define STARTUP_VERBOSE STARTUP_CONF_VERBOSE
+#else
+#define STARTUP_VERBOSE 0
+#endif
+
 /*---------------------------------------------------------------------------*/
 static void
 fade(int l)
@@ -58,50 +61,90 @@ static void
 set_rime_addr(void)
 {
   rimeaddr_t addr;
-  uint8_t ft_buffer[8];
+  static uint8_t ft_buffer[8];
   uint8_t *addr_long = NULL;
   uint16_t addr_short = 0;
-  int i;
+  unsigned char i;
 
-  /* TODO: This flash_read routine currently gets a different address
-   * than nano_programmer -m... something broken or misconfigured...
+#if SHORTCUTS_CONF_FLASH_READ
+  /*
+   * The MAC is always stored in 0x1FFF8 of our flash. This maps to address
+   * 0xFFF8 of our CODE segment, when BANK3 is selected.
+   * Switch to BANK3, read 8 bytes starting at 0xFFF8 and restore last BANK
+   * Since we are called from main(), this MUST be BANK1 or something is very
+   * wrong. This code can be used even without banking
    */
+  __code unsigned char * macp;
 
+  /* Don't interrupt us to make sure no BANK switching happens while working */
+  DISABLE_INTERRUPTS();
+
+  /* Switch to BANK3, map CODE: 0x8000 – 0xFFFF to FLASH: 0x18000 – 0x1FFFF */
+  FMAP = 3;
+
+  /* Set our pointer to the correct address and fetch 8 bytes of MAC */
+  macp = (__code unsigned char *) 0xFFF8;
+
+  for(i=0; i < 8; i++) {
+    ft_buffer[i] = *macp;
+    macp++;
+  }
+
+  /* Remap 0x8000 – 0xFFFF to BANK1 */
+  FMAP = 1;
+  ENABLE_INTERRUPTS();
+#else
+  /*
+   * Or use the more generic flash_read() routine which can read from any
+   * address of our flash
+   */
   flash_read(&ft_buffer[0], 0x1FFF8, 8);
+#endif
 
+  /* MAC is stored LSByte first, so we print it backwards */
+#if STARTUP_VERBOSE
   printf("Read MAC from flash: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-	 ft_buffer[0], ft_buffer[1], ft_buffer[2], ft_buffer[3],
-	 ft_buffer[4], ft_buffer[5], ft_buffer[6], ft_buffer[7]);
-
+	 ft_buffer[7], ft_buffer[6], ft_buffer[5], ft_buffer[4],
+	 ft_buffer[3], ft_buffer[2], ft_buffer[1], ft_buffer[0]);
+  printf("Rime is %d bytes long.\n", sizeof(rimeaddr_t));
+#endif
   memset(&addr, 0, sizeof(rimeaddr_t));
 
+  /* Flip the byte order and store MSB first */
 #if UIP_CONF_IPV6
-  memcpy(addr.u8, ft_buffer, sizeof(addr.u8));
+  for(i = 0; i < RIMEADDR_SIZE; ++i) {
+    addr.u8[i] = ft_buffer[RIMEADDR_SIZE - 1 - i];
+  }
 #else
   if(node_id == 0) {
-    for(i = 0; i < sizeof(rimeaddr_t); ++i) {
-      addr.u8[i] = ft_buffer[7 - i];
+    for(i = 0; i < RIMEADDR_SIZE; ++i) {
+      addr.u8[i] = ft_buffer[RIMEADDR_SIZE - 1 - i];
     }
   } else {
-    printf("Setting manual address from node_id\n");
+    putstring("Setting manual address from node_id\n");
     addr.u8[1] = node_id >> 8;
     addr.u8[0] = node_id & 0xff;
   }
 #endif
 
   rimeaddr_set_node_addr(&addr);
-  printf("Rime configured with address ");
-  for(i = (sizeof(addr.u8)) - 1; i > 0; i--) {
-    printf("%02x:", addr.u8[i]);
+  /* Now the address is stored MSB first */
+#if STARTUP_VERBOSE
+  putstring("Rime configured with address ");
+  for(i = 0; i < RIMEADDR_SIZE - 1; i++) {
+    puthex(addr.u8[i]);
+    putchar(':');
   }
-  printf("%02x\n", addr.u8[i]);
+  puthex(addr.u8[i]);
+  putchar('\n');
+#endif
 
   /* Set the cc2430 RF addresses */
-  if (sizeof(addr.u8) == 6)
+#if (RIMEADDR_SIZE==8)
 	  addr_long = (uint8_t *) addr.u8;
-  else
-	  addr_short = (addr.u8[1] * 256) + addr.u8[0];
-
+#else
+    addr_short = (addr.u8[0] * 256) + addr.u8[1];
+#endif
   cc2430_rf_set_addr(0xffff, addr_short, addr_long);
 }
 /*---------------------------------------------------------------------------*/
@@ -111,37 +154,126 @@ main(void)
 
   /* Hardware initialization */
   bus_init();
+  rtimer_init();
 
+#ifdef MODEL_N740
+  /* Init the serial-parallel chip for N740s. This will also 'init' LEDs */
+  n740_ser_par_init();
+#endif
+  /* Init LEDs here  for all other models (will do nothing for N740) */
   leds_init();
   fade(LEDS_GREEN);
-
-  uart1_init(115200);
-  uart1_set_input(serial_line_input_byte);
 
   /* initialize process manager. */
   process_init();
 
+  uart1_init(115200);
+#if SLIP_ARCH_CONF_ENABLE
+  /* On cc2430, the argument is not used. We always use 115200 */
+  slip_arch_init(0);
+#else
+  uart1_set_input(serial_line_input_byte);
   serial_line_init();
+#endif
 
-  printf("\n" CONTIKI_VERSION_STRING " started\n");
-  printf("model: " SENSINODE_MODEL "\n\n");
+#ifdef HAVE_DMA
+  dma_init();
+#endif
 
-  /* initialize the radio driver */
+#if STARTUP_VERBOSE
+  putstring("##########################################\n");
+#endif
+  putstring("Welcome to " CONTIKI_VERSION_STRING ".\n");
+  putstring("Running on: " SENSINODE_MODEL ".\n");
 
-  cc2430_rf_init();
-  rime_init(sicslowmac_init(&cc2430_rf_driver));
+#if STARTUP_VERBOSE
+#ifdef HAVE_SDCC_BANKING
+  putstring("  With Banking.\n");
+#endif /* HAVE_SDCC_BANKING */
+#ifdef SDCC_MODEL_LARGE
+  putstring("  --model-large\n");
+#endif /* SDCC_MODEL_LARGE */
+#ifdef SDCC_MODEL_HUGE
+  putstring("  --model-huge\n");
+#endif /* SDCC_MODEL_HUGE */
+#ifdef SDCC_STACK_AUTO
+  putstring("  --stack-auto\n");
+#endif /* SDCC_STACK_AUTO */
+#ifdef SDCC_USE_XSTACK
+  putstring("  --xstack\n");
+#endif /* SDCC_USE_XSTACK */
+
+  putchar('\n');
+
+  putstring(" Network: ");
+  putstring(NETSTACK_NETWORK.name);
+  putchar('\n');
+  putstring(" MAC: ");
+  putstring(NETSTACK_MAC.name);
+  putchar('\n');
+  putstring(" RDC: ");
+  putstring(NETSTACK_RDC.name);
+  putchar('\n');
+
+  putstring("##########################################\n");
+#endif /* STARTUP_VERBOSE */
+
+  watchdog_init();
+
+  /* Initialise the cc2430 RNG engine. */
+  random_init(0);
+
+  /* initialize the netstack */
+  netstack_init();
   set_rime_addr();
 
   /* start services */
   process_start(&etimer_process, NULL);
+  ctimer_init();
+
+#if BUTTON_SENSOR_ON || ADC_SENSOR_ON
+  process_start(&sensors_process, NULL);
+  sensinode_sensors_activate();
+#endif
+
+#if UIP_CONF_IPV6
+  memcpy(&uip_lladdr.addr, &rimeaddr_node_addr, sizeof(uip_lladdr.addr));
+  queuebuf_init();
+  process_start(&tcpip_process, NULL);
+
+#if (!UIP_CONF_IPV6_RPL)
+  uip_ip6addr(&ipaddr, 0x2001, 0x470, 0x55, 0, 0, 0, 0, 0);
+  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+  uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
+#endif /* UIP_CONF_IPV6_RPL */
+#endif /* UIP_CONF_IPV6 */
 
   fade(LEDS_RED);
 
+  energest_init();
+  ENERGEST_ON(ENERGEST_TYPE_CPU);
+
   autostart_start(autostart_processes);
+  watchdog_start();
 
   while(1) {
-    process_run();
-    etimer_request_poll();
+    int r;
+    do {
+      /* Reset watchdog and handle polls and events */
+      watchdog_periodic();
+      r = process_run();
+    } while(r > 0);
+#if SHORTCUTS_CONF_NETSTACK
+    len = NETSTACK_RADIO.pending_packet();
+    if(len) {
+      packetbuf_clear();
+      len = cc2430_rf_read(packetbuf_dataptr(), PACKETBUF_SIZE);
+      if(len > 0) {
+        packetbuf_set_datalen(len);
+        NETSTACK_RDC.input();
+      }
+    }
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/

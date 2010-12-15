@@ -192,7 +192,17 @@ send_packet(mac_callback_t sent, void *ptr)
 
 #endif /* ! NULLRDC_802154_AUTOACK */
   }
+#if SHORTCUTS_CONF_NETSTACK
+  /*
+   * mac_call_sent_callback does absolutely nothing except print some debug
+   * messages before upcalling sent()
+   */
+  if(sent) {
+    sent(ptr, ret, 1);
+  }
+#else
   mac_call_sent_callback(sent, ptr, ret, 1);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static void

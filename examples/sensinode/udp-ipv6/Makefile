@@ -1,0 +1,22 @@
+ifndef TARGET
+TARGET=sensinode
+endif
+
+# Make absolutely certain that you specify your device here
+DEFINES=MODEL_N740
+
+# This example won't fit in flash without banking so we turn it on
+HAVE_BANKING=1
+UIP_CONF_IPV6=1
+
+# Use the huge memory model although large will work just as well
+MEMORY_MODEL=--model-huge
+
+CONTIKI_SOURCEFILES += ping6.c
+
+CONTIKI_PROJECT = client server
+all: $(CONTIKI_PROJECT) 
+
+CONTIKI = ../../..
+
+include $(CONTIKI)/Makefile.include

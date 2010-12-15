@@ -19,7 +19,6 @@
 #include "net/packetbuf.h"
 #include "net/rime/rimestats.h"
 
-extern void (* receiver_callback)(const struct radio_driver *);
 #ifndef RF_DEFAULT_POWER
 #define RF_DEFAULT_POWER 100
 #endif
@@ -27,6 +26,8 @@ extern void (* receiver_callback)(const struct radio_driver *);
 #ifndef RF_DEFAULT_CHANNEL
 #define RF_DEFAULT_CHANNEL 18
 #endif
+#define CC2430_CHANNEL_MIN 11
+#define CC2430_CHANNEL_MAX 26
 
 #ifndef CC2430_CONF_CHECKSUM
 #define CC2430_CONF_CHECKSUM 0
@@ -63,39 +64,154 @@ extern void (* receiver_callback)(const struct radio_driver *);
 #define TX_ACK 0x40
 #define TX_ON_AIR 0x20
 #define RX_NO_DMA
+/* Bits of the last byte in the RX FIFO */
+#define CRC_BIT_MASK 0x80
+#define LQI_BIT_MASK 0x7F
+
+#define CC2430_WIRESHARK_OUT 0
+#if CC2430_WIRESHARK_OUT
+#include "sensinode-debug.h"
+#endif
 
 #ifdef HAVE_RF_ERROR
 uint8_t rf_error = 0;
 #endif
 
-uint8_t rf_initialized = 0;
-uint8_t rf_tx_power;
-uint8_t rf_flags;
-uint8_t rf_channel = 0;
-rf_address_mode_t rf_addr_mode;
-uint16_t rf_manfid;
-uint8_t rf_softack;
-uint16_t rf_panid;
+static uint8_t rf_initialized = 0;
+static uint8_t rf_tx_power;
+static uint8_t rf_flags;
 
 /*---------------------------------------------------------------------------*/
-PROCESS_NAME(cc2430_rf_process);
-/*---------------------------------------------------------------------------*/
+static void
+flush_rx()
+{
+  cc2430_rf_command(ISFLUSHRX);
+  cc2430_rf_command(ISFLUSHRX);
 
-const struct radio_driver cc2430_rf_driver =
+#if !SHORTCUTS_CONF_NETSTACK
+  IEN2 |= RFIE;
+#endif
+#if CC2430_RFERR_INTERRUPT
+  IEN0 |= RFERRIE;
+#endif
+
+  RFIF &= ~IRQ_FIFOP;
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * Set address decoder on/off.
+ *
+ * \param param 1=on 0=off.
+ * \return pdTRUE operation successful
+ */
+static int8_t
+address_decoder_mode(rf_address_mode_t mode)
+{
+
+  /* set oscillator on*/
+  switch(mode) {
+  case RF_SOFTACK_MONITOR:
+  case RF_MONITOR:
+    MDMCTRL0H |= 0x10;   /*Address-decode off , coordinator*/
+    MDMCTRL0L &= ~0x10;  /*no automatic ACK */
+    break;
+
+  case RF_DECODER_COORDINATOR:
+    MDMCTRL0H |= 0x18;   /*Address-decode on , coordinator*/
+    MDMCTRL0L |= 0x10;   /*automatic ACK */
+    break;
+
+  case RF_DECODER_ON:
+    MDMCTRL0H |= 0x08;   /*Address-decode on */
+    MDMCTRL0L &= ~0x10;  /* no automatic ACK */
+    break;
+
+  default:
+    MDMCTRL0H &= ~0x18;  /* Generic client */
+    MDMCTRL0L &= ~0x10;  /* no automatic ACK */
+    break;
+  }
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+int
+cc2430_rf_prepare(const void *payload, unsigned short payload_len) __banked
   {
-    cc2430_rf_send,
-    cc2430_rf_read,
-    cc2430_rf_set_receiver,
-    cc2430_rf_on,
-    cc2430_rf_off,
-  };
+  uint8_t i;
+  /*
+   * When we transmit in very quick bursts, make sure previous transmission
+   * is not still in progress before re-writing in the TX FIFO
+   */
+  while(RFSTATUS & TX_ACTIVE);
 
+  if(rf_flags & TX_ACK) {
+    return -1;
+  }
+
+  if((rf_flags & RX_ACTIVE) == 0) {
+    cc2430_rf_rx_enable();
+  }
+  /* Check packet attributes */
+  /*printf("packetbuf_attr: txpower = %d\n", packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER));*/
+  /* Should set TX power according to this if > 0 */
+
+  PRINTF("cc2430_rf: sending %u byte payload\n", payload_len);
+
+#if CC2430_WIRESHARK_OUT
+  putstring("000000 ");
+#endif
+
+  cc2430_rf_command(ISFLUSHTX);
+  PRINTF("cc2430_rf: data = ");
+  /* Send the phy length byte first */
+  RFD = payload_len+CHECKSUM_LEN;   /* Payload plus FCS */
+  PRINTF("(%d)", payload_len+CHECKSUM_LEN);
+  for(i = 0 ; i < payload_len; i++) {
+    RFD = ((unsigned char*)(payload))[i];
+#if CC2430_WIRESHARK_OUT
+    puthex(((unsigned char*)(payload))[i]);
+    putchar(' ');
+#endif
+    PRINTF("%02X", ((unsigned char*)(payload))[i]);
+  }
+  PRINTF("\n");
+
+  /* Dummy CRC OK, RSSI and LQI */
+#if CC2430_WIRESHARK_OUT
+  putstring("FF FF\n");
+#endif
+
+  /* Leave space for the FCS */
+  RFD = 0;
+  RFD = 0;
+
+  return 0;
+}
 /*---------------------------------------------------------------------------*/
-void
+int
+cc2430_rf_receiving_packet(void) __banked
+{
+  /*
+   * SFD high while transmitting and receiving.
+   * TX_ACTIVE high only when transmitting
+   *
+   * RFSTATUS & (TX_ACTIVE | SFD) == SFD <=> receiving
+   */
+  return (RFSTATUS & (TX_ACTIVE | SFD) == SFD);
+}
+/*---------------------------------------------------------------------------*/
+int
+cc2430_rf_pending_packet(void) __banked
+{
+  return (RFSTATUS & FIFOP);
+}
+/*---------------------------------------------------------------------------*/
+int
 cc2430_rf_init(void) __banked
 {
   if(rf_initialized) {
-    return;
+    return 0;
   }
 
   PRINTF("cc2430_rf_init called\n");
@@ -107,7 +223,6 @@ cc2430_rf_init(void) __banked
   while((SLEEP & XOSC_STB) == 0);	/*wait for power up*/
 
   rf_flags = 0;
-  rf_softack = 0;
 
   FSMTC1 = 1;	/*don't abort reception, if enable called, accept ack, auto rx after tx*/
 
@@ -120,70 +235,57 @@ cc2430_rf_init(void) __banked
   RXCTRL0H = 0x32;			/* RX tuning optimized */
   RXCTRL0L = 0xf5;
 
-  /* get ID for MAC */
-  rf_manfid = CHVER;
-  rf_manfid <<= 8;
-  rf_manfid += CHIPID;
   cc2430_rf_channel_set(RF_DEFAULT_CHANNEL);
   cc2430_rf_command(ISFLUSHTX);
   cc2430_rf_command(ISFLUSHRX);
 
   cc2430_rf_set_addr(0xffff, 0x0000, NULL);
-  cc2430_rf_address_decoder_mode(RF_DECODER_NONE);
+  address_decoder_mode(RF_DECODER_NONE);
 
   RFIM = IRQ_FIFOP;
   RFIF &= ~(IRQ_FIFOP);
 
   S1CON &= ~(RFIF_0 | RFIF_1);
+#if !SHORTCUTS_CONF_NETSTACK
   IEN2 |= RFIE;
+#endif
+
+  /* If contiki-conf.h turns on the RFERR interrupt, enable it here */
+#if CC2430_RFERR_INTERRUPT
+  IEN0 |= RFERRIE;
+#endif
 
   RF_TX_LED_OFF();
   RF_RX_LED_OFF();
   rf_initialized = 1;
-  process_start(&cc2430_rf_process, NULL);
+
+  return 1;
 }
 /*---------------------------------------------------------------------------*/
 int
-cc2430_rf_send_b(void *payload, unsigned short payload_len) __banked
+cc2430_rf_transmit(void) __banked
 {
-  uint8_t i, counter;
-  
-  if(rf_flags & TX_ACK) {
-    return -1;
+  uint8_t counter;
+  int ret = RADIO_TX_ERR;
+
+  if(cc2430_rf_cca_check(0,0) == CC2430_CCA_BUSY) {
+    RIMESTATS_ADD(contentiondrop);
+    return RADIO_TX_COLLISION;
   }
-  if((rf_flags & RX_ACTIVE) == 0) {
-    cc2430_rf_rx_enable();
-  }
-  /* Check packet attributes */
-  /*printf("packetbuf_attr: txpower = %d\n", packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER));*/
-  /* Should set TX power according to this if > 0 */
 
-  PRINTF("cc2430_rf: sending %ud byte payload\n", payload_len);
-
-  RIMESTATS_ADD(lltx);
-
-  cc2430_rf_command(ISFLUSHTX);
-  PRINTF("cc2430_rf: sent = ");
-  /* Send the phy length byte first */
-  RFD = payload_len+CHECKSUM_LEN; 	/* Payload plus FCS */
-  PRINTF("(%d)", payload_len+CHECKSUM_LEN);
-  for(i = 0 ; i < payload_len; i++) {
-    RFD = ((unsigned char*)(payload))[i];
-    PRINTF("%02X", ((unsigned char*)(payload))[i]);
-  }
-  PRINTF("\n");
-
-  /* Leave space for the FCS */
-  RFD = 0;
-  RFD = 0;
-
-  if(cc2430_rf_cca_check(0,0) == -1) {
-    return -1;
+  /*
+   * prepare() double checked that TX_ACTIVE is low. If SFD is high we are
+   * receiving. Abort transmission and bail out with RADIO_TX_COLLISION
+   */
+  if(RFSTATUS & SFD) {
+    RIMESTATS_ADD(contentiondrop);
+    return RADIO_TX_COLLISION;
   }
 
   /* Start the transmission */
+  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+  ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
 
-  RFIF &= ~IRQ_TXDONE;
   cc2430_rf_command(ISTXON);
   counter = 0;
   while(!(RFSTATUS & TX_ACTIVE) && (counter++ < 3)) {
@@ -193,56 +295,85 @@ cc2430_rf_send_b(void *payload, unsigned short payload_len) __banked
   if(!(RFSTATUS & TX_ACTIVE)) {
     PRINTF("cc2430_rf: TX never active.\n");
     cc2430_rf_command(ISFLUSHTX);
-    return -1;
+    ret = RADIO_TX_ERR;
   } else {
+    /* Wait for the transmission to finish */
+    while(RFSTATUS & TX_ACTIVE);
     RF_RX_LED_OFF();
     RF_TX_LED_ON();
+    ret = RADIO_TX_OK;
     // rf_flags |= TX_ON_AIR;
   }
-  return 1;
+  ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
+  ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+
+  RIMESTATS_ADD(lltx);
+  /* OK, sent. We are now ready to send more */
+  return ret;
 }
 /*---------------------------------------------------------------------------*/
 int
-cc2430_rf_read_banked(void *buf, unsigned short bufsize) __banked
+cc2430_rf_read(void *buf, unsigned short bufsize) __banked
 {
-  uint8_t i, len;
+  uint8_t i;
+  uint8_t len;
+  uint8_t crc_corr;
+  int8_t rssi;
 #if CC2420_CONF_CHECKSUM
   uint16_t checksum;
 #endif /* CC2420_CONF_CHECKSUM */
 
-  /* RX interrupt polled the cc2430_rf_process, now read the RX FIFO */
+  /* Don't interrupt us while emptying the FIFO */
+#if !SHORTCUTS_CONF_NETSTACK
+  IEN2 &= ~RFIE;
+#endif
+#if CC2430_RFERR_INTERRUPT
+  IEN0 &= ~RFERRIE;
+#endif
 
+  /* RX interrupt polled the cc2430_rf_process, now read the RX FIFO */
   /* Check the length */
   len = RFD;
+
+#if CC2430_WIRESHARK_OUT
+  putstring("000000 ");
+#endif
 
   /* Check for validity */
   if(len > CC2430_MAX_PACKET_LEN) {
     /* Oops, we must be out of sync. */
 	PRINTF("error: bad sync\n");
-    cc2430_rf_command(ISFLUSHRX);
+
     RIMESTATS_ADD(badsynch);
+    flush_rx();
     return 0;
   }
 
   if(len <= CC2430_MIN_PACKET_LEN) {
 	PRINTF("error: too short\n");
-    cc2430_rf_command(ISFLUSHRX);
+
     RIMESTATS_ADD(tooshort);
+    flush_rx();
     return 0;
   }
 
   if(len - CHECKSUM_LEN > bufsize) {
 	PRINTF("error: too long\n");
-    cc2430_rf_command(ISFLUSHRX);
+
     RIMESTATS_ADD(toolong);
+    flush_rx();
     return 0;
   }
 
-  /* Read the buffer */
   PRINTF("cc2430_rf: read = ");
   PRINTF("(%d)", len);
-  for(i = 0; i < (len - CHECKSUM_LEN); i++) {
+  len -= CHECKSUM_LEN;
+  for(i = 0; i < len; ++i) {
       ((unsigned char*)(buf))[i] = RFD;
+#if CC2430_WIRESHARK_OUT
+    puthex(((unsigned char*)(buf))[i]);
+    putchar(' ');
+#endif
       PRINTF("%02X", ((unsigned char*)(buf))[i]);
   }
   PRINTF("\n");
@@ -252,55 +383,56 @@ cc2430_rf_read_banked(void *buf, unsigned short bufsize) __banked
     checksum = RFD * 256;
     checksum += RFD;
 #endif /* CC2430_CONF_CHECKSUM */
-  packetbuf_set_attr(PACKETBUF_ATTR_RSSI, ((int8_t) RFD) - 45);
-  packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, RFD);
 
-  RFIF &= ~IRQ_FIFOP;
-  RFSTATUS &= ~FIFO;
-  cc2430_rf_command(ISFLUSHRX);
-  cc2430_rf_command(ISFLUSHRX);
+  /* Read the RSSI and CRC/Corr bytes */
+  rssi = ((int8_t) RFD) - 45;
+  crc_corr = RFD;
+
+#if CC2430_WIRESHARK_OUT
+  puthex(rssi);
+  putchar(' ');
+  puthex(crc_corr);
+  putchar('\n');
+#endif
+
+  /* MS bit CRC OK/Not OK, 7 LS Bits, Correlation value */
+  if(crc_corr & CRC_BIT_MASK) {
+    packetbuf_set_attr(PACKETBUF_ATTR_RSSI, rssi);
+    packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, crc_corr & LQI_BIT_MASK);
+    RIMESTATS_ADD(llrx);
+  } else {
+    RIMESTATS_ADD(badcrc);
+    flush_rx();
+    return 0;
+}
+
+  /* If FIFOP==1 and FIFO==0 then we had a FIFO overflow at some point. */
+  if((RFSTATUS & (FIFO | FIFOP)) == FIFOP) {
+    /*
+     * If we reach here means that there might be more intact packets in the
+     * FIFO despite the overflow. This can happen with bursts of small packets.
+ *
+     * Only flush if the FIFO is actually empty. If not, then next pass we will
+     * pick up one more packet or flush due to an error.
+ */
+    if(!RXFIFOCNT) {
+      flush_rx();
+    }
+  }
+
   RF_RX_LED_OFF();
 
-  RIMESTATS_ADD(llrx);
+#if !SHORTCUTS_CONF_NETSTACK
+  IEN2 |= RFIE;
+#endif
+#if CC2430_RFERR_INTERRUPT
+  IEN0 |= RFERRIE;
+#endif
 
-  return (len - CHECKSUM_LEN);
-}
-/**
- * Execute a single CSP command.
- *
- * \param command command to execute
- *
- */
-void cc2430_rf_command(uint8_t command) __banked
-{
-  if(command >= 0xE0) {	/*immediate strobe*/
-    uint8_t fifo_count;
-    switch(command) {	/*hardware bug workaround*/
-    case ISRFOFF:
-    case ISRXON:
-    case ISTXON:
-      fifo_count = RXFIFOCNT;
-      RFST = command;
-      clock_delay(2);
-      if(fifo_count != RXFIFOCNT) {
-	RFST = ISFLUSHRX;
-	RFST = ISFLUSHRX;
-      }
-      break;
+  RFIF &= ~IRQ_FIFOP;
 
-    default:
-      RFST = command;
-    }
-  } else if(command == SSTART) {
-    RFIF &= ~IRQ_CSP_STOP;	/*clear IRQ flag*/
-    RFST = SSTOP;	/*make sure there is a stop in the end*/
-    RFST = ISSTART;	/*start execution*/
-    while((RFIF & IRQ_CSP_STOP) == 0);
-  } else {
-    RFST = command;	/*write command*/
-  }
+  return (len);
 }
-/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 /**
@@ -315,7 +447,7 @@ void cc2430_rf_command(uint8_t command) __banked
             freq = (2048 + FSCTRL(9:0)) MHz */
 
 int8_t
-cc2430_rf_channel_set(uint8_t channel)
+cc2430_rf_channel_set(uint8_t channel) __banked
 {
   uint16_t freq;
 
@@ -334,8 +466,6 @@ cc2430_rf_channel_set(uint8_t channel)
   FSCTRLL = (uint8_t)freq;
 
   cc2430_rf_command(ISRXON);
-
-  rf_channel = channel;
 
   return (int8_t) channel;
 }
@@ -359,7 +489,7 @@ cc2430_rf_channel_set(uint8_t channel)
  */
 
 int8_t
-cc2430_rf_power_set(uint8_t new_power)
+cc2430_rf_power_set(uint8_t new_power) __banked
 {
   uint16_t power;
 
@@ -386,7 +516,7 @@ cc2430_rf_power_set(uint8_t new_power)
  * \return pdTRUE
  * \return pdFALSE	bus not free
  */
-int8_t
+int
 cc2430_rf_rx_enable(void) __banked
 {
   PRINTF("cc2430_rf_rx_enable called\n");
@@ -404,6 +534,7 @@ cc2430_rf_rx_enable(void) __banked
     cc2430_rf_command(ISFLUSHRX);
   }
   PRINTF("cc2430_rf_rx_enable done\n");
+  ENERGEST_ON(ENERGEST_TYPE_LISTEN);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -414,7 +545,9 @@ cc2430_rf_rx_enable(void) __banked
  * \return pdTRUE
  * \return pdFALSE	bus not free
  */
-int8_t cc2430_rf_rx_disable(void) __banked
+
+int
+cc2430_rf_rx_disable(void) __banked
 {
   cc2430_rf_command(ISSTOP);	/*make sure CSP is not running*/
   cc2430_rf_command(ISRFOFF);
@@ -422,9 +555,11 @@ int8_t cc2430_rf_rx_disable(void) __banked
   RFPWR |= RREG_RADIO_PD;		/*RF powerdown*/
 
   rf_flags = 0;
+  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+#if 0 /* unused */
 /**
  * Enable RF transmitter.
  *
@@ -432,14 +567,15 @@ int8_t cc2430_rf_rx_disable(void) __banked
  * \return pdTRUE
  * \return pdFALSE	bus not free
  */
-int8_t
+int
 cc2430_rf_tx_enable(void)
 {
   DMAARM = 0x80 + (1 << 0);	/*ABORT + channel bit*/
 
   return 1;
 }
-
+#endif
+/*---------------------------------------------------------------------------*/
 /**
 	* Set MAC addresses
 	*
@@ -448,12 +584,11 @@ cc2430_rf_tx_enable(void)
 	*	\param ieee_addr The 64-bit IEEE address to set
 	*/
 void
-cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr)
+cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr) __banked
 {
 	uint8_t f;
 	__xdata unsigned char *ptr;
 
-	rf_panid = pan;
 	PANIDH = pan >> 8;
 	PANIDL = pan & 0xff;
 
@@ -468,49 +603,7 @@ cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr)
 		}
 	}
 }
-
-/*---------------------------------------------------------------------------*/
-/**
- * Set address decoder on/off.
- *
- * \param param 1=on 0=off.
- * \return pdTRUE operation successful
- */
-int8_t
-cc2430_rf_address_decoder_mode(rf_address_mode_t mode)
-{
-  int8_t retval = -1;
-
-  rf_softack = 0;
-  /* set oscillator on*/
-  switch(mode) {
-  case RF_SOFTACK_MONITOR:
-    rf_softack = 1;
-  case RF_MONITOR:
-    MDMCTRL0H |= 0x10;	 /*Address-decode off , coordinator*/
-    MDMCTRL0L &= ~0x10;	 /*no automatic ACK */
-    break;
-
-  case RF_DECODER_COORDINATOR:
-    MDMCTRL0H |= 0x18;	 /*Address-decode on , coordinator*/
-    MDMCTRL0L |= 0x10;	 /*automatic ACK */
-    break;
-
-  case RF_DECODER_ON:
-    MDMCTRL0H |= 0x08;	 /*Address-decode on */
-    MDMCTRL0L &= ~0x10;	 /* no automatic ACK */
-    break;
-
-  default:
-    MDMCTRL0H &= ~0x18;	 /* Generic client */
-    MDMCTRL0L &= ~0x10;	 /* no automatic ACK */
-    break;
-  }
-  rf_addr_mode = mode;
-
-  retval = 1;
-  return retval;
-}
+#if 0 /* currently unused */
 /*---------------------------------------------------------------------------*/
 /**
  * Channel energy detect.
@@ -530,18 +623,19 @@ cc2430_rf_analyze_rssi(void)
   retval -= 45;
   return retval;
 }
+#endif /* currently unused */
 /*---------------------------------------------------------------------------*/
 /**
- * Clear channel assesment check.
+ * Clear channel assessment check.
  *
- * \return pdTRUE	CCA clear
- * \return pdFALSE	CCA reserved
+ * \return 1	CCA clear
+ * \return 0	CCA reserved
  */
-int8_t
-cc2430_rf_cca_check(uint8_t backoff_count, uint8_t slotted)
+int
+cc2430_rf_cca_check(uint8_t backoff_count, uint8_t slotted) __banked
 {
   uint8_t counter, cca = 1;
-  int8_t retval = 1;
+  int8_t retval = CC2430_CCA_CLEAR;
   backoff_count;
   cc2430_rf_command(ISRXON);
 
@@ -559,12 +653,12 @@ cc2430_rf_cca_check(uint8_t backoff_count, uint8_t slotted)
 	clock_delay(256);
 	if(!(RFSTATUS & CCA)) {
 	  cca = 0;
-	  retval = -1;
+	  retval = CC2430_CCA_BUSY;
 	}
 	counter++;
       }
     } else {
-      retval = -1;
+      retval = CC2430_CCA_BUSY;
     }
     break;
 

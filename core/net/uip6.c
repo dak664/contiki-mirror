@@ -78,7 +78,6 @@
 #include "net/uip-ds6.h"
 
 #include <string.h>
-
 /*---------------------------------------------------------------------------*/
 /* For Debug, logging, statistics                                            */
 /*---------------------------------------------------------------------------*/
@@ -95,7 +94,7 @@
 #endif
 
 #if UIP_CONF_IPV6_RPL
-void uip_rpl_input(void);
+void uip_rpl_input(void) __banked;
 #endif /* UIP_CONF_IPV6_RPL */
 
 #if UIP_LOGGING == 1
@@ -862,7 +861,7 @@ ext_hdr_options_process() {
 
 /*---------------------------------------------------------------------------*/
 void
-uip_process(u8_t flag)
+uip_process(u8_t flag) __banked
 {
 #if UIP_TCP
   register struct uip_conn *uip_connr = uip_conn;
@@ -2189,15 +2188,15 @@ uip_process(u8_t flag)
 }
 /*---------------------------------------------------------------------------*/
 u16_t
-uip_htons(u16_t val)
+uip_htons(u16_t val) __banked
 {
   return UIP_HTONS(val);
 }
 
 u32_t
-uip_htonl(u32_t val)
+uip_htonl(u32_t val) __banked
 {
-  return UIP_HTONL(val);
+  return UIP_HTONS(val);
 }
 /*---------------------------------------------------------------------------*/
 void

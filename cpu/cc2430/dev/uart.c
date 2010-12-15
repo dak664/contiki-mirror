@@ -18,6 +18,7 @@
 #include "dev/leds.h"
 #include "dev/uart.h"
 
+#if UART_ZERO_ENABLE
 /*---------------------------------------------------------------------------*/
 /* Write one byte over the UART. */
 void
@@ -28,6 +29,9 @@ uart0_writeb(uint8_t byte)
   while(!IRCON2_UTX0IF); /* Wait until byte has been transmitted. */
   IRCON2_UTX0IF = 0;
 }
+#endif
+
+#if UART_ONE_ENABLE
 /*---------------------------------------------------------------------------*/
 /* Write one byte over the UART. */
 void
@@ -39,3 +43,4 @@ uart1_writeb(uint8_t byte)
   IRCON2_UTX1IF = 0;
 }
 /*---------------------------------------------------------------------------*/
+#endif

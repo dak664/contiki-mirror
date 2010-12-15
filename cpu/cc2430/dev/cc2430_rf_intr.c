@@ -23,6 +23,7 @@
 
 #include "net/packetbuf.h"
 #include "net/rime/rimestats.h"
+#include "net/netstack.h"
 #define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -47,9 +48,27 @@ uint8_t rf_error = 0;
 #endif
 
 
+#if !SHORTCUTS_CONF_NETSTACK
 /*---------------------------------------------------------------------------*/
 PROCESS(cc2430_rf_process, "CC2430 RF driver");
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(cc2430_rf_process, ev, data)
+{
+  int len;
+  PROCESS_BEGIN();
+  while(1) {
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
+    packetbuf_clear();
+    len = cc2430_rf_read(packetbuf_dataptr(), PACKETBUF_SIZE);
+    if(len > 0) {
+      packetbuf_set_datalen(len);
+      NETSTACK_RDC.input();
+    }
+  }
+
+  PROCESS_END();
+}
 /*---------------------------------------------------------------------------*/
 /**
  * RF interrupt service routine.
@@ -59,29 +78,27 @@ void
 cc2430_rf_ISR( void ) __interrupt (RF_VECTOR)
 {
   EA = 0;
-  if(RFIF & IRQ_TXDONE) {
-    RF_TX_LED_OFF();
-    RFIF &= ~IRQ_TXDONE;
-    cc2430_rf_command(ISFLUSHTX);
-  }
+  ENERGEST_ON(ENERGEST_TYPE_IRQ);
+  /*
+   * We only vector here if RFSTATUS.FIFOP goes high.
+   * Just double check the flag.
+   */
   if(RFIF & IRQ_FIFOP) {
-    if(RFSTATUS & FIFO) {
       RF_RX_LED_ON();
       /* Poll the RF process which calls cc2430_rf_read() */
       process_poll(&cc2430_rf_process);
-    } else {
-      cc2430_rf_command(ISFLUSHRX);
-      cc2430_rf_command(ISFLUSHRX);
-      RFIF &= ~IRQ_FIFOP;
-    }
   }
   S1CON &= ~(RFIF_0 | RFIF_1);
+
+  ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   EA = 1;
 }
+#endif
 /*---------------------------------------------------------------------------*/
+#if CC2430_RFERR_INTERRUPT
 /**
  * RF error interrupt service routine.
- *
+ * Turned off by default, can be turned on in contiki-conf.h
  */
 void
 cc2430_rf_error_ISR( void ) __interrupt (RFERR_VECTOR)
@@ -99,57 +116,124 @@ cc2430_rf_error_ISR( void ) __interrupt (RFERR_VECTOR)
   RF_TX_LED_OFF();
   EA = 1;
 }
-
-void (* receiver_callback)(const struct radio_driver *);
-
+#endif
+/*---------------------------------------------------------------------------*/
+/**
+ * Execute a single CSP command.
+ *
+ * \param command command to execute
+ *
+ */
 void
-cc2430_rf_set_receiver(void (* recv)(const struct radio_driver *))
+cc2430_rf_command(uint8_t command)
 {
-  receiver_callback = recv;
+  if (command >= 0xE0) { /*immediate strobe*/
+    uint8_t fifo_count;
+    switch (command) { /*hardware bug workaround*/
+    case ISRFOFF:
+    case ISRXON:
+    case ISTXON:
+      fifo_count = RXFIFOCNT;
+      RFST = command;
+      clock_delay(2);
+      if (fifo_count != RXFIFOCNT) {
+        RFST = ISFLUSHRX;
+        RFST = ISFLUSHRX;
+      }
+      break;
+
+    default:
+      RFST = command;
+    }
+  } else if (command == SSTART) {
+    RFIF &= ~IRQ_CSP_STOP; /*clear IRQ flag*/
+    RFST = SSTOP; /*make sure there is a stop in the end*/
+    RFST = ISSTART; /*start execution*/
+    while ((RFIF & IRQ_CSP_STOP) == 0);
+  } else {
+    RFST = command; /*write command*/
+  }
 }
 /*---------------------------------------------------------------------------*/
 /* 
  * non-banked functions called through function pointers then call banked code
  */
-int
-cc2430_rf_off(void)
+static int
+init(void)
+{
+  int rv = cc2430_rf_init();
+#if !SHORTCUTS_CONF_NETSTACK
+  process_start(&cc2430_rf_process, NULL);
+#endif
+  return rv;
+}
+/*---------------------------------------------------------------------------*/
+static int
+prepare(const void *data, unsigned short len)
+{
+  return cc2430_rf_prepare(data,len);
+}
+/*---------------------------------------------------------------------------*/
+static int
+transmit(unsigned short len)
+{
+  return cc2430_rf_transmit();
+}
+/*---------------------------------------------------------------------------*/
+static int
+off(void)
 {
   return cc2430_rf_rx_disable();
 }
 /*---------------------------------------------------------------------------*/
-int
-cc2430_rf_on(void)
+static int
+on(void)
 {
   return cc2430_rf_rx_enable();
 }
 /*---------------------------------------------------------------------------*/
-int
-cc2430_rf_send(void *payload, unsigned short payload_len)
+static int
+send(void *payload, unsigned short payload_len)
 {
-  return cc2430_rf_send_b(payload, payload_len);
+  cc2430_rf_prepare(payload, payload_len);
+  return cc2430_rf_transmit();
 }
 /*---------------------------------------------------------------------------*/
-int
-cc2430_rf_read(void *buf, unsigned short bufsize) 
+static int
+read(void *buf, unsigned short bufsize)
 {
-  return cc2430_rf_read_banked(buf, bufsize);
+  return cc2430_rf_read(buf, bufsize);
 }
 /*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(cc2430_rf_process, ev, data)
+static int
+channel_clear(void)
 {
-  PROCESS_BEGIN();
-  while(1) {
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
-
-    if(receiver_callback != NULL) {
-      PRINTF("cc2430_rf_process: calling receiver callback\n");
-      receiver_callback(&cc2430_rf_driver);
-    } else {
-      PRINTF("cc2430_rf_process: no receiver callback\n");
-      cc2430_rf_command(ISFLUSHRX);
+  return cc2430_rf_cca_check(0, 0);
     }
+/*---------------------------------------------------------------------------*/
+static int
+receiving_packet(void)
+{
+  return cc2430_rf_receiving_packet();
   }
-
-  PROCESS_END();
+/*---------------------------------------------------------------------------*/
+static int
+pending_packet(void)
+{
+  return cc2430_rf_pending_packet();
 }
+/*---------------------------------------------------------------------------*/
+const struct radio_driver cc2430_rf_driver =
+  {
+    init,
+    prepare,
+    transmit,
+    send,
+    read,
+    channel_clear,
+    receiving_packet,
+    pending_packet,
+    on,
+    off,
+  };
+/*---------------------------------------------------------------------------*/

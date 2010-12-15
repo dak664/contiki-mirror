@@ -49,7 +49,7 @@ extern u16_t uip_slen;
 
 /*---------------------------------------------------------------------------*/
 void
-uip_udp_packet_send(struct uip_udp_conn *c, const void *data, int len)
+uip_udp_packet_send(struct uip_udp_conn *c, const void *data, int len) __banked
 {
 #if UIP_UDP
   uip_udp_conn = c;
@@ -69,7 +69,7 @@ uip_udp_packet_send(struct uip_udp_conn *c, const void *data, int len)
 /*---------------------------------------------------------------------------*/
 void
 uip_udp_packet_sendto(struct uip_udp_conn *c, const void *data, int len,
-		      const uip_ipaddr_t *toaddr, uint16_t toport)
+		      const uip_ipaddr_t *toaddr, uint16_t toport) __banked
 {
   uip_ipaddr_t curaddr;
   uint16_t curport;

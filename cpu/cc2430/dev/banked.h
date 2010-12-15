@@ -17,7 +17,7 @@
 
 #ifndef __BANKED_H
 #ifdef SDCC
-#ifndef HAVE_SDCC_BANKING
+#if !defined (HAVE_SDCC_BANKING) || defined(SDCC_MODEL_HUGE)
 #define __banked 
 #else
 #ifdef BANKED_IN_HOME

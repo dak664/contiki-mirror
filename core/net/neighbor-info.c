@@ -100,7 +100,7 @@ add_neighbor(const rimeaddr_t *addr)
 }
 /*---------------------------------------------------------------------------*/
 void
-neighbor_info_packet_sent(int status, int numtx)
+neighbor_info_packet_sent(int status, int numtx) __banked
 {
   const rimeaddr_t *dest;
   link_metric_t packet_metric;
@@ -117,7 +117,14 @@ neighbor_info_packet_sent(int status, int numtx)
   switch(status) {
   case MAC_TX_OK:
     packet_metric = numtx;
+#if !SHORTCUTS_CONF_NETSTACK
     add_neighbor(dest);
+#else
+    neighbor_attr_add_neighbor(dest);
+    if(subscriber_callback != NULL) {
+      subscriber_callback(dest, 1, ETX_FIRST_GUESS);
+    }
+#endif
     break;
   case MAC_TX_COLLISION:
     packet_metric = numtx;
@@ -135,7 +142,7 @@ neighbor_info_packet_sent(int status, int numtx)
 }
 /*---------------------------------------------------------------------------*/
 void
-neighbor_info_packet_received(void)
+neighbor_info_packet_received(void) __banked
 {
   const rimeaddr_t *src;
 
@@ -147,7 +154,14 @@ neighbor_info_packet_received(void)
   PRINTF("neighbor-info: packet received from %d.%d\n",
 	src->u8[sizeof(*src) - 2], src->u8[sizeof(*src) - 1]);
 
+#if !SHORTCUTS_CONF_NETSTACK
   add_neighbor(src);
+#else
+  neighbor_attr_add_neighbor(src);
+  if(subscriber_callback != NULL) {
+    subscriber_callback(src, 1, ETX_FIRST_GUESS);
+  }
+#endif
 }
 /*---------------------------------------------------------------------------*/
 int

@@ -1,0 +1,26 @@
+# segment.rules - platform/sensinode
+
+# segment.rules file for code in platform/sensinode
+# Please see cpu/cc2430/segment.rules for more info on segments
+# and for rules of thumb on what to do and what not to do
+
+# Keeping the main() routine in HOME is a wise thing to do...
+HOME contiki-sensinode-main.c	
+
+# These are safe to put in whatever bank
+BANK3 n740-ser-par.c 			
+
+# Debugging functions
+HOME putchar.c            # Keep putchar() in HOME.
+HOME sensinode-debug.c    # This is actually bankable
+
+# sensor code
+# Careful. sensinode-sensors.c will match the sensors.c rule, if there is one.
+# Keep the sensors.c line below sensinode-sensors.c to avoid this
+BANK3 sensinode-sensors.c # With sensors.c in HOME, this is bankable.
+HOME button-sensor.c      # Contains ISRs. Keep it in HOME
+HOME adc-sensor.c         # Functions called from sensors.c via FPs. Keep this in HOME
+HOME leds-arch.c
+
+# segment.rules - platform/sensinode - end
+

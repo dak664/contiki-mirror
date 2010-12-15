@@ -1,0 +1,10 @@
+# segment.rules - project
+
+# project-specific segment-rules file
+# This takes precedence over the files in cpu/cc2430 and platform/sensinode
+# Use this to specify rules for the project files or to override rules in
+# the files above
+
+HOME slip-bridge.c
+
+# segment.rules - project - end

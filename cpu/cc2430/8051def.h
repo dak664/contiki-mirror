@@ -16,6 +16,8 @@
 #define CC_CONF_UNSIGNED_CHAR_BUGS	0
 #define CC_CONF_REGISTER_ARGS		0
 #define CC_CONF_FUNCTION_POINTER_KEYWORD __reentrant
+#define CC_CONF_HAS_BANKING 1
+#define CC_CONF_STORAGE_CLASSES 1
 
 /* Generic types. */
 typedef   signed char    int8_t;
@@ -37,7 +39,6 @@ typedef unsigned int size_t;
 /* Compiler configurations */
 #define CCIF
 #define CLIF
-#define CC_CONF_CONST_FUNCTION_BUG
 
 /* Critical section management */
 #define DISABLE_INTERRUPTS()	EA = 0;
@@ -77,7 +78,7 @@ typedef unsigned int size_t;
 
 #define UIP_ARCH_ADD32		0
 #define UIP_ARCH_CHKSUM	0
-#define UIP_ARCH_IPCHKSUM
+/* #define UIP_ARCH_IPCHKSUM */
 
 #define CC_CONF_ASSIGN_AGGREGATE(dest, src)	\
     memcpy(dest, src, sizeof(*dest))

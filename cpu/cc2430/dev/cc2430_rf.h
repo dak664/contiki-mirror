@@ -8,7 +8,7 @@
 #ifndef __CC2430_RF_H__
 #define __CC2430_RF_H__
 
-#include "banked.h"
+#include "dev/banked.h"
 #include "contiki.h"
 #include "dev/radio.h"
 #include "cc2430_sfr.h"
@@ -60,35 +60,42 @@ typedef enum rf_address_mode_t
 #define CC2430_MAX_PACKET_LEN      127
 #define CC2430_MIN_PACKET_LEN      4
 
+#define CC2430_CCA_CLEAR  0
+#define CC2430_CCA_BUSY   1
+
+#ifdef CC2430_CONF_RFERR_INTERRUPT
+#define CC2430_RFERR_INTERRUPT CC2430_CONF_RFERR_INTERRUPT
+#else
+#define CC2430_RFERR_INTERRUPT 0
+#endif
+
 extern const struct radio_driver cc2430_rf_driver;
 
-/* radio_driver functions */
-void cc2430_rf_set_receiver(void (* recv)(const struct radio_driver *));
-int cc2430_rf_on(void);
-int cc2430_rf_off(void);
-int cc2430_rf_read(void *buf, unsigned short bufsize);
-int cc2430_rf_read_banked (void *buf, unsigned short bufsize) __banked;
-int cc2430_rf_send(void *data, unsigned short len);
-int cc2430_rf_send_b (void *data, unsigned short len) __banked;
 extern unsigned short cc2430_rf_payload_len;
 extern void *cc2430_rf_payload;
 
 /* RF driver functions */
-void cc2430_rf_init(void) __banked;
-void cc2430_rf_command(uint8_t command) __banked;
-int8_t cc2430_rf_channel_set(uint8_t channel);
-int8_t cc2430_rf_power_set(uint8_t new_power);
-int8_t cc2430_rf_rx_enable(void) __banked;
-int8_t cc2430_rf_rx_disable(void) __banked;
-int8_t cc2430_rf_tx_enable(void);
-int8_t cc2430_rf_address_decoder_mode(rf_address_mode_t mode);
-int8_t cc2430_rf_analyze_rssi(void);
-int8_t cc2430_rf_cca_check(uint8_t backoff_count, uint8_t slotted);
-void cc2430_rf_send_ack(uint8_t pending);
-void cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr);
+int cc2430_rf_init(void) __banked;
+int cc2430_rf_prepare(const void *data, unsigned short len) __banked;
+int cc2430_rf_transmit(void) __banked;
+int cc2430_rf_read(void *buf, unsigned short bufsize) __banked;
+int cc2430_rf_cca_check(uint8_t backoff_count, uint8_t slotted) __banked;
+int cc2430_rf_receiving_packet(void) __banked;
+int cc2430_rf_pending_packet(void) __banked;
+int cc2430_rf_rx_enable(void) __banked;
+int cc2430_rf_rx_disable(void) __banked;
 
+void cc2430_rf_command(uint8_t command);
+int8_t cc2430_rf_channel_set(uint8_t channel) __banked;
+int8_t cc2430_rf_power_set(uint8_t new_power) __banked;
+void cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr) __banked;
+
+#if !SHORTCUTS_CONF_NETSTACK
 extern void cc2430_rf_ISR( void ) __interrupt (RF_VECTOR);
+#endif
+#if CC2430_RFERR_INTERRUPT
 extern void cc2430_rf_error_ISR( void ) __interrupt (RFERR_VECTOR);
+#endif
 
 #ifdef HAVE_RF_DMA
 void rf_dma_callback_isr(void);

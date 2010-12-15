@@ -70,23 +70,23 @@
 
 struct queuebuf;
 
-void queuebuf_init(void);
+void queuebuf_init(void) __banked;
 
 #if QUEUEBUF_DEBUG
 struct queuebuf *queuebuf_new_from_packetbuf_debug(const char *file, int line);
 #define queuebuf_new_from_packetbuf() queuebuf_new_from_packetbuf_debug(__FILE__, __LINE__)
 #else /* QUEUEBUF_DEBUG */
-struct queuebuf *queuebuf_new_from_packetbuf(void);
+struct queuebuf *queuebuf_new_from_packetbuf(void) __banked;
 #endif /* QUEUEBUF_DEBUG */
 
-void queuebuf_to_packetbuf(struct queuebuf *b);
-void queuebuf_free(struct queuebuf *b);
+void queuebuf_free(struct queuebuf *b) __banked;
+void queuebuf_to_packetbuf(struct queuebuf *b) __banked;
 
-void *queuebuf_dataptr(struct queuebuf *b);
-int queuebuf_datalen(struct queuebuf *b);
+void *queuebuf_dataptr(struct queuebuf *b) __banked;
+int queuebuf_datalen(struct queuebuf *b) __banked;
 
-rimeaddr_t *queuebuf_addr(struct queuebuf *b, uint8_t type);
-packetbuf_attr_t queuebuf_attr(struct queuebuf *b, uint8_t type);
+rimeaddr_t *queuebuf_addr(struct queuebuf *b, uint8_t type) __banked;
+packetbuf_attr_t queuebuf_attr(struct queuebuf *b, uint8_t type) __banked;
 
 void queuebuf_debug_print(void);
 
