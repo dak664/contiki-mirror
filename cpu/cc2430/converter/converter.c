@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 			{
 				sscanf((char *)&(buffer[3]),"%4hx", &addr);
 				sscanf((char *)&(buffer[9]),"%4lx", &ext_addr);
-				printf("\rExtended page address: 0x%8.8lX\r", ext_addr*0x8000 );
+				printf("Extended page address: 0x%8.8lX\n", ext_addr*0x8000 );
 				
 				if (ext_addr >= 0x0002) sdcc_file = 1;
 				
