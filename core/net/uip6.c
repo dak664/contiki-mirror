@@ -1438,7 +1438,7 @@ uip_process(u8_t flag) __banked
   UIP_IP_BUF->len[0] = ((uip_len - UIP_IPH_LEN) >> 8);
   UIP_IP_BUF->len[1] = ((uip_len - UIP_IPH_LEN) & 0xff);
 
-  UIP_IP_BUF->ttl = uip_udp_conn->ttl;
+  memcpy(&UIP_IP_BUF->ttl, &uip_udp_conn->ttl, sizeof(uip_udp_conn->ttl));
   UIP_IP_BUF->proto = UIP_PROTO_UDP;
 
   UIP_UDP_BUF->udplen = UIP_HTONS(uip_slen + UIP_UDPH_LEN);
