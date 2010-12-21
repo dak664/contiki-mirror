@@ -36,6 +36,7 @@
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
 #include "dev/sensinode-sensors.h"
+#include "sensinode-debug.h"
 #include "dev/watchdog.h"
 #include "dev/leds.h"
 #include "net/rpl/rpl.h"
@@ -53,8 +54,6 @@ static uint16_t len;
 static uip_ipaddr_t ipaddr;
 #endif
 
-uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
-
 #define SERVER_REPLY          1
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor adc_sensor;
@@ -70,10 +69,13 @@ tcpip_handler(void)
     leds_on(LEDS_RED);
     len = uip_datalen();
     memcpy(buf, uip_appdata, len);
-    PRINTF("%u bytes in (0x%04x) - ", len, *(uint16_t *)buf);
+    PRINTF("%u bytes from [", len, *(uint16_t *)buf);
     PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-    PRINTF(" Remote Port %u", UIP_HTONS(UIP_UDP_BUF->srcport));
-    PRINTF("\n");
+    PRINTF("]:%u", UIP_HTONS(UIP_UDP_BUF->srcport));
+    PRINTF(" V=%u", *buf);
+    PRINTF(" I=%u", *(buf + 1));
+    PRINTF(" T=%u", *(buf + 2));
+    PRINTF(" Val=%u\n", *(uint16_t *)(buf + 3));
 #if SERVER_REPLY
     uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
     server_conn->rport = UIP_UDP_BUF->srcport;
@@ -85,6 +87,7 @@ tcpip_handler(void)
 #endif
   }
   leds_off(LEDS_RED);
+  PRINTF("sent\n");
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -103,11 +106,12 @@ print_local_addresses(void)
   int i;
   uint8_t state;
 
-  PRINTF("Server IPv6 addresses: ");
+  PRINTF("Server IPv6 addresses:\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused && (state == ADDR_TENTATIVE || state
         == ADDR_PREFERRED)) {
+      PRINTF("  ");
       PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
       PRINTF("\n");
       /* Tentative -> Preferred to finialise our address */
@@ -120,36 +124,26 @@ print_local_addresses(void)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_server_process, ev, data)
 {
-  struct uip_ds6_addr *root_if;
   static struct sensors_sensor *b1;
   static struct sensors_sensor *b2;
 
   PROCESS_BEGIN();
-  PRINTF("UDP server started\n");
-  PRINTF("Button 1: Print RIME stats\n");
-  PRINTF("Button 2: Reboot\n");
+  putstring("Starting UDP server\n");
+  putstring("Button 1: Print RIME stats\n");
+  putstring("Button 2: Reboot\n");
 
 #if UIP_CONF_ROUTER
   uip_ip6addr(&ipaddr, 0x2001, 0x470, 0x55, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-  root_if = uip_ds6_addr_lookup(&ipaddr);
-  if(root_if != NULL) {
-    rpl_dag_t *dag;
-    rpl_set_root((uip_ip6addr_t *)dag_id);
-    dag = rpl_get_dag(RPL_ANY_INSTANCE);
-    uip_ip6addr(&ipaddr, 0x2001, 0x470, 0x55, 0, 0, 0, 0, 0);
-    rpl_set_prefix(dag, &ipaddr, 64);
-    PRINTF("created a new RPL dag\n");
-  } else {
-    PRINTF("failed to create a new RPL DAG\n");
-  }
 #endif /* UIP_CONF_ROUTER */
 
   print_local_addresses();
 
   server_conn = udp_new(NULL, UIP_HTONS(0), NULL);
   udp_bind(server_conn, UIP_HTONS(3000));
+
+  PRINTF("Listen port: 3000, TTL=%u\n", server_conn->ttl);
 
   b1 = sensors_find(BUTTON_1_SENSOR);
   b2 = sensors_find(BUTTON_2_SENSOR);
