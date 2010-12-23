@@ -47,6 +47,9 @@ obj_sensinode
 #cpu/*
 #!cpu/cc2430
 cpu/cc2430/converter/converter
+cpu/cc2430/converter/converter.exe
+cpu/cc2430/converter/converter.o
+cpu/cc2430/converter/ihex.o
 #platform/*
 #!platform/sensinode
 #examples/*
