@@ -40,18 +40,18 @@ contiki-sensinode.lib
 obj_sensinode
 
 # untracked contiki dirs
-backyard
-core/cfs
-core/ctk
-core/loader
-cpu/*
-!cpu/cc2430
+#backyard
+#core/cfs
+#core/ctk
+#core/loader
+#cpu/*
+#!cpu/cc2430
 cpu/cc2430/converter/converter
-platform/*
-!platform/sensinode
-examples/*
-!examples/sensinode
-apps
-doc
-tools
-secondary
+#platform/*
+#!platform/sensinode
+#examples/*
+#!examples/sensinode
+#apps
+#doc
+#tools
+#secondary
