@@ -159,10 +159,12 @@ typedef unsigned short clock_time_t;
 #define SICSLOWPAN_CONF_ADDR_CONTEXT_0 { \
   addr_contexts[0].prefix[0] = 0x20; \
   addr_contexts[0].prefix[1] = 0x01; \
-  addr_contexts[0].prefix[2] = 0x04; \
-  addr_contexts[0].prefix[3] = 0x70; \
-  addr_contexts[0].prefix[4] = 0x00; \
-  addr_contexts[0].prefix[5] = 0x55; \
+  addr_contexts[0].prefix[2] = 0x06; \
+  addr_contexts[0].prefix[3] = 0x30; \
+  addr_contexts[0].prefix[4] = 0x30; \
+  addr_contexts[0].prefix[5] = 0x01; \
+  addr_contexts[0].prefix[6] = 0x64; \
+  addr_contexts[0].prefix[7] = 0x53; \
 }
 
 #define MAC_CONF_CHANNEL_CHECK_RATE          8
