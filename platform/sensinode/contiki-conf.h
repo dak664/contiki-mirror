@@ -176,7 +176,7 @@ typedef unsigned short clock_time_t;
   addr_contexts[0].prefix[1] = 0x01; \
   addr_contexts[0].prefix[2] = 0x06; \
   addr_contexts[0].prefix[3] = 0x30; \
-  addr_contexts[0].prefix[4] = 0x30; \
+  addr_contexts[0].prefix[4] = 0x03; \
   addr_contexts[0].prefix[5] = 0x01; \
   addr_contexts[0].prefix[6] = 0x64; \
   addr_contexts[0].prefix[7] = 0x53; \
