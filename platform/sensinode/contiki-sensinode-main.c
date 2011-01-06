@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "contiki.h"
 #include "sys/clock.h"
 #include "sys/autostart.h"
@@ -22,11 +20,6 @@
 
 static volatile int i, a;
 unsigned short node_id = 0;			/* Manually sets MAC address when > 0 */
-
-#if UIP_CONF_IPV6
-static uip_ds6_addr_t *lladdr;
-static uip_ipaddr_t ipaddr;
-#endif
 
 #if SHORTCUTS_CONF_NETSTACK
 static int len;
@@ -103,10 +96,16 @@ set_rime_addr(void)
 
   /* MAC is stored LSByte first, so we print it backwards */
 #if STARTUP_VERBOSE
-  printf("Read MAC from flash: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-	 ft_buffer[7], ft_buffer[6], ft_buffer[5], ft_buffer[4],
-	 ft_buffer[3], ft_buffer[2], ft_buffer[1], ft_buffer[0]);
-  printf("Rime is %d bytes long.\n", sizeof(rimeaddr_t));
+  putstring("Read MAC from flash: ");
+  for(i = 7; i > 0; --i) {
+    puthex(ft_buffer[i]);
+    putchar(':');
+  }
+  puthex(ft_buffer[0]);
+  putchar('\n');
+  putstring("Rime is 0x");
+  puthex(sizeof(rimeaddr_t));
+  putstring(" bytes long.\n");
 #endif
   memset(&addr, 0, sizeof(rimeaddr_t));
 
@@ -242,9 +241,13 @@ main(void)
   process_start(&tcpip_process, NULL);
 
 #if (!UIP_CONF_IPV6_RPL)
-  uip_ip6addr(&ipaddr, 0x2001, 0x470, 0x55, 0, 0, 0, 0, 0);
+  {
+    uip_ipaddr_t ipaddr;
+
+    uip_ip6addr(&ipaddr, 0x2001, 0x630, 0x301, 0x6453, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
+  }
 #endif /* UIP_CONF_IPV6_RPL */
 #endif /* UIP_CONF_IPV6 */
 
