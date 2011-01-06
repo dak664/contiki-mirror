@@ -6,6 +6,11 @@
 #include "dev/banked.h"
 #include <string.h>
 
+/* Include Project Specific conf */
+#ifdef PROJECT_CONF_H
+#include "project-conf.h"
+#endif /* PROJECT_CONF_H */
+
 /*
  * To help syntax checkers with parsing of sdcc keywords. It basically defines
  * empty macros for keywords such as __sfr etc. Does nothing when compiling
@@ -83,9 +88,13 @@ typedef unsigned short clock_time_t;
  * It is harmless to #define XYZ 1
  * even if the sensor is not present on our device
  */
+#ifndef BUTTON_SENSOR_CONF_ON
 #define BUTTON_SENSOR_CONF_ON   1  /* Buttons */
+#endif
 /* ADC - Turning this off will disable everything below */
+#ifndef ADC_SENSOR_CONF_ON
 #define ADC_SENSOR_CONF_ON      1
+#endif
 #define TEMP_SENSOR_CONF_ON     1  /* Temperature */
 #define BATTERY_SENSOR_CONF_ON  1  /* Battery */
 #define VDD_SENSOR_CONF_ON      1  /* Supply Voltage */
@@ -103,13 +112,19 @@ typedef unsigned short clock_time_t;
 /* Network Stack */
 #if UIP_CONF_IPV6
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
+#ifndef NETSTACK_CONF_RDC
 #define NETSTACK_CONF_RDC     sicslowmac_driver
+#endif
 #else
 #define NETSTACK_CONF_NETWORK rime_driver
+#ifndef NETSTACK_CONF_RDC
 #define NETSTACK_CONF_RDC     nullrdc_driver
 #endif
+#endif
 
+#ifndef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     csma_driver
+#endif
 #define NETSTACK_CONF_RADIO   cc2430_rf_driver
 
 /* #define CC2420_CONF_AUTOACK                  1  // this is useful. check for similar in cc2430 */
