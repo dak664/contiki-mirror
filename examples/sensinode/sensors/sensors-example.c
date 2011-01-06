@@ -83,23 +83,30 @@
 
 #include "contiki.h"
 #include "contiki-conf.h"
-#include "dev/sensinode-sensors.h"
 #include "net/rime.h"
 #include "dev/leds.h"
 #include "dev/watchdog.h"
 #include "lib/random.h"
 
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
+#include "dev/sensinode-sensors.h"
+#else
+#include "lib/sensors.h"
+#endif
+
 #define DEBUG 1
 #if DEBUG
-#include "sensinode-debug.h"
 #include <stdio.h>
+#if CONTIKI_TARGET_SENSINODE
+#include "sensinode-debug.h"
+#endif /* CONTIKI_TARGET_SENSINODE */
 #define PRINTF(...) printf(__VA_ARGS__)
-#else
+#else /* DEBUG */
 /* We overwrite (read as annihilate) all output functions here */
 #define PRINTF(...)
 #define putstring(...)
 #define putchar(...)
-#endif
+#endif /* DEBUG */
 
 
 #define SEND_BATTERY_INFO 0

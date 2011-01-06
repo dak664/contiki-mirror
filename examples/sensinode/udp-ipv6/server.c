@@ -35,11 +35,16 @@
 
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
-#include "dev/sensinode-sensors.h"
-#include "sensinode-debug.h"
 #include "dev/watchdog.h"
 #include "dev/leds.h"
 #include "net/rpl/rpl.h"
+
+#if CONTIKI_TARGET_SENSINODE
+#include "dev/sensinode-sensors.h"
+#include "sensinode-debug.h"
+#else
+#define putstring(s)
+#endif
 
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
@@ -124,13 +129,18 @@ print_local_addresses(void)
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_server_process, ev, data)
 {
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
   static struct sensors_sensor *b1;
   static struct sensors_sensor *b2;
+#endif
 
   PROCESS_BEGIN();
   putstring("Starting UDP server\n");
+
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
   putstring("Button 1: Print RIME stats\n");
   putstring("Button 2: Reboot\n");
+#endif
 
 #if UIP_CONF_ROUTER
   uip_ip6addr(&ipaddr, 0x2001, 0x630, 0x301, 0x6453, 0, 0, 0, 0);
@@ -145,22 +155,25 @@ PROCESS_THREAD(udp_server_process, ev, data)
 
   PRINTF("Listen port: 3000, TTL=%u\n", server_conn->ttl);
 
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
   b1 = sensors_find(BUTTON_1_SENSOR);
   b2 = sensors_find(BUTTON_2_SENSOR);
+#endif
 
   while(1) {
     PROCESS_YIELD();
     if(ev == tcpip_event) {
       tcpip_handler();
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
     } else if(ev == sensors_event && data != NULL) {
       if(data == b1) {
         print_stats();
       } else if(data == b2) {
         watchdog_reboot();
       }
+#endif
     }
   }
-
 
   PROCESS_END();
 }

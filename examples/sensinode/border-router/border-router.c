@@ -36,8 +36,6 @@
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
 #include "net/rpl/rpl.h"
-#include "dev/sensinode-sensors.h"
-#include "sensinode-debug.h"
 #include "dev/watchdog.h"
 #include "dev/slip.h"
 
@@ -101,8 +99,6 @@ set_prefix_64(uip_ipaddr_t *prefix_64) {
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
-  static struct sensors_sensor *b1;
-  static struct sensors_sensor *b2;
   static struct etimer et;
   rpl_dag_t *dag;
 
@@ -125,21 +121,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 
   print_local_addresses();
 
-  b1 = sensors_find(BUTTON_1_SENSOR);
-  b2 = sensors_find(BUTTON_2_SENSOR);
-
-  while(1) {
-    PROCESS_YIELD();
-
-    if(ev == sensors_event && data != NULL) {
-        if(data == b1) {
-          print_stats();
-        } else if(data == b2) {
-          watchdog_reboot();
-        }
-      }
-    }
-
+  PROCESS_EXIT();
 
   PROCESS_END();
 }

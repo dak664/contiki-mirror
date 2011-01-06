@@ -32,9 +32,16 @@
 #include "contiki-net.h"
 
 #include <string.h>
-#include "sensinode-debug.h"
-#include "dev/sensinode-sensors.h"
 #include "dev/leds.h"
+
+#if CONTIKI_TARGET_SENSINODE
+#include "dev/sensinode-sensors.h"
+#include "sensinode-debug.h"
+#else
+#define putstring(s)
+#define puthex(s)
+#define putchar(s)
+#endif
 
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"

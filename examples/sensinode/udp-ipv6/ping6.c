@@ -30,9 +30,13 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
-#include "dev/sensinode-sensors.h"
 #include <string.h>
 #include <stdio.h>
+
+#if CONTIKI_TARGET_SENSINODE
+#include "dev/sensinode-sensors.h"
+#include "sensinode-debug.h"
+#endif
 
 #define DEBUG 0
 #if DEBUG
@@ -107,7 +111,9 @@ ping6handler()
 PROCESS_THREAD(ping6_process, ev, data)
 {
   
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
   static struct sensors_sensor * btn;
+#endif
 
   PROCESS_BEGIN();
   PRINTF("ping6 running.\n");
@@ -117,16 +123,21 @@ PROCESS_THREAD(ping6_process, ev, data)
   count = 0;
  
   /* Check if we have buttons */
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
   btn = sensors_find(BUTTON_1_SENSOR);
+#endif
 
   while(1) {
     PROCESS_YIELD();
 
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
     if(ev == sensors_event) {
       if(data == btn && count == 0) {
         ping6handler();
       }
-    } else if(etimer_expired(&ping6_periodic_timer)) {
+    }
+#endif
+    if(etimer_expired(&ping6_periodic_timer)) {
       ping6handler();
     }
   }
