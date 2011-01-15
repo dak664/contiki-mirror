@@ -12,6 +12,5 @@ This example is meant to be used with tunslip6 in tools/
   The node will use this address to obtain the network prefix
   
   for example:
-  sudo ./tunslip6 2001:470:55::1/64
-  This will use 2001:470:55:: / 64 as the prefix for the 15.4 network.
-  
+  sudo ./tunslip6 aaaa::1/64
+  This will use aaaa:: / 64 as the prefix for the 15.4 network.
