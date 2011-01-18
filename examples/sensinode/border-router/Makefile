@@ -17,7 +17,7 @@ MEMORY_MODEL=--model-huge
 
 PROJECT_SOURCEFILES += slip-bridge.c
 
-CONTIKI_PROJECT = border-router.c
+CONTIKI_PROJECT = border-router
 all: $(CONTIKI_PROJECT) 
 
 CONTIKI = ../../..
