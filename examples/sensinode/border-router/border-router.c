@@ -33,7 +33,7 @@
 
 #include <string.h>
 
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_PRINT
 #include "net/uip-debug.h"
 #include "net/rpl/rpl.h"
 #include "dev/watchdog.h"
@@ -53,11 +53,12 @@ print_local_addresses(void)
   int i;
   uint8_t state;
 
-  PRINTF("Server IPv6 addresses: ");
+  PRINTF("Router's IPv6 addresses:\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused && (state == ADDR_TENTATIVE || state
         == ADDR_PREFERRED)) {
+      PRINTF("  ");
       PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
       PRINTF("\n");
       /* Tentative -> Preferred to finialise our address */
@@ -116,7 +117,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   dag = rpl_set_root((uip_ip6addr_t *)dag_id);
   if(dag != NULL) {
     rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("created a new RPL dag\n");
+    PRINTF("Created a new RPL dag\n");
   }
 
   print_local_addresses();
