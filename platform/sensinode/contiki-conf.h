@@ -118,7 +118,7 @@ typedef unsigned short clock_time_t;
 #else
 #define NETSTACK_CONF_NETWORK rime_driver
 #ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
+#define NETSTACK_CONF_RDC     sicslowmac_driver
 #endif
 #endif
 
