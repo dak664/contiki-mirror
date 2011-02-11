@@ -60,6 +60,12 @@ static uip_ipaddr_t ipaddr;
 #endif
 
 #define SERVER_REPLY          1
+
+/* Should we act as RPL root? */
+#define SERVER_RPL_ROOT       1
+#if SERVER_RPL_ROOT
+uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
+#endif
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor adc_sensor;
 /*---------------------------------------------------------------------------*/
@@ -96,6 +102,7 @@ tcpip_handler(void)
   return;
 }
 /*---------------------------------------------------------------------------*/
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON && (DEBUG==DEBUG_PRINT))
 static void
 print_stats()
 {
@@ -104,6 +111,9 @@ print_stats()
   PRINTF("llrx=%lu, lltx=%lu, rx=%lu, tx=%lu\n",
       rimestats.llrx, rimestats.lltx, rimestats.rx, rimestats.tx);
 }
+#else
+#define print_stats()
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)
@@ -133,7 +143,9 @@ PROCESS_THREAD(udp_server_process, ev, data)
   static struct sensors_sensor *b1;
   static struct sensors_sensor *b2;
 #endif
-
+#if SERVER_RPL_ROOT
+  rpl_dag_t *dag;
+#endif
   PROCESS_BEGIN();
   putstring("Starting UDP server\n");
 
@@ -146,6 +158,15 @@ PROCESS_THREAD(udp_server_process, ev, data)
   uip_ip6addr(&ipaddr, 0x2001, 0x630, 0x301, 0x6453, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+
+#if SERVER_RPL_ROOT
+  dag = rpl_set_root((uip_ip6addr_t *)dag_id);
+  if(dag != NULL) {
+    uip_ip6addr(&ipaddr, 0x2001, 0x630, 0x301, 0x6453, 0, 0, 0, 0);
+    rpl_set_prefix(dag, &ipaddr, 64);
+    PRINTF("Created a new RPL dag\n");
+  }
+#endif /* SERVER_RPL_ROOT */
 #endif /* UIP_CONF_ROUTER */
 
   print_local_addresses();
@@ -171,7 +192,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
       } else if(data == b2) {
         watchdog_reboot();
       }
-#endif
+#endif /* (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON) */
     }
   }
 
