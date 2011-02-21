@@ -97,6 +97,11 @@ static const char tcp_name[] = /*  "tcp-connections"*/
 static const char proc_name[] = /*  "processes"*/
 {0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73,
  0x65, 0x73, 0};
+#if HTTPD_CONF_PASS_QUERY_STRING
+static const char tictactoe_name[] = /*  "tictactoe"*/
+{0x74, 0x69, 0x63, 0x74, 0x61, 0x63, 0x74,
+ 0x6f, 0x65, 0};
+#endif
 
 static const char *states[] = {
   closed,
@@ -227,6 +232,142 @@ PT_THREAD(processes(struct httpd_state *s, char *ptr))
   }
   PSOCK_END(&s->sout);
 }
+#if HTTPD_CONF_PASS_QUERY_STRING
+extern char httpd_query[HTTPD_CONF_PASS_QUERY_STRING];
+/*---------------------------------------------------------------------------*/
+static uint8_t whowon(char x) {
+
+  if (httpd_query[0]==x) {
+    if(((httpd_query[1]==x)&&(httpd_query[2]==x))
+    || ((httpd_query[4]==x)&&(httpd_query[8]==x))
+    || ((httpd_query[3]==x)&&(httpd_query[6]==x))){
+      return 1;
+    }
+  } else if (httpd_query[1]==x) {
+    if ((httpd_query[4]==x)&&(httpd_query[7]==x)) {
+      return 1;
+    }
+  } else if (httpd_query[2]==x) {
+    if(((httpd_query[4]==x)&&(httpd_query[6]==x))
+    || ((httpd_query[5]==x)&&(httpd_query[8]==x))){
+      return 1;
+    }
+  } else if (httpd_query[3]==x) {
+    if ((httpd_query[4]==x)&&(httpd_query[5]==x)) {
+      return 1;
+    }
+  } else if (httpd_query[6]==x) {
+    if ((httpd_query[7]==x)&&(httpd_query[8]==x)) {
+      return 1;
+    }
+  }
+ return 0;
+}
+/*---------------------------------------------------------------------------*/
+static unsigned short
+make_tictactoe(void *p)
+{
+  uint8_t i,newgame,iwon,uwon,nx,no;
+  char me,you,locater;
+  unsigned short numprinted=0;
+ 
+ /* If no query string restart game, else put into proper form */
+  newgame=0;httpd_query[9]=0;
+  if ((httpd_query[0]==0)||(httpd_query[0]==' ')) {
+    newgame=1;
+    for (i=0;i<9;i++) httpd_query[i]='b';
+  } else for (i=0;i<9;i++) {
+    if (!((httpd_query[i]=='x')||(httpd_query[i]=='o'))) {
+      httpd_query[i]='b';
+    }
+  }
+
+  /* I am x if I move first, or if number of x's is <= number of o's */
+  for (nx=0,no=0,i=0;i<9;i++) {
+    if (httpd_query[i]=='x') nx++;
+    else if (httpd_query[i]=='o') no++;
+  }
+  if ((no>=nx)&&!newgame) {me='x';you='o';}
+  else {me='o';you='x';};
+
+  iwon=whowon(me);
+  uwon=whowon(you);
+
+  if (newgame||iwon||uwon||(nx+no)>=9) goto showboard;
+ 
+  /* Make a move */
+  if (me=='x') nx++;else no++;
+  if (httpd_query[4]=='b') httpd_query[4]=me;
+  else if (httpd_query[0]=='b') httpd_query[0]=me;
+  else if (httpd_query[2]=='b') httpd_query[2]=me;
+  else if (httpd_query[6]=='b') httpd_query[6]=me;
+  else if (httpd_query[8]=='b') httpd_query[8]=me;
+   else if (httpd_query[1]=='b') httpd_query[1]=me;
+  else if (httpd_query[3]=='b') httpd_query[3]=me;
+  else if (httpd_query[5]=='b') httpd_query[5]=me;
+  else if (httpd_query[7]=='b') httpd_query[7]=me;
+  
+  /* Did I win? */
+  iwon=whowon(me);
+
+  showboard: 
+  for (i=0;i<9;i++) {
+  
+    if (i==4) locater='c';
+    else if ((i==1)||(i==7)) locater='v';
+    else if ((i==3)||(i==5)) locater='h';
+    else locater=0;
+    
+    if ((httpd_query[i]=='b')&&(!(iwon||uwon))) {
+        httpd_query[i]=you;
+        numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<a href=ttt.shtml?%s><img src=b",httpd_query);
+        httpd_query[i]='b';
+    } else {
+        numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<img src=%c",httpd_query[i]);
+    }
+    if (locater) {
+        numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "%c",locater);
+    }
+    numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, ".gif>");
+    if (httpd_query[i]=='b') {       
+        numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "</a>");       
+    }
+    if ((i==2)||(i==5)) {
+      numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<br>");
+    }
+  }
+  
+  if ((nx>(no+1))||(no>(nx+1))) {
+     numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<br><h2>You cheated!!!</h2>");
+  } else if (iwon) {
+     numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<br><h2>I Win!</h2>");
+  } else if (uwon) { 
+     numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<br><h2>You Win!</h2>");
+  } else if ((nx+no)==9) {
+     numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<br><h2>Draw!</h2>");
+  }
+  if (iwon||uwon||((nx+no)==9)) {
+       numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<br><a href=ttt.shtml>Play Again</a>");
+  }
+
+  /* If new game give option for me to start */
+  if ((nx==0)&&(no==0)) {
+     numprinted+=snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, "<br><br><a href=ttt.shtml?bbbbbbbb>Let computer move first</a>");
+  }
+  httpd_query[0]=0;  //zero the query string
+  printf("numprinted=%d\n",numprinted);
+  return numprinted;
+
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(tictactoe(struct httpd_state *s, char *ptr))
+{
+  PSOCK_BEGIN(&s->sout);
+  PSOCK_GENERATOR_SEND(&s->sout, make_tictactoe, s);
+  PSOCK_END(&s->sout);
+}
+#endif
 /*---------------------------------------------------------------------------*/
 void
 httpd_cgi_add(struct httpd_cgi_call *c)
@@ -246,6 +387,9 @@ httpd_cgi_add(struct httpd_cgi_call *c)
 HTTPD_CGI_CALL(file, file_name, file_stats);
 HTTPD_CGI_CALL(tcp, tcp_name, tcp_stats);
 HTTPD_CGI_CALL(proc, proc_name, processes);
+#if HTTPD_CONF_PASS_QUERY_STRING
+HTTPD_CGI_CALL(tictac, tictactoe_name, tictactoe);
+#endif
 
 void
 httpd_cgi_init(void)
@@ -253,5 +397,8 @@ httpd_cgi_init(void)
   httpd_cgi_add(&file);
   httpd_cgi_add(&tcp);
   httpd_cgi_add(&proc);
+#if HTTPD_CONF_PASS_QUERY_STRING
+  httpd_cgi_add(&tictac);
+#endif
 }
 /*---------------------------------------------------------------------------*/

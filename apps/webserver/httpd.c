@@ -51,6 +51,9 @@
 #else /* WEBSERVER_CONF_CGI_CONNS */
 #define CONNS WEBSERVER_CONF_CGI_CONNS
 #endif /* WEBSERVER_CONF_CGI_CONNS */
+#if HTTPD_CONF_PASS_QUERY_STRING
+char httpd_query[HTTPD_CONF_PASS_QUERY_STRING];
+#endif
 
 #define STATE_WAITING 0
 #define STATE_OUTPUT  1
@@ -65,6 +68,7 @@ MEMB(conns, struct httpd_state, CONNS);
 #define ISO_period  0x2e
 #define ISO_slash   0x2f
 #define ISO_colon   0x3a
+#define ISO_qmark   0x3f
 
 /*---------------------------------------------------------------------------*/
 static unsigned short
@@ -219,7 +223,7 @@ static
 PT_THREAD(handle_output(struct httpd_state *s))
 {
   char *ptr;
-  
+
   PT_BEGIN(&s->outputpt);
  
   if(!httpd_fs_open(s->filename, &s->file)) {
@@ -235,7 +239,12 @@ PT_THREAD(handle_output(struct httpd_state *s))
 		   send_headers(s,
 		   http_header_200));
     ptr = strrchr(s->filename, ISO_period);
+#if 1  /* Treat index.html as .shtml so it can have cgi calls */
+    if(ptr != NULL && (strncmp(ptr, http_shtml, 6) == 0
+    ||strncmp(ptr-1-sizeof(http_index_html)+sizeof(http_shtml), http_index_html, sizeof(http_index_html)) == 0)) {
+#else
     if(ptr != NULL && strncmp(ptr, http_shtml, 6) == 0) {
+#endif
       PT_INIT(&s->scriptpt);
       PT_WAIT_THREAD(&s->outputpt, handle_script(s));
     } else {
@@ -263,13 +272,44 @@ PT_THREAD(handle_input(struct httpd_state *s))
     PSOCK_CLOSE_EXIT(&s->sin);
   }
 
+  /* If no file name specified use default /[.../]index.html */
   if(s->inputbuf[1] == ISO_space) {
     strncpy(s->filename, http_index_html, sizeof(s->filename));
   } else {
+
+#if HTTPD_CONF_PASS_QUERY_STRING
+/* Query string is left in the buffer until zeroed by the application! */
+{uint8_t i;
+    for (i=0;i<sizeof(s->filename)+1;i++) {
+      if (s->inputbuf[i]==ISO_space) break;
+      if (s->inputbuf[i]==ISO_qmark) {
+         s->inputbuf[i]=0;
+         strncpy(httpd_query,&s->inputbuf[i+1],sizeof(httpd_query));
+      }
+    }
+}
+#endif
     s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
     strncpy(s->filename, s->inputbuf, sizeof(s->filename));
   }
-
+#if 1
+{uint8_t i;  
+    for (i=1;i<sizeof(s->filename);i++) {
+      if (s->filename[i]==ISO_space) break;
+      if (s->filename[i]==ISO_slash) {
+        if (s->filename[i+1]==0) {         
+          strncpy(&s->filename[i], http_index_html, sizeof(s->filename)-i);
+          break;
+        }
+      }
+    }
+}
+#endif
+#if 0
+  printf("filename=%s\n",s->filename);
+  if (httpd_query[0])  printf("query=%s\n",httpd_query);
+#endif
+      
   petsciiconv_topetscii(s->filename, sizeof(s->filename));
   webserver_log_file(&uip_conn->ripaddr, s->filename);
   petsciiconv_toascii(s->filename, sizeof(s->filename));
