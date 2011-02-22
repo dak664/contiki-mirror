@@ -2196,7 +2196,7 @@ uip_htons(u16_t val) __banked
 u32_t
 uip_htonl(u32_t val) __banked
 {
-  return UIP_HTONS(val);
+  return UIP_HTONL(val);
 }
 /*---------------------------------------------------------------------------*/
 void
