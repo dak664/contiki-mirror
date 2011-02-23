@@ -44,14 +44,17 @@ CONTIKI_TARGET_SOURCEFILES += n740-ser-par.c putchar.c
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 .SUFFIXES:
+# .sensinode target so we can behave similar to other targets
+# Will also print out interesting stats
+# Lastly, it will create a %-$(MODEL).ihx file
+%.$(TARGET): %.hex
+	cp $< $@
+	if [ -f $(<:.hex=.ihx) ] ; then cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi	
+	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${<:.hex=.map} | uniq
+	@egrep -A 5 'Other memory' ${<:.hex=.mem}
 
-%.upload: %.ihx
+%.upload: %.hex
 	$(PROG) -P $<
-
-%.model: %.ihx
-	@echo cp $< $(DROP_DIR)/sensinode-hexes/$(<:.ihx=-$(MODEL_SUFFIX).ihx)
-	@if [ -f $< ]; then cp $< $(DROP_DIR)/sensinode-hexes/$(<:.ihx=-$(MODEL_SUFFIX).ihx) ; fi
-	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${@:.model=.map} | uniq
 
 sensinode.serialdump:
 	$(SERIALDUMP)

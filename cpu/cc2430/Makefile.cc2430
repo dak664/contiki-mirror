@@ -6,21 +6,23 @@ AR	   = sdcclib
 OBJCOPY  = objcopy
 STRIP    = strip
 PACKIHX  = packihx
+CONVERTER_DIR = $(CONTIKI)/cpu/cc2430/converter
+CONVERTER = $(CONVERTER_DIR)/converter
 
-CFLAGS  += --std-c99 --stack-auto -DSDCC_CC2430
-LDFLAGS += --stack-auto -DSDCC_CC2430 --out-fmt-ihx 
-ASFLAGS += -plosgff
-ifdef MEMORY_MODEL
-CFLAGS += $(MEMORY_MODEL)
-LDFLAGS += $(MEMORY_MODEL)
-else 
-CFLAGS += --model-large
-LDFLAGS += --model-large
+ifndef MEMORY_MODEL
+MEMORY_MODEL=large
 endif
-LDFLAGS += --xram-loc 57344 --xram-size 7936
-##LDFLAGS += --verbose
-##LDFLAGS += -V
+
+CFLAGS  += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430
+CFLAGS  += --std-c99 
+
+LDFLAGS += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430
+LDFLAGS +=  --out-fmt-ihx --xram-loc 57344 --xram-size 7936 
+
+ASFLAGS += -plosgff
+
 AROPTS   = -a
+
 ifeq ($(HAVE_BANKING),1)
 #banking
 LDFLAGS += --code-size 0x20000 
@@ -33,27 +35,30 @@ LDFLAGS += -Wl-r
 CFLAGS += -DHAVE_SDCC_BANKING
 #use this in $(call code_segment,$<) to get segment for a source file.
 code_segment = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | perl ${CONTIKI_CPU}/segment.rules.pl $1 ) CSEG )
-FINAL_TARGET = %_linear.hex
-#bank switching file conversion 
-%_linear.hex: %.ihx
-	$(CONTIKI)/cpu/cc2430/converter/converter -f $< $@
 
-%.$(TARGET): %_linear.hex
-	cp ${@:.${TARGET}=_linear.hex} $@
-	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${@:.${TARGET}=.map} | uniq
-	@egrep -A 5 'Other memory' ${@:.${TARGET}=.mem}
+#bank switching file conversion 
+%.hex: %.ihx $(CONVERTER)
+	$(CONVERTER) -f $<
+
 else
 #no banking
 LDFLAGS += --code-loc 0000 --code-size 65500
 code_segment =
-FINAL_TARGET = %.hex
+
 %.hex: %.ihx
 	$(PACKIHX) $< > $@
 	
-%.$(TARGET): %.hex
-	cp ${@:.${TARGET}=.hex} $@
-	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${@:.${TARGET}=.map} | uniq
 endif 
+
+# When building with banking we need the converter
+# for ihx -> hex conversion. Make sure it's built so make doesn't bail out with an error
+converter: $(CONVERTER)
+
+converter-clean:
+	$(MAKE) --directory=$(CONVERTER_DIR) clean
+
+$(CONVERTER):
+	$(MAKE) --directory=$(CONVERTER_DIR) converter
 
 ### CPU-dependent cleanup files
 CLEAN += *.lnk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex *.sensinode
@@ -85,8 +90,7 @@ PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFI
 
 ### Compilation rules
 
-
-SEGMENT_RULE_FILES = ${foreach dir, . ${CONTIKI_PLATFORM_DIRS} ${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} } 
+SEGMENT_RULE_FILES = ${foreach dir, ${CONTIKI_PLATFORM_DIRS} ${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} } 
 ${OBJECTDIR}/segment.rules: ${SEGMENT_RULE_FILES}
 	echo ${SEGMENT_RULE_FILES}
 	cat ${SEGMENT_RULE_FILES} > $@
@@ -137,13 +141,12 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) $(CONTIKI_A
 	for target in $^; do echo $$target >> $@; done
 
 .PRECIOUS: %.$(TARGET)
-.PRECIOUS: %.ihx %.rel %_linear.hex %.hex %.ihex
+.PRECIOUS: %.ihx %.rel %.hex
 
 #build app/example local object files 
 %.rel: %.c
 	$(CC) $(CFLAGS) -DAUTOSTART_ENABLE -c $< -o $@
 
-%.ihex: %.ihx
 # .ihx is the sdcc binary output file
 %.ihx: %.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib
 	$(CC) $(LDFLAGS) -o $@ $(CONTIKI_TARGET_MAIN) $*.rel -llibsdcc.lib -lcontiki-$(TARGET).lib
