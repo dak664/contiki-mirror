@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 				*ptr = 0;
 			}
 		}
-		strcat(conf_opts.ihex_file, "_linear.hex");
+		strcat(conf_opts.ihex_file, ".hex");
  		printf("Output file: %s.\n", conf_opts.ihex_file);
 		ihex = fopen(conf_opts.ihex_file, "wb");
 		ext_addr=0;
