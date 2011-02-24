@@ -1,0 +1,7 @@
+# Segment rules file for the sensors-ipv6 example.
+# Doing the sensor reads and float operations inside sensors-ipv6.c results
+# in too much code in HOME.
+# We move this functionality to BANK2. On the downside, the function can
+# no longer be static. We just take this in the chin.
+
+BANK2 sensors-driver.c
