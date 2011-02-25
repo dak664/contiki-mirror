@@ -80,17 +80,6 @@ rtimer_arch_init(void)
   IEN1_T1IE = 1;
   PRINTF("IEN1_T1IE=0x%02x\n", IEN1_T1IE);
 
-  /* Timer 1, Channel 1, pin - output */
-  /* Check the Per I/O control (PERCFG bit 6) for the location of T1, Chan 1 */
-  if((PERCFG & T1CFG) == 0) {
-    /* Alternative 1 - P0_3 */
-    P0DIR |= 0x08;
-    PRINTF("(PERCFG & T1CFG)=0x%02x, P0DIR=0x%02x\n", (PERCFG & T1CFG), P0DIR);
-  } else {
-    /* Alternative 2 - P1_1*/
-    P1DIR |= 0x02;
-  }
-
   /* Timer 1, Channel 1. Compare Mode (0x04), Interrupt mask on (0x40) */
   T1CCTL1 = T1MODE + T1IM;
   PRINTF("T1CCTL1=0x%02x\n", T1CCTL1);
