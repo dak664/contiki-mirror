@@ -79,7 +79,7 @@ tcpip_handler(void)
   memset(buf, 0, MAX_PAYLOAD_LEN);
 
   if(uip_newdata()) {
-    leds_on(LEDS_RED);
+    leds_on(LEDS_GREEN);
     len = uip_datalen();
     memcpy(buf, uip_appdata, len);
     PRINTF("%u bytes from [", len, *(uint16_t *)buf);
@@ -97,7 +97,7 @@ tcpip_handler(void)
     uip_create_unspecified(&server_conn->ripaddr);
     server_conn->rport = 0;
   }
-  leds_off(LEDS_RED);
+  leds_off(LEDS_GREEN);
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -161,8 +161,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
 #if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
     } else if(ev == sensors_event && data != NULL) {
       if(data == b1) {
-        /* do something */
-        leds_toggle(LEDS_GREEN);
+        leds_toggle(LEDS_RED);
       } else if(data == b2) {
         watchdog_reboot();
       }

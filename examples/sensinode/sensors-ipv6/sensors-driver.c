@@ -227,10 +227,10 @@ read_sensor(char * rs) __banked
     }
   }
   if (r & REQUEST_BIT_LED_SET) {
-    leds_toggle(LEDS_GREEN);
+    leds_toggle(LEDS_RED);
   }
   if (r & REQUEST_BIT_LED_GET) {
-    uint8_t leds = leds_get() & LEDS_GREEN;
+    uint8_t leds = leds_get() & LEDS_RED;
     memcpy(rs + len, &leds, sizeof(leds));
     len += sizeof(leds);
     PRINTF(" LED 2=%u\n", leds);

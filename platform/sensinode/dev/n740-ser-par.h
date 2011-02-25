@@ -55,8 +55,8 @@
 #define N740_SER_PAR_ACC         0x08 /* Acceleration Sensor */
 #define N740_SER_PAR_RF_IN_GAIN  0x10 /* Receiver Amplifier, best not set */
 #define N740_SER_PAR_U5_ANALOGUE 0x20 /* U5 analog switch enable */
-#define N740_SER_PAR_LED_RED     0x40 /* Led 1 */
-#define N740_SER_PAR_LED_GREEN   0x80 /* Led 2 */
+#define N740_SER_PAR_LED_GREEN   0x40 /* Led 1 */
+#define N740_SER_PAR_LED_RED     0x80 /* Led 2 */
 
 void n740_ser_par_init(void) __banked;
 void n740_ser_par_set(uint8_t data) __banked ;

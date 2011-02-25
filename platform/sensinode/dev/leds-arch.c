@@ -34,18 +34,18 @@ leds_arch_get(void)
   uint8_t ser_par;
   ser_par = n740_ser_par_get();
   /* Check bits 7 & 8, ignore the rest */
-  if(ser_par & N740_SER_PAR_LED_RED) {
-    l |= LEDS_RED;
-  }
   if(ser_par & N740_SER_PAR_LED_GREEN) {
     l |= LEDS_GREEN;
   }
-#else
-  if(LED1_PIN) {
+  if(ser_par & N740_SER_PAR_LED_RED) {
     l |= LEDS_RED;
   }
-  if(LED2_PIN) {
+#else
+  if(LED1_PIN) {
     l |= LEDS_GREEN;
+  }
+  if(LED2_PIN) {
+    l |= LEDS_RED;
   }
 #endif
   return l;
@@ -59,28 +59,28 @@ leds_arch_set(unsigned char leds)
    * the remaining bit values should be retained */
   static uint8_t ser_par;
   ser_par = n740_ser_par_get();
-  if(leds & LEDS_RED) {
-    ser_par |= N740_SER_PAR_LED_RED; /* Set bit 7 */
+  if(leds & LEDS_GREEN) {
+    ser_par |= N740_SER_PAR_LED_GREEN; /* Set bit 7 */
   } else {
-    ser_par &= ~N740_SER_PAR_LED_RED; /* Unset bit 7 */
+    ser_par &= ~N740_SER_PAR_LED_GREEN; /* Unset bit 7 */
   }
 
-  if(leds & LEDS_GREEN) {
-    ser_par |= N740_SER_PAR_LED_GREEN; /* Set bit 8 */
+  if(leds & LEDS_RED) {
+    ser_par |= N740_SER_PAR_LED_RED; /* Set bit 8 */
   } else {
-    ser_par &= ~N740_SER_PAR_LED_GREEN; /* Unset bit 8 */
+    ser_par &= ~N740_SER_PAR_LED_RED; /* Unset bit 8 */
   }
 
   /* Write the new status back to the chip */
   n740_ser_par_set(ser_par);
 #else
-  if(leds & LEDS_RED) {
+  if(leds & LEDS_GREEN) {
     LED1_PIN = 1;
   } else {
     LED1_PIN = 0;
   }
 
-  if(leds & LEDS_GREEN) {
+  if(leds & LEDS_RED) {
     LED2_PIN = 1;
   } else {
     LED2_PIN = 0;
