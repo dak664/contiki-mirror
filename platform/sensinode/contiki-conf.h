@@ -31,7 +31,9 @@ typedef unsigned short clock_time_t;
 #define LOG_CONF_ENABLED		0
 
 /* Energest Module */
-#define ENERGEST_CONF_ON      1
+#ifndef ENERGEST_CONF_ON
+#define ENERGEST_CONF_ON      0
+#endif
 
 /* Verbose Startup? Turning this off saves 700+ bytes of CODE in HOME */
 #define STARTUP_CONF_VERBOSE  0
