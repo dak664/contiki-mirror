@@ -10,7 +10,7 @@ HAVE_BANKING=1
 UIP_CONF_IPV6=1
 
 # Use the huge memory model although large will work just as well
-MEMORY_MODEL=--model-large
+MEMORY_MODEL=large
 
 CONTIKI_SOURCEFILES += sensors-driver.c
 
