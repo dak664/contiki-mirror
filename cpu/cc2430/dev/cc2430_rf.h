@@ -12,7 +12,9 @@
 #include "contiki.h"
 #include "dev/radio.h"
 #include "cc2430_sfr.h"
+#if HAVE_RF_DMA
 #include "dev/dma.h"
+#endif
 
 /* Constants */
 typedef enum rf_address_mode_t
