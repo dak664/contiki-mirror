@@ -13,7 +13,7 @@ UIP_CONF_IPV6=1
 CFLAGS += -DUIP_CONF_ROUTER=1 -DSLIP_ARCH_CONF_ENABLE=1
 
 # Use the large memory model because we are using printfs
-MEMORY_MODEL=--model-large
+MEMORY_MODEL=large
 
 PROJECT_SOURCEFILES += slip-bridge.c
 
