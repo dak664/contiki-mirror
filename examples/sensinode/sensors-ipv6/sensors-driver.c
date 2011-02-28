@@ -66,7 +66,8 @@
 #define SENSOR_UNKNOWN -2
 
 /* Request Bits */
-#define REQUEST_BIT_LED_SET   0x0100
+#define REQUEST_BIT_L2_SET    0x0200
+#define REQUEST_BIT_L1_SET    0x0100
 #define REQUEST_BIT_LED_GET   0x0080
 #define REQUEST_BIT_ACC       0x0040
 #define REQUEST_BIT_BAT       0x0020
@@ -226,11 +227,14 @@ read_sensor(char * rs) __banked
       len += sizeof(rv);
     }
   }
-  if (r & REQUEST_BIT_LED_SET) {
+  if (r & REQUEST_BIT_L1_SET) {
+    leds_toggle(LEDS_GREEN);
+  }
+  if (r & REQUEST_BIT_L2_SET) {
     leds_toggle(LEDS_RED);
   }
   if (r & REQUEST_BIT_LED_GET) {
-    uint8_t leds = leds_get() & LEDS_RED;
+    uint8_t leds = leds_get();
     memcpy(rs + len, &leds, sizeof(leds));
     len += sizeof(leds);
     PRINTF(" LED 2=%u\n", leds);

@@ -79,7 +79,6 @@ tcpip_handler(void)
   memset(buf, 0, MAX_PAYLOAD_LEN);
 
   if(uip_newdata()) {
-    leds_on(LEDS_GREEN);
     len = uip_datalen();
     memcpy(buf, uip_appdata, len);
     PRINTF("%u bytes from [", len);
@@ -97,7 +96,6 @@ tcpip_handler(void)
     uip_create_unspecified(&server_conn->ripaddr);
     server_conn->rport = 0;
   }
-  leds_off(LEDS_GREEN);
   return;
 }
 /*---------------------------------------------------------------------------*/
@@ -134,8 +132,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
   putstring("Starting UDP server\n");
 
 #if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
-  putstring("Button 1: Toggle L2\n");
-  putstring("Button 2: Reboot\n");
+  putstring("Button X: Toggle LED X\n");
 #endif
 
 #if UIP_CONF_ROUTER
@@ -161,9 +158,9 @@ PROCESS_THREAD(udp_server_process, ev, data)
 #if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
     } else if(ev == sensors_event && data != NULL) {
       if(data == b1) {
-        leds_toggle(LEDS_RED);
+        leds_toggle(LEDS_GREEN);
       } else if(data == b2) {
-        watchdog_reboot();
+        leds_toggle(LEDS_RED);
       }
 #endif /* (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON) */
     }
