@@ -154,9 +154,6 @@ typedef unsigned short clock_time_t;
 
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER       10000
-#define UIP_CONF_ND6_MAX_PREFIXES            3
-#define UIP_CONF_ND6_MAX_NEIGHBORS           4
-#define UIP_CONF_ND6_MAX_DEFROUTERS          2
 #define UIP_CONF_DS6_NBR_NBU                 4 /* Handle 4 Neighbors */
 #define UIP_CONF_DS6_ROUTE_NBU               4 /* Handle 4 Routes */
 
