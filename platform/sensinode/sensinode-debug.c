@@ -26,11 +26,9 @@ static const char binconv[] = "01";
 void
 putstring(char *s) __banked
 {
-#if UART_ONE_ENABLE
   while(*s) {
     putchar(*s++);
   }
-#endif
 }
 /*---------------------------------------------------------------------------*/
 void
