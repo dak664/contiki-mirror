@@ -49,7 +49,6 @@
 #include "sys/energest.h"
 #include "dev/banked.h"
 
-#if BUTTON_SENSOR_ON || ADC_SENSOR_ON
 const struct sensors_sensor *sensors[] = {
 #if ADC_SENSOR_ON
     &adc_sensor,
@@ -62,7 +61,6 @@ const struct sensors_sensor *sensors[] = {
 };
 
 unsigned char sensors_flags[(sizeof(sensors) / sizeof(struct sensors_sensor *))];
-#endif
 
 /*---------------------------------------------------------------------------*/
 void
