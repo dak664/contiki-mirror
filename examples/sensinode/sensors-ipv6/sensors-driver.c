@@ -66,6 +66,7 @@
 #define SENSOR_UNKNOWN -2
 
 /* Request Bits */
+#define REQUEST_BIT_P0_GET    0x0400
 #define REQUEST_BIT_L2_SET    0x0200
 #define REQUEST_BIT_L1_SET    0x0100
 #define REQUEST_BIT_LED_GET   0x0080
@@ -238,6 +239,11 @@ read_sensor(char * rs) __banked
     memcpy(rs + len, &leds, sizeof(leds));
     len += sizeof(leds);
     PRINTF(" LED 2=%u\n", leds);
+  }
+  if (r & REQUEST_BIT_P0_GET) {
+    uint8_t p0 = P0_3;
+    memcpy(rs + len, &p0, sizeof(p0));
+    len += sizeof(p0);
   }
   return len;
 }
