@@ -43,20 +43,6 @@ n740_ser_par_init() __banked
   uint8_t new_status;
   P1DIR |= 0x0A;
   P0DIR |= 0x04;
-  new_status = N740_SER_PAR_CHIP_SEL;
-
-  /* Turn on Acc, Light, Buttons if enabled in conf */
-#if ACC_SENSOR_ON
-  P0SEL |= 0x80 | 0x40 | 0x20;
-  new_status |= N740_SER_PAR_ACC;
-#if ACC_SENSOR_GSEL
-  new_status |= N740_SER_PAR_ACC_GSEL;
-#endif /*ACC_SENSOR_GSEL */
-#endif /*ACC_SENSOR_ON */
-
-#if LIGHT_SENSOR_ON
-  new_status |= N740_SER_PAR_LIGHT;
-#endif
 
   n740_ser_par_set(new_status);
 }
