@@ -51,11 +51,10 @@ void
 n740_ser_par_init() __banked
 {
   /* bus_init and uart1_init also touch the I/O direction for those pins */
-  uint8_t new_status;
   P1DIR |= 0x0A;
   P0DIR |= 0x04;
 
-  n740_ser_par_set(new_status);
+  n740_ser_par_set(0);
 }
 
 /*---------------------------------------------------------------------------*/
