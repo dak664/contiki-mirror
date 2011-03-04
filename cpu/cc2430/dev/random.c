@@ -46,7 +46,6 @@
  */
 #include "cc2430_sfr.h"
 #include "dev/cc2430_rf.h"
-#include "dev/banked.h"
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      Generates a new random number using the cc2430 RNG.
