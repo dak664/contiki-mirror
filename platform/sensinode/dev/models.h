@@ -1,6 +1,8 @@
 #ifndef __MODELS_H__
 #define __MODELS_H__
 
+#include "dev/banked.h"
+
 /* Define model text */
 #ifdef MODEL_N100
 #define SENSINODE_MODEL "N100 Module (CC2431-F128)"
