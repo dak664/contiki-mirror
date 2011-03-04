@@ -156,10 +156,12 @@ main(void)
   bus_init();
   rtimer_init();
 
-#ifdef MODEL_N740
-  /* Init the serial-parallel chip for N740s. This will also 'init' LEDs */
-  n740_ser_par_init();
-#endif
+  /* Init UART1 without acknowledging the RX interrupt */
+  uart1_init(115200, UART_RX_INT_OFF);
+
+  /* model-specific h/w init. This will turn on UART interrupts if needed */
+  model_init();
+
   /* Init LEDs here  for all other models (will do nothing for N740) */
   leds_init();
   fade(LEDS_GREEN);
@@ -167,7 +169,6 @@ main(void)
   /* initialize process manager. */
   process_init();
 
-  uart1_init(115200);
 #if SLIP_ARCH_CONF_ENABLE
   /* On cc2430, the argument is not used. We always use 115200 */
   slip_arch_init(0);

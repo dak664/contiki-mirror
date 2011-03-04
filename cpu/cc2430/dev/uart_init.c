@@ -22,7 +22,7 @@
 #if UART_ZERO_ENABLE
 /*---------------------------------------------------------------------------*/
 void
-uart0_init(uint32_t speed) __banked
+uart0_init(uint32_t speed, uint8_t rx_int) __banked
 {
   if(speed == 115200) {
     U0BAUD=216;	/*115200*/
@@ -73,14 +73,16 @@ uart0_init(uint32_t speed) __banked
   IP1 |= IP1_3;
   IP0 |= IP0_3;
   
+  if(rx_int) {
   IEN0_URX0IE = 1;
+}
 }
 #endif
 #if UART_ONE_ENABLE
 /*---------------------------------------------------------------------------*/
 /* UART1 initialization */
 void
-uart1_init(uint32_t speed) __banked
+uart1_init(uint32_t speed, uint8_t rx_int) __banked
 {
 #ifdef UART1_ALTERNATIVE_1
   PERCFG &= ~U1CFG;	/*alternative port 1 = P0.5-2*/
@@ -131,16 +133,9 @@ uart1_init(uint32_t speed) __banked
   IP1 |= IP1_3;
   IP0 |= IP0_3;
   
-  /*
-   * Dirty, ugly hack for the N740 USART1 RX issue:
-   * When our USB is not connected, RX starts flowing down pin 1.7 (and the
-   * line stays low). So, we only turn on the USART1 RX ISR when the line is
-   * high (thus we are on USB).
-   */
-#ifdef MODEL_N740
-  if(P1_7 == 1)
-#endif
+  if(rx_int) {
   IEN0_URX1IE = 1;	/* Enable the RX interrupt */
+}
 }
 /*---------------------------------------------------------------------------*/
 #endif

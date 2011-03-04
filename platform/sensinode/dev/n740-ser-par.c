@@ -1,12 +1,23 @@
 /**
  * \file
- *   This files provides functions to control the 74HC595D chip on the
- *   Sensinode N740s. This is an 8-bit serial in-parallel out shift register.
+ *   This files provides functions to control various chips on the
+ *   Sensinode N740s:
  *
+ *   - The 74HC595D is an 8-bit serial in-parallel out shift register.
  *   LEDs are connected to this chip. It also serves other functions such as
  *   enabling/disabling the Accelerometer (see n740-ser-par.h).
+ *   - The 74HC4053D is a triple, 2-channel analog mux/de-mux.
+ *     It switches I/O between the USB and the D-Connector.
+ *     It also controls P0_0 input source (Light Sensor / External I/O)
  *
- *   We can:
+ *   Mux/De-mux: Connected to P0_3 (set to output in models.c
+ *     Changing the state of the mux/demux can have catastrophic (tm) results
+ *     on our software. If we are not careful, we risk entering a state where
+ *     UART1 RX interrupts are being generated non-stop. Only change its state
+ *     via the function in this file.
+ *
+ *   Shift Register:
+ *     For the shift register we can:
  *     - write a new instruction
  *     - remember and retrieve the last instruction sent
  *
@@ -22,8 +33,8 @@
  */
 
 #include "dev/banked.h"
-#include "dev/sensinode-sensors.h"
 #include "dev/n740-ser-par.h"
+#include "dev/uart.h"
 
 /*
  * This variable stores the most recent instruction sent to the ser-par chip.
@@ -59,7 +70,7 @@ n740_ser_par_set(uint8_t data) __banked
   uint8_t mask = 1;
   uint8_t temp = 0;
 
-  ENTER_CRITICAL();
+  DISABLE_INTERRUPTS();
   /* bit-by-bit */
   for(i = 0; i < 8; i++) {
     temp = (data & mask);
@@ -78,12 +89,11 @@ n740_ser_par_set(uint8_t data) __banked
   /* Move to Par-Out */
   P1_1 = 1;
   P1_1 = 0;
-  EXIT_CRITICAL();
+  ENABLE_INTERRUPTS();
 
   /* Right, we're done. Save the new status in ser_par_status */
   ser_par_status = data;
 }
-
 /*---------------------------------------------------------------------------*/
 /* This function returns the last value sent to the ser-par chip on the N740.
  *
@@ -97,4 +107,22 @@ uint8_t
 n740_ser_par_get() __banked
 {
   return ser_par_status;
+}
+/*---------------------------------------------------------------------------*/
+void
+n740_analog_switch(uint8_t state) __banked
+{
+  /* Turn off the UART RX interrupt before switching */
+  DISABLE_INTERRUPTS();
+  UART1_RX_INT(0);
+
+  /* Switch */
+  P0_3 = state;
+
+  /* If P0_3 now points to the USB and nothing is flowing down P1_7,
+   * enable the interrupt again */
+  if(P1_7 == 1 && P0_3 == 0) {
+    UART1_RX_INT(1);
+  }
+  ENABLE_INTERRUPTS();
 }
