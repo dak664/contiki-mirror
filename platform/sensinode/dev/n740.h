@@ -61,5 +61,6 @@
 void n740_ser_par_init(void) __banked;
 void n740_ser_par_set(uint8_t data) __banked ;
 uint8_t n740_ser_par_get(void) __banked;
+void n740_analog_switch(uint8_t state) __banked;
 
 #endif /* N740SERPAR_H_ */
