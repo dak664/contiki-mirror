@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "8051def.h"
 #include "dev/banked.h"
 #include "cc2430_sfr.h"
 

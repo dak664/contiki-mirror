@@ -4,6 +4,7 @@
 #include "contiki-conf.h"
 
 #include "cc2430_sfr.h"
+#include "8051def.h"
 
 #ifdef UART_ZERO_CONF_ENABLE
 #define UART_ZERO_ENABLE UART_ZERO_CONF_ENABLE
