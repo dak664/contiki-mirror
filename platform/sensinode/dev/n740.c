@@ -4,8 +4,8 @@
  *   Sensinode N740s:
  *
  *   - The 74HC595D is an 8-bit serial in-parallel out shift register.
- *   LEDs are connected to this chip. It also serves other functions such as
- *   enabling/disabling the Accelerometer (see n740-ser-par.h).
+ *     LEDs are connected to this chip. It also serves other functions such as
+ *     enabling/disabling the Accelerometer (see n740.h).
  *   - The 74HC4053D is a triple, 2-channel analog mux/de-mux.
  *     It switches I/O between the USB and the D-Connector.
  *     It also controls P0_0 input source (Light Sensor / External I/O)
@@ -21,10 +21,10 @@
  *     - write a new instruction
  *     - remember and retrieve the last instruction sent
  *
- *   The chip is connected to CPU pins as follows:
- *   - P0_2: Serial Data Input
- *   - P1_3: Shift Register Clock Input
- *   - P1_1: Storage Register Clock
+ *     The chip is connected to CPU pins as follows:
+ *     - P0_2: Serial Data Input
+ *     - P1_3: Shift Register Clock Input
+ *     - P1_1: Storage Register Clock
  *
  *   This file can be placed in any bank.
  *
@@ -33,7 +33,7 @@
  */
 
 #include "dev/banked.h"
-#include "dev/n740-ser-par.h"
+#include "dev/n740.h"
 #include "dev/uart.h"
 
 /*

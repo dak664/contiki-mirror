@@ -31,7 +31,7 @@
  * Defines and functions to control it
  */
 #ifdef MODEL_N740
-#include "dev/n740-ser-par.h"
+#include "dev/n740.h"
 
 #else
 /* All other models use these LED pins */

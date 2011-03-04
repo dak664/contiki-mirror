@@ -39,7 +39,7 @@ CONTIKI_TARGET_SOURCEFILES = contiki-sensinode-main.c \
                              leds.c leds-arch.c serial-line.c sensinode-debug.c
 
 CONTIKI_TARGET_SOURCEFILES += sensors.c sensinode-sensors.c button-sensor.c adc-sensor.c
-CONTIKI_TARGET_SOURCEFILES += n740-ser-par.c putchar.c models.c
+CONTIKI_TARGET_SOURCEFILES += n740.c putchar.c models.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
