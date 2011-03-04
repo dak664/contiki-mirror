@@ -31,6 +31,7 @@ static int len;
 #define STARTUP_VERBOSE 0
 #endif
 
+static __data int r;
 /*---------------------------------------------------------------------------*/
 static void
 fade(int l)
@@ -260,7 +261,6 @@ main(void)
   watchdog_start();
 
   while(1) {
-    int r;
     do {
       /* Reset watchdog and handle polls and events */
       watchdog_periodic();
