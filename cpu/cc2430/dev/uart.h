@@ -23,8 +23,8 @@ void uart0_writeb(uint8_t byte);
 
 void uart0_set_input(int (*input)(unsigned char c));
 
-void uart0_rxISR( void ) __interrupt (URX0_VECTOR);
-void uart0_txISR( void ) __interrupt (UTX0_VECTOR);
+void uart0_rx_ISR( void ) __interrupt (URX0_VECTOR);
+void uart0_tx_ISR( void ) __interrupt (UTX0_VECTOR);
 #endif
 
 #if UART_ONE_ENABLE
@@ -33,8 +33,8 @@ void uart1_writeb(uint8_t byte);
 
 void uart1_set_input(int (*input)(unsigned char c));
 
-void uart1_rxISR( void ) __interrupt (URX1_VECTOR);
-void uart1_txISR( void ) __interrupt (UTX1_VECTOR);
+void uart1_rx_ISR( void ) __interrupt (URX1_VECTOR);
+void uart1_tx_ISR( void ) __interrupt (UTX1_VECTOR);
 #else
 #define uart1_init(...)
 #define uart1_writeb(...)

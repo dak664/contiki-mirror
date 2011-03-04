@@ -36,7 +36,7 @@ uart0_set_input(int (*input)(unsigned char c))
 
 /*---------------------------------------------------------------------------*/
 void
-uart0_rxISR(void) __interrupt (URX0_VECTOR)
+uart0_rx_ISR(void) __interrupt (URX0_VECTOR)
 {
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   TCON_URX0IF = 0;
@@ -47,7 +47,7 @@ uart0_rxISR(void) __interrupt (URX0_VECTOR)
 }
 /*---------------------------------------------------------------------------*/
 void
-uart0_txISR( void ) __interrupt (UTX0_VECTOR)
+uart0_tx_ISR( void ) __interrupt (UTX0_VECTOR)
 {
 }
 #endif
@@ -60,7 +60,7 @@ uart1_set_input(int (*input)(unsigned char c))
 }
 /*---------------------------------------------------------------------------*/
 void
-uart1_rxISR(void) __interrupt (URX1_VECTOR)
+uart1_rx_ISR(void) __interrupt (URX1_VECTOR)
 {
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
   TCON_URX1IF = 0;
@@ -71,7 +71,7 @@ uart1_rxISR(void) __interrupt (URX1_VECTOR)
 }
 /*---------------------------------------------------------------------------*/
 void
-uart1_txISR( void ) __interrupt (UTX1_VECTOR)
+uart1_tx_ISR( void ) __interrupt (UTX1_VECTOR)
 {
 }
 /*---------------------------------------------------------------------------*/
