@@ -58,7 +58,7 @@ value(int type)
   uint16_t reading;
   /*
    * For single-shot AD conversions, we may only write to ADCCON3[3:0] once
-   * (This write triggers the conversion). We thus use the varialble 'command'
+   * (This write triggers the conversion). We thus use the variable 'command'
    * to store intermediate steps (reference, decimation rate, input channel)
    */
   uint8_t command;
@@ -107,7 +107,6 @@ value(int type)
   case ADC_SENSOR_TYPE_BATTERY:
     ADCCFG = ADC1EN;
     command |= ADECH0 | ADEREF1; /* AVDD_SOC reference */
-    //command |= ADECH0;           /* 1.25V Reference */
     break;
 #endif
   default:
@@ -139,62 +138,79 @@ value(int type)
 static int
 status(int type)
 {
-  switch(type) {
-  case SENSORS_ACTIVE:
-  case SENSORS_READY:
     return ready;
   }
-  return 0;
-}
 /*---------------------------------------------------------------------------*/
+/*
+ * On N740 we can control Ill and Acc individually:
+ * ADC_VAL_OTHERS     0x01
+ * ADC_VAL_LIGHT_ON   0x04
+ * ADC_VAL_ACC_ON     0x08
+ * ADC_VAL_ACC_GSEL   0x10
+ *
+ * Return Value is always light | acc | acc_gsel
+ *
+ * SENSORS_ACTIVE:
+ *   - 1: Activate everything, use default setting for ACC G-select
+ *   - 0: Turn everything off
+ *   - xyz: Mask with the defines above and act accordingly.
+ *
+ * SENSORS_READY:
+ *   - Return Status (0: all off or a value based on the defines above)
+ */
 static int
 configure(int type, int value)
 {
 #ifdef MODEL_N740
-  uint8_t ser_par_val = n740_ser_par_get();
+  /*
+   * Read current state of the ser-par, ignoring current sensor settings
+   * Those will be set all over depending on VALUE
+   */
+  uint8_t ser_par_val = n740_ser_par_get() & 0xF2;
 #endif /* MODEL_N740 */
+
+  /* 'Others' are either compiled in or not. Can't be turned on/off */
+  ready = ADC_VAL_ALL;
 
   switch(type) {
   case SENSORS_HW_INIT:
-#ifdef MODEL_N740
-#if LIGHT_SENSOR_ON
-    P0_3 = 0; /* Important for Light on N740*/
-#endif /* LIGHT_SENSOR_ON */
-#endif /* MODEL_N740 */
-
   case SENSORS_ACTIVE:
-    if(value == 1) {
-      /* Turn on Acc and Light through ser-par on N740 */
 #ifdef MODEL_N740
-#if ACC_SENSOR_ON
-      ser_par_val |= N740_SER_PAR_ACC;
-#endif /* ACC_SENSOR_ON */
-
-#if LIGHT_SENSOR_ON
-      ser_par_val |= N740_SER_PAR_LIGHT;
-#endif /* LIGHT_SENSOR_ON */
-
-      n740_ser_par_set(ser_par_val);
-#endif /* MODEL_N740 */
-      ready = 1;
-
-    } else if(value == 0) {
-#ifdef MODEL_N740
-#if ACC_SENSOR_ON
-      ser_par_val &= ~N740_SER_PAR_ACC;
-#endif /* ACC_SENSOR_ON */
-
-#if LIGHT_SENSOR_ON
-      ser_par_val &= ~N740_SER_PAR_LIGHT;
-#endif /* LIGHT_SENSOR_ON */
-
-      n740_ser_par_set(ser_par_val);
-#endif /* MODEL_N740 */
-      ready = 0;
+    if(value == ADC_VAL_ALL) {
+      value = ADC_VAL_ACC_ON | ADC_VAL_LIGHT_ON;
+#if ACC_SENSOR_GSEL
+      value |= ADC_VAL_ACC_GSEL;
+#endif /* ACC_SENSOR_GSEL */
     }
-      return 1;
-  }
-  return 0;
+#endif /* MODEL_N740 */
+
+    /* OK, Now value definitely specifies our bits, start masking
+     * We will refuse to turn things on if they are specified OFF in conf. */
+#ifdef MODEL_N740
+#if ACC_SENSOR_ON
+    if(value & ADC_VAL_ACC_ON) {
+      P0SEL |= 0x80 | 0x40 | 0x20;
+      ser_par_val |= N740_SER_PAR_ACC;
+      ready |= ADC_VAL_ACC_ON;
+#if ACC_SENSOR_GSEL
+      if(value & ADC_VAL_ACC_GSEL) {
+        ser_par_val |= N740_SER_PAR_ACC_GSEL;
+        ready |= ADC_VAL_ACC_GSEL;
+      }
+#endif /*ACC_SENSOR_GSEL */
+    }
+#endif /* ACC_SENSOR_ON */
+
+#if LIGHT_SENSOR_ON
+    if(value & ADC_VAL_LIGHT_ON) {
+      ser_par_val |= N740_SER_PAR_LIGHT;
+      ready |= ADC_VAL_LIGHT_ON;
+    }
+#endif /* LIGHT_SENSOR_ON */
+      n740_ser_par_set(ser_par_val);
+#endif /* MODEL_N740 */
+    }
+  return ready;
 }
 
 #endif /* ADC_SENSOR_ON */

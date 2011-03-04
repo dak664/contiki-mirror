@@ -67,6 +67,13 @@ void sensinode_sensors_deactivate() __banked;
 #define ADC_SENSOR_TYPE_LIGHT   5
 #define ADC_SENSOR_TYPE_BATTERY 6
 
+/* Defines to help us control Acc and Ill individually */
+#define  ADC_VAL_NONE       0x00
+#define  ADC_VAL_ALL        0x01
+#define  ADC_VAL_LIGHT_ON   0x04
+#define  ADC_VAL_ACC_ON     0x08
+#define  ADC_VAL_ACC_GSEL   0x10
+
 #ifdef ADC_SENSOR_CONF_ON
 #define ADC_SENSOR_ON ADC_SENSOR_CONF_ON
 #endif /* ADC_SENSOR_CONF_ON */
