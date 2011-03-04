@@ -9,6 +9,7 @@ HOME contiki-sensinode-main.c
 
 # These are safe to put in whatever bank
 BANK3 n740-ser-par.c 			
+BANK3 models.c
 
 # Debugging functions
 HOME putchar.c            # Keep putchar() in HOME.
