@@ -38,6 +38,7 @@
 #include "net/rpl/rpl.h"
 #include "dev/watchdog.h"
 #include "dev/slip.h"
+#include "dev/leds.h"
 
 static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
@@ -78,15 +79,6 @@ request_prefix(void) {
   slip_send();
 }
 /*---------------------------------------------------------------------------*/
-static void
-print_stats()
-{
-  PRINTF("tl=%lu, ts=%lu, bs=%lu, bc=%lu\n",
-      rimestats.toolong, rimestats.tooshort, rimestats.badsynch, rimestats.badcrc);
-  PRINTF("llrx=%lu, lltx=%lu, rx=%lu, tx=%lu\n",
-      rimestats.llrx, rimestats.lltx, rimestats.rx, rimestats.tx);
-}
-/*---------------------------------------------------------------------------*/
 /* Set our prefix when we receive one over SLIP */
 void
 set_prefix_64(uip_ipaddr_t *prefix_64) {
@@ -107,10 +99,15 @@ PROCESS_THREAD(border_router_process, ev, data)
   PRINTF("Border Router started\n");
   prefix_set = 0;
 
+  leds_on(LEDS_RED);
+
   /* Request prefix until it has been received */
   while(!prefix_set) {
+    leds_on(LEDS_GREEN);
+    PRINTF("Prefix request.\n");
     etimer_set(&et, CLOCK_SECOND);
     request_prefix();
+    leds_off(LEDS_GREEN);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
 
@@ -121,6 +118,8 @@ PROCESS_THREAD(border_router_process, ev, data)
   }
 
   print_local_addresses();
+
+  leds_off(LEDS_RED);
 
   PROCESS_EXIT();
 
