@@ -18,11 +18,10 @@
 #include "contiki-lib.h"
 #include "contiki-net.h"
 
-static volatile int i, a;
 unsigned short node_id = 0;			/* Manually sets MAC address when > 0 */
 
 #if SHORTCUTS_CONF_NETSTACK
-static int len;
+static __data int len;
 #endif
 
 #ifdef STARTUP_CONF_VERBOSE
@@ -36,6 +35,7 @@ static __data int r;
 static void
 fade(int l)
 {
+  volatile int i, a;
   int k, j;
   for(k = 0; k < 400; ++k) {
     j = k > 200? 400 - k: k;
