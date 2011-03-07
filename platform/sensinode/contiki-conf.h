@@ -52,8 +52,12 @@ typedef unsigned short clock_time_t;
  * UART1 RX interrupts accordingly. This seems to work but you have been warned
  * If you start seeing random crashes when on battery, this is where to look.
  */
+#ifndef UART_ONE_CONF_ENABLE
 #define UART_ONE_CONF_ENABLE  1
+#endif
+#ifndef UART_ONE_CONF_WITH_INPUT
 #define UART_ONE_CONF_WITH_INPUT 0
+#endif
 #define UART_ZERO_CONF_ENABLE 0
 
 /* Are we a SLIP bridge? */
