@@ -55,8 +55,9 @@ static neighbor_info_subscriber_t subscriber_callback;
 static void
 update_metric(const rimeaddr_t *dest, int packet_metric)
 {
-  link_metric_t *metricp;
-  link_metric_t recorded_metric, new_metric;
+  static link_metric_t *metricp;
+  static link_metric_t recorded_metric;
+  static link_metric_t new_metric;
 
   metricp = (link_metric_t *)neighbor_attr_get_data(&etx, dest);
   packet_metric = NEIGHBOR_INFO_ETX2FIX(packet_metric);
@@ -102,8 +103,8 @@ add_neighbor(const rimeaddr_t *addr)
 void
 neighbor_info_packet_sent(int status, int numtx) __banked
 {
-  const rimeaddr_t *dest;
-  link_metric_t packet_metric;
+  static const rimeaddr_t *dest;
+  static link_metric_t packet_metric;
 
   dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
   if(rimeaddr_cmp(dest, &rimeaddr_null)) {
