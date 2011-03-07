@@ -45,7 +45,6 @@ static uint8_t ser_par_status;
 /*---------------------------------------------------------------------------*/
 /* Init the serial-parallel chip:
  *   - Set I/O direction for all 3 pins (P0_2, P1_1 and P1_3) to output
- *   - We start with value 0x02 (Flash Enable / Chip Select bit set)
  */
 void
 n740_ser_par_init() __banked
@@ -53,8 +52,6 @@ n740_ser_par_init() __banked
   /* bus_init and uart1_init also touch the I/O direction for those pins */
   P1DIR |= 0x0A;
   P0DIR |= 0x04;
-
-  n740_ser_par_set(0);
 }
 
 /*---------------------------------------------------------------------------*/
