@@ -50,7 +50,7 @@ void
 uart0_tx_ISR( void ) __interrupt (UTX0_VECTOR)
 {
 }
-#endif
+#endif /* UART_ZERO_ENABLE */
 #if UART_ONE_ENABLE
 /*---------------------------------------------------------------------------*/
 void
@@ -59,6 +59,7 @@ uart1_set_input(int (*input)(unsigned char c))
   uart1_input_handler = input;
 }
 /*---------------------------------------------------------------------------*/
+#if UART_ONE_CONF_WITH_INPUT
 void
 uart1_rx_ISR(void) __interrupt (URX1_VECTOR)
 {
@@ -75,4 +76,5 @@ uart1_tx_ISR( void ) __interrupt (UTX1_VECTOR)
 {
 }
 /*---------------------------------------------------------------------------*/
-#endif
+#endif /* UART_ONE_CONF_WITH_INPUT */
+#endif /* UART_ONE_ENABLE */

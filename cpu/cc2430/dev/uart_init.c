@@ -73,17 +73,14 @@ uart0_init(uint32_t speed, uint8_t rx_int) __banked
   /*set priority group of group 3 to highest, so the UART won't miss bytes*/
   IP1 |= IP1_3;
   IP0 |= IP0_3;
-  
-  if(rx_int) {
-  IEN0_URX0IE = 1;
-}
 }
 #endif
+
 #if UART_ONE_ENABLE
 /*---------------------------------------------------------------------------*/
 /* UART1 initialization */
 void
-uart1_init(uint32_t speed, uint8_t rx_int) __banked
+uart1_init(uint32_t speed) __banked
 {
 #ifdef UART1_ALTERNATIVE_1
   PERCFG &= ~U1CFG;	/*alternative port 1 = P0.5-2*/
@@ -133,10 +130,6 @@ uart1_init(uint32_t speed, uint8_t rx_int) __banked
   /*set priority group of group 3 to highest, so the UART won't miss bytes*/
   IP1 |= IP1_3;
   IP0 |= IP0_3;
-  
-  if(rx_int) {
-  IEN0_URX1IE = 1;	/* Enable the RX interrupt */
-}
 }
 /*---------------------------------------------------------------------------*/
 #endif

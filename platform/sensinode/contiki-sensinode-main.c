@@ -156,18 +156,18 @@ main(void)
   bus_init();
   rtimer_init();
 
-  /* Init UART1 without acknowledging the RX interrupt */
-  uart1_init(115200, UART_RX_INT_OFF);
-
-  /* model-specific h/w init. This will turn on UART interrupts if needed */
+  /* model-specific h/w init. */
   model_init();
 
-  /* Init LEDs here  for all other models (will do nothing for N740) */
+  /* Init LEDs here */
   leds_init();
   fade(LEDS_GREEN);
 
   /* initialize process manager. */
   process_init();
+
+  /* Init UART1 without acknowledging the RX interrupt */
+  uart1_init(115200);
 
 #if SLIP_ARCH_CONF_ENABLE
   /* On cc2430, the argument is not used. We always use 115200 */
@@ -253,12 +253,19 @@ main(void)
 #endif /* UIP_CONF_IPV6_RPL */
 #endif /* UIP_CONF_IPV6 */
 
-  fade(LEDS_RED);
+  /*
+   * Acknowledge the UART1 RX interrupt
+   * now that we're sure we are ready to process it
+   */
+  model_uart_intr_en();
 
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
+  fade(LEDS_RED);
+
   autostart_start(autostart_processes);
+
   watchdog_start();
 
   while(1) {

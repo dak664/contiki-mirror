@@ -53,13 +53,16 @@ typedef unsigned short clock_time_t;
  * If you start seeing random crashes when on battery, this is where to look.
  */
 #define UART_ONE_CONF_ENABLE  1
+#define UART_ONE_CONF_WITH_INPUT 0
 #define UART_ZERO_CONF_ENABLE 0
 
 /* Are we a SLIP bridge? */
 #if SLIP_ARCH_CONF_ENABLE
-/* Make sure UART1 is enabled */
+/* Make sure UART1 is enabled, with interrupts */
 #undef UART_ONE_CONF_ENABLE
+#undef UART_ONE_CONF_WITH_INPUT
 #define UART_ONE_CONF_ENABLE  1
+#define UART_ONE_CONF_WITH_INPUT 1
 #define UIP_FALLBACK_INTERFACE slip_interface
 #endif
 

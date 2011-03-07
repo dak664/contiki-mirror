@@ -63,6 +63,13 @@ model_init() __banked
   /* Init the serial-parallel chip for N740s. This will also 'init' LEDs */
   n740_ser_par_init();
 
+#endif
+}
+/*---------------------------------------------------------------------------*/
+void
+model_uart_intr_en() __banked
+{
+#ifdef MODEL_N740
   /*
    * Dirty, ugly hack for the N740 USART1 RX issue:
    * When the USB is for whatever reason disabled (either disconnected or the
@@ -72,9 +79,13 @@ model_init() __banked
    * high and the dongle is connected (thus we are on USB).
    *
    * For all other models, just turn the interrupt on
+   *
+   * Interrupts will only turn on if UART_ONE_CONF_WITH_INPUT is defined 1
    */
-  if(P1_7 == 1 && P0_3 == 0)
-#endif
+  if(P1_7 == 1 && P0_3 == 0) {
     UART1_RX_INT(1);
-
+  }
+#else
+  UART1_RX_INT(1);
+#endif
 }

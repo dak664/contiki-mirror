@@ -53,6 +53,7 @@
 #define TEMP_PIN		P0_1
 #endif
 
-void model_init() __banked; /* Model-Specific init function */
-
+/* Model-Specific startup functions */
+void model_init() __banked;
+void model_uart_intr_en() __banked;
 #endif /* __MODELS_H__ */
