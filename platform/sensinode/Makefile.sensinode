@@ -51,7 +51,7 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 	cp $< $@
 	if [ -f $(<:.hex=.ihx) ] ; then cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi	
 	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${<:.hex=.map} | uniq
-	@egrep -A 5 'Other memory' ${<:.hex=.mem}
+	egrep -A 5 'Other memory' ${<:.hex=.mem}
 
 %.upload: %.hex
 	$(PROG) -P $<
