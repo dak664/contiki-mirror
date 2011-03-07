@@ -6,7 +6,7 @@
 
 /*
  * Sensinode v1.0 HW products have 2 red LEDs, LED1 is mapped to the Contiki
- * LEDS_RED and LED2 is mapped to LEDS_GREEN.
+ * LEDS_GREEN and LED2 is mapped to LEDS_RED.
  */
 
 /*---------------------------------------------------------------------------*/
@@ -15,8 +15,8 @@ leds_arch_init(void)
 {
 #ifdef MODEL_N740
   /*
-   * We don't need explicit led initialisation for N740s.
-   * Port I/O direction is set in n740_ser_par_init()
+   * We don't need explicit led initialisation for N740s. They are controlled
+   * by the ser/par chip which is initalised already
    */
   return;
 #else
