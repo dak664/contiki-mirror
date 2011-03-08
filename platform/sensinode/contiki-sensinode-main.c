@@ -30,6 +30,19 @@ static __data int len;
 #define STARTUP_VERBOSE 0
 #endif
 
+#if STARTUP_VERBOSE
+#define PUTSTRING(...) putstring(__VA_ARGS__)
+#define PUTHEX(...) puthex(__VA_ARGS__)
+#define PUTBIN(...) putbin(__VA_ARGS__)
+#define PUTCHAR(...) putchar(__VA_ARGS__)
+#else
+#define PUTSTRING(...)
+#define PUTHEX(...)
+#define PUTBIN(...)
+#define PUTCHAR(...)
+#endif
+
+extern rimeaddr_t rimeaddr_node_addr;
 static __data int r;
 /*---------------------------------------------------------------------------*/
 static void
@@ -54,12 +67,22 @@ fade(int l)
 static void
 set_rime_addr(void)
 {
-  rimeaddr_t addr;
-  static uint8_t ft_buffer[8];
   uint8_t *addr_long = NULL;
   uint16_t addr_short = 0;
-  unsigned char i;
+  char i;
 
+#if SHORTCUTS_CONF_FLASH_READ
+  __code unsigned char * macp;
+#else
+  static uint8_t ft_buffer[8];
+#endif
+
+  PUTSTRING("Rime is 0x");
+  PUTHEX(sizeof(rimeaddr_t));
+  PUTSTRING(" bytes long\n");
+
+  if(node_id == 0) {
+    PUTSTRING("Reading MAC from flash\n");
 #if SHORTCUTS_CONF_FLASH_READ
   /*
    * The MAC is always stored in 0x1FFF8 of our flash. This maps to address
@@ -68,7 +91,6 @@ set_rime_addr(void)
    * Since we are called from main(), this MUST be BANK1 or something is very
    * wrong. This code can be used even without banking
    */
-  __code unsigned char * macp;
 
   /* Don't interrupt us to make sure no BANK switching happens while working */
   DISABLE_INTERRUPTS();
@@ -79,8 +101,8 @@ set_rime_addr(void)
   /* Set our pointer to the correct address and fetch 8 bytes of MAC */
   macp = (__code unsigned char *) 0xFFF8;
 
-  for(i=0; i < 8; i++) {
-    ft_buffer[i] = *macp;
+  for(i = (RIMEADDR_SIZE - 1); i >= 0; --i){
+    rimeaddr_node_addr.u8[i] = *macp;
     macp++;
   }
 
@@ -92,58 +114,36 @@ set_rime_addr(void)
    * Or use the more generic flash_read() routine which can read from any
    * address of our flash
    */
-  flash_read(&ft_buffer[0], 0x1FFF8, 8);
-#endif
-
-  /* MAC is stored LSByte first, so we print it backwards */
-#if STARTUP_VERBOSE
-  putstring("Read MAC from flash: ");
-  for(i = 7; i > 0; --i) {
-    puthex(ft_buffer[i]);
-    putchar(':');
-  }
-  puthex(ft_buffer[0]);
-  putchar('\n');
-  putstring("Rime is 0x");
-  puthex(sizeof(rimeaddr_t));
-  putstring(" bytes long.\n");
-#endif
-  memset(&addr, 0, sizeof(rimeaddr_t));
+  flash_read(ft_buffer, 0x1FFF8, 8);
 
   /* Flip the byte order and store MSB first */
-#if UIP_CONF_IPV6
-  for(i = 0; i < RIMEADDR_SIZE; ++i) {
-    addr.u8[i] = ft_buffer[RIMEADDR_SIZE - 1 - i];
-  }
-#else
-  if(node_id == 0) {
-    for(i = 0; i < RIMEADDR_SIZE; ++i) {
-      addr.u8[i] = ft_buffer[RIMEADDR_SIZE - 1 - i];
-    }
-  } else {
-    putstring("Setting manual address from node_id\n");
-    addr.u8[1] = node_id >> 8;
-    addr.u8[0] = node_id & 0xff;
+  for(i = (RIMEADDR_SIZE - 1); i >= 0; --i){
+    rimeaddr_node_addr.u8[RIMEADDR_SIZE - 1 - i] = ft_buffer[i];
   }
 #endif
 
-  rimeaddr_set_node_addr(&addr);
+  } else {
+    PUTSTRING("Setting manual address from node_id\n");
+    rimeaddr_node_addr.u8[1] = node_id >> 8;
+    rimeaddr_node_addr.u8[0] = node_id & 0xff;
+  }
+
   /* Now the address is stored MSB first */
 #if STARTUP_VERBOSE
-  putstring("Rime configured with address ");
+  PUTSTRING("Rime configured with address ");
   for(i = 0; i < RIMEADDR_SIZE - 1; i++) {
-    puthex(addr.u8[i]);
-    putchar(':');
+    PUTHEX(rimeaddr_node_addr.u8[i]);
+    PUTCHAR(':');
   }
-  puthex(addr.u8[i]);
-  putchar('\n');
+  PUTHEX(rimeaddr_node_addr.u8[i]);
+  PUTCHAR('\n');
 #endif
 
   /* Set the cc2430 RF addresses */
 #if (RIMEADDR_SIZE==8)
-	  addr_long = (uint8_t *) addr.u8;
+    addr_long = (uint8_t *) &rimeaddr_node_addr;
 #else
-    addr_short = (addr.u8[0] * 256) + addr.u8[1];
+    addr_short = (rimeaddr_node_addr.u8[0] * 256) + rimeaddr_node_addr.u8[1];
 #endif
   cc2430_rf_set_addr(0xffff, addr_short, addr_long);
 }
@@ -181,43 +181,41 @@ main(void)
   dma_init();
 #endif
 
-#if STARTUP_VERBOSE
-  putstring("##########################################\n");
-#endif
+  PUTSTRING("##########################################\n");
   putstring("Welcome to " CONTIKI_VERSION_STRING ".\n");
   putstring("Running on: " SENSINODE_MODEL ".\n");
 
 #if STARTUP_VERBOSE
 #ifdef HAVE_SDCC_BANKING
-  putstring("  With Banking.\n");
+  PUTSTRING("  With Banking.\n");
 #endif /* HAVE_SDCC_BANKING */
 #ifdef SDCC_MODEL_LARGE
-  putstring("  --model-large\n");
+  PUTSTRING("  --model-large\n");
 #endif /* SDCC_MODEL_LARGE */
 #ifdef SDCC_MODEL_HUGE
-  putstring("  --model-huge\n");
+  PUTSTRING("  --model-huge\n");
 #endif /* SDCC_MODEL_HUGE */
 #ifdef SDCC_STACK_AUTO
-  putstring("  --stack-auto\n");
+  PUTSTRING("  --stack-auto\n");
 #endif /* SDCC_STACK_AUTO */
 #ifdef SDCC_USE_XSTACK
-  putstring("  --xstack\n");
+  PUTSTRING("  --xstack\n");
 #endif /* SDCC_USE_XSTACK */
 
-  putchar('\n');
+  PUTCHAR('\n');
 
-  putstring(" Network: ");
-  putstring(NETSTACK_NETWORK.name);
-  putchar('\n');
-  putstring(" MAC: ");
-  putstring(NETSTACK_MAC.name);
-  putchar('\n');
-  putstring(" RDC: ");
-  putstring(NETSTACK_RDC.name);
-  putchar('\n');
+  PUTSTRING(" Net: ");
+  PUTSTRING(NETSTACK_NETWORK.name);
+  PUTCHAR('\n');
+  PUTSTRING(" MAC: ");
+  PUTSTRING(NETSTACK_MAC.name);
+  PUTCHAR('\n');
+  PUTSTRING(" RDC: ");
+  PUTSTRING(NETSTACK_RDC.name);
+  PUTCHAR('\n');
 
-  putstring("##########################################\n");
-#endif /* STARTUP_VERBOSE */
+  PUTSTRING("##########################################\n");
+#endif
 
   watchdog_init();
 

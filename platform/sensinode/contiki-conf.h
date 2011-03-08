@@ -82,13 +82,12 @@ typedef unsigned short clock_time_t;
  *   - mac_call_sent_callback() is replaced with sent() in various places
  *
  * These are good things to do, we reduce stack usage, RAM size and code size
- * e.g. with csma and sicslowmac we save 10 bytes of RAM and 300+ bytes of CODE
  */
 #define SHORTCUTS_CONF_NETSTACK   1
 
 /*
  * Directly read mac from flash with a __code pointer, instead of using the
- * generic flash_read() routine. This reduces code size by 81 bytes in HOME
+ * generic flash_read() routine. This reduces HOME code size
  */
 #define SHORTCUTS_CONF_FLASH_READ 1
 
