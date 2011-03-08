@@ -47,6 +47,7 @@ void uart1_tx_ISR( void ) __interrupt (UTX1_VECTOR);
 #define uart1_init(...)
 #define uart1_writeb(...)
 #define uart1_set_input(...)
+#define UART1_RX_INT(v)
 #endif /* UART_ONE_ENABLE */
 
 #endif /*UART_H*/
