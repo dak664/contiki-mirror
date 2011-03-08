@@ -79,7 +79,7 @@ uint8_t rf_error = 0;
 
 static uint8_t rf_initialized = 0;
 static uint8_t rf_tx_power;
-static uint8_t rf_flags;
+static uint8_t __data rf_flags;
 
 /*---------------------------------------------------------------------------*/
 static void
