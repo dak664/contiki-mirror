@@ -124,8 +124,8 @@ set_rime_addr(void)
 
   } else {
     PUTSTRING("Setting manual address from node_id\n");
-    rimeaddr_node_addr.u8[1] = node_id >> 8;
-    rimeaddr_node_addr.u8[0] = node_id & 0xff;
+    rimeaddr_node_addr.u8[RIMEADDR_SIZE - 1] = node_id >> 8;
+    rimeaddr_node_addr.u8[RIMEADDR_SIZE - 2] = node_id & 0xff;
   }
 
   /* Now the address is stored MSB first */
