@@ -148,6 +148,9 @@ transmit_queued_packet(void *ptr)
     //    printf("s %d\n", packetbuf_addr(PACKETBUF_ADDR_RECEIVER)->u8[0]);
     rdc_is_transmitting = 1;
     NETSTACK_RDC.send(packet_sent, q);
+#if CSMA_SHORTCUT
+    packet_sent_cb(ptr, mac_status);
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -288,9 +291,9 @@ packet_sent(void *ptr, int status, int num_transmissions)
     /*    queuebuf_to_packetbuf(q->buf);*/
     free_queued_packet();
 #if SHORTCUTS_CONF_NETSTACK
-    if(sent) {
-      sent(cptr, status, num_tx);
-    }
+      if(sent) {
+        sent(cptr, status, num_tx);
+      }
 #else
     mac_call_sent_callback(sent, cptr, status, num_tx);
 #endif
@@ -346,7 +349,7 @@ send_packet(mac_callback_t sent, void *ptr)
                          &rimeaddr_null),
            packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS));
   }
-  NETSTACK_RDC.send(sent, ptr);
+  NETSTACK_RDC.send(packet_sent, ptr);
 #if CSMA_SHORTCUT
   packet_sent_cb(ptr, mac_status);
 #endif
