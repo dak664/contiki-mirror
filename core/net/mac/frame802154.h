@@ -64,7 +64,6 @@
 
 #include "contiki-conf.h"
 #include "net/rime/rimeaddr.h"
-#include "sys/cc.h"
 
 #ifdef IEEE802154_CONF_PANID
 #define IEEE802154_PANID           IEEE802154_CONF_PANID

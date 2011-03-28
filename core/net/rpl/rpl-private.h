@@ -236,43 +236,43 @@ extern rpl_stats_t rpl_stats;
 #endif /* RPL_CONF_STATS */
 /*---------------------------------------------------------------------------*/
 /* ICMPv6 functions for RPL. */
-void dis_output(uip_ipaddr_t *addr);
-void dio_output(rpl_dag_t *, uip_ipaddr_t *uc_addr);
-void dao_output(rpl_parent_t *, uint32_t lifetime);
-void dao_ack_output(rpl_dag_t *, uip_ipaddr_t *, uint8_t);
-void uip_rpl_input(void);
+void dis_output(uip_ipaddr_t *addr) __banked;
+void dio_output(rpl_dag_t *, uip_ipaddr_t *uc_addr) __banked;
+void dao_output(rpl_parent_t *, uint32_t lifetime) __banked;
+void dao_ack_output(rpl_dag_t *, uip_ipaddr_t *, uint8_t) __banked;
+void uip_rpl_input(void) __banked;
 
 /* RPL logic functions. */
-void rpl_join_dag(rpl_dag_t *);
-void rpl_local_repair(rpl_dag_t *dag);
-int rpl_set_default_route(rpl_dag_t *dag, uip_ipaddr_t *from);
-void rpl_process_dio(uip_ipaddr_t *, rpl_dio_t *);
-int rpl_process_parent_event(rpl_dag_t *, rpl_parent_t *);
+void rpl_join_dag(rpl_dag_t *) __banked;
+void rpl_local_repair(rpl_dag_t *dag) __banked;
+int rpl_set_default_route(rpl_dag_t *dag, uip_ipaddr_t *from) __banked;
+void rpl_process_dio(uip_ipaddr_t *, rpl_dio_t *) __banked;
+int rpl_process_parent_event(rpl_dag_t *, rpl_parent_t *) __banked;
 
 /* DAG object management. */
-rpl_dag_t *rpl_alloc_dag(uint8_t);
-void rpl_free_dag(rpl_dag_t *);
+rpl_dag_t *rpl_alloc_dag(uint8_t) __banked;
+void rpl_free_dag(rpl_dag_t *) __banked;
 
 /* DAG parent management function. */
-rpl_parent_t *rpl_add_parent(rpl_dag_t *, rpl_dio_t *dio, uip_ipaddr_t *);
-rpl_parent_t *rpl_find_parent(rpl_dag_t *, uip_ipaddr_t *);
-int rpl_remove_parent(rpl_dag_t *, rpl_parent_t *);
-rpl_parent_t *rpl_select_parent(rpl_dag_t *dag);
-void rpl_recalculate_ranks(void);
+rpl_parent_t *rpl_add_parent(rpl_dag_t *, rpl_dio_t *dio, uip_ipaddr_t *) __banked;
+rpl_parent_t *rpl_find_parent(rpl_dag_t *, uip_ipaddr_t *) __banked;
+int rpl_remove_parent(rpl_dag_t *, rpl_parent_t *) __banked;
+rpl_parent_t *rpl_select_parent(rpl_dag_t *dag) __banked;
+void rpl_recalculate_ranks(void) __banked;
 
 /* RPL routing table functions. */
 void rpl_remove_routes(rpl_dag_t *dag);
 uip_ds6_route_t *rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix,
                                int prefix_len, uip_ipaddr_t *next_hop);
-void rpl_purge_routes(void);
+void rpl_purge_routes(void) __banked;
 
 /* Objective function. */
-rpl_of_t *rpl_find_of(rpl_ocp_t);
+rpl_of_t *rpl_find_of(rpl_ocp_t) __banked;
 
 /* Timer functions. */
-void rpl_schedule_dao(rpl_dag_t *);
-void rpl_reset_dio_timer(rpl_dag_t *, uint8_t);
-void rpl_reset_periodic_timer(void);
+void rpl_schedule_dao(rpl_dag_t *) __banked;
+void rpl_reset_dio_timer(rpl_dag_t *, uint8_t) __banked;
+void rpl_reset_periodic_timer(void) __banked;
 
 /* Route poisoning. */
 void rpl_poison_routes(rpl_dag_t *, rpl_parent_t *);

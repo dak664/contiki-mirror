@@ -122,9 +122,6 @@ neighbor_info_packet_sent(int status, int numtx) __banked
     add_neighbor(dest);
 #else
     neighbor_attr_add_neighbor(dest);
-    if(subscriber_callback != NULL) {
-      subscriber_callback(dest, 1, ETX_FIRST_GUESS);
-    }
 #endif
     break;
   case MAC_TX_COLLISION:
@@ -159,9 +156,6 @@ neighbor_info_packet_received(void) __banked
   add_neighbor(src);
 #else
   neighbor_attr_add_neighbor(src);
-  if(subscriber_callback != NULL) {
-    subscriber_callback(src, 1, ETX_FIRST_GUESS);
-  }
 #endif
 }
 /*---------------------------------------------------------------------------*/
