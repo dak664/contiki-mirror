@@ -1,3 +1,15 @@
+-------------------------------------------------------------------
+This is the github clone of the contiki development repository at
+http://contiki.git.sourceforge.net
+It will be updated from time to time with the latest changes.
+Fork this to create your own github development repo and branches.
+-------------------------------------------------------------------
+http://www.sics.se/contiki/                    Home page
+http://www.sics.se/contiki/wiki/               Wiki
+https://github.com/contiki/                    github contiki account
+https://github.com/contiki/contiki-mirror      This repository
+-------------------------------------------------------------------
+
 The Contiki Operating System
 
 Contiki is an open source, highly portable, multi-tasking operating
