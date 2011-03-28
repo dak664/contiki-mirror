@@ -48,6 +48,7 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
+#include "lib/include/uart1.h"
 
 #if WITH_UIP6
 #include "net/sicslowpan.h"
@@ -201,13 +202,6 @@ init_lowlevel(void)
 	*CRM_RTC_TIMEOUT = 32768 * 10; 
 #else 
 	*CRM_RTC_TIMEOUT = cal_rtc_secs * 10;
-#endif
-
-#if (USE_WDT == 1)
-	/* set the watchdog timer timeout to 1 sec */
-	cop_timeout_ms(WDT_TIMEOUT);
-	/* enable the watchdog timer */
-	CRM->COP_CNTLbits.COP_EN = 1;
 #endif
 
 	/* XXX debug */
@@ -486,17 +480,36 @@ main(void)
   while(1) {
 	  check_maca();
 
-#if (USE_WDT == 1)
-	  cop_service();
+#if 1
+/* Show rx buffer for debugging */
+if (i++==300000) {
+i=0;printf("head=%d, tail=%d\n",u1_rx_head,u1_rx_tail);
+}
 #endif
 
-	  /* TODO: replace this with a uart rx interrupt */
+#if 0
+/* Show number of uart interrupts */
+if (i++==300000) {
+extern uint32_t interrupts_we_got,interrupts_we_processed;
+i=0;printf("got=%d, processed=%d\n",interrupts_we_got,interrupts_we_processed);
+}
+#endif
+
+#if 0
+uart1_can_get is defined in uart1.h as
+#if UART1_RX_INTERRUPTS
+#define uart1_can_get() (u1_rx_head!=u1_rx_tail)
+#else
+#define uart1_can_get() (*UART1_URXCON > 0)
+#endif
+#endif
+
 	  if(uart1_input_handler != NULL) {
 		  if(uart1_can_get()) {
 			  uart1_input_handler(uart1_getc());
 		  }
 	  }
-	         
+        
 	  process_run();
   }
   

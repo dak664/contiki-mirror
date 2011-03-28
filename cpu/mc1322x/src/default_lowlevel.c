@@ -55,15 +55,35 @@ void uart1_init(uint16_t inc, uint16_t mod, uint8_t samp) {
 	/* you must enable the peripheral first BEFORE setting the function in GPIO_FUNC_SEL */
 	/* From the datasheet: "The peripheral function will control operation of the pad IF */
 	/* THE PERIPHERAL IS ENABLED. */
-	*UART1_UCON = (1 << 0) | (1 << 1); /* enable receive, transmit */
+#if UART1_RX_INTERRUPTS  //make clean before changing this option in the build
+    *UART1_UCON = (1 << 0) | (1 << 1) ; /* enable receive, transmit */
+#elif 0       //rx interrupts will occur needlessly
+	*UART1_UCON = (1 << 0) | (1 << 1);             /* enable receive, transmit */
+#elif 1    //disabling rx interrupt saves a bunch of unncessary interrupts
+    *UART1_UCON = (1 << 0) | (1 << 1) | (1 << 14); /* enable receive, transmit, disable rx interrupt */
+#elif 0//flow control seems to have no effect on econotag
+    *UART1_UCON = (1 << 0) | (1 << 1) | (1 << 12) | (1 << 14); /* enable receive, transmit, flow control, disable rx interrupt */
+    *UART1_UCTS = 16;                              /* drop cts when tx buffer is half full */
+#endif
+ 
 	if(samp == UCON_SAMP_16X) 
 		set_bit(*UART1_UCON,UCON_SAMP);
 	*GPIO_FUNC_SEL0 = ( (0x01 << (14*2)) | (0x01 << (15*2)) ); /* set GPIO15-14 to UART (UART1 TX and RX)*/
        
 	/* interrupt when there are this number or more bytes free in the TX buffer*/
 	*UART1_UTXCON = 16;
-
-	u1_head = 0; u1_tail = 0;
+    u1_tx_head = 0; u1_tx_tail = 0;
+ 
+#if UART1_RX_INTERRUPTS
+#if UART1_RX_HYBRID_INTERRUPTS
+	/* interrupt when fifo is nearly full */
+	*UART1_URXCON = 30;
+#else
+	/* interrupt when there is anything in the RX buffer */
+	*UART1_URXCON = 1;
+#endif
+    u1_rx_head = 0; u1_rx_tail = 0;
+#endif
 
 	/* tx and rx interrupts are enabled in the UART by default */
 	/* see status register bits 13 and 14 */

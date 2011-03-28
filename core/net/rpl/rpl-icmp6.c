@@ -197,6 +197,9 @@ dio_input(void)
   }
 
   buffer_length = uip_len - uip_l2_l3_icmp_hdr_len;
+#if RPL_CONF_ADD_FALLBACK_INTERFACE_HEADER_LENGTH
+  buffer_length += UIP_CONF_LLH_LEN;
+#endif
 
   /* Process the DIO base option. */
   i = 0;
@@ -490,6 +493,9 @@ dao_input(void)
 
   buffer = UIP_ICMP_PAYLOAD;
   buffer_length = uip_len - uip_l2_l3_icmp_hdr_len;
+#if RPL_CONF_ADD_FALLBACK_INTERFACE_HEADER_LENGTH
+  buffer_length += UIP_CONF_LLH_LEN;
+#endif
 
   pos = 0;
   instance_id = buffer[pos++];
@@ -687,6 +693,9 @@ dao_ack_input(void)
 
   buffer = UIP_ICMP_PAYLOAD;
   buffer_length = uip_len - uip_l2_l3_icmp_hdr_len;
+#if RPL_CONF_ADD_FALLBACK_INTERFACE_HEADER_LENGTH
+  buffer_length += UIP_CONF_LLH_LEN;
+#endif
 
   instance_id = buffer[0];
   sequence = buffer[2];

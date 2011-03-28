@@ -70,9 +70,18 @@
 #define UART2_UCTS       ((volatile uint32_t *) ( UART2_BASE + UCTS   ))
 #define UART2_UBRCNT     ((volatile uint32_t *) ( UART2_BASE + UBRCNT ))
 
-extern volatile uint32_t  u1_head, u1_tail;
+extern volatile uint32_t  u1_tx_head, u1_tx_tail;
+extern volatile uint32_t  u1_rx_head, u1_rx_tail;
 void uart1_putc(char c);
+
+#if UART1_RX_HYBRID_INTERRUPTS
+#define UART1_RX_INTERRUPTS 1
+#define uart1_can_get() ((u1_rx_head!=u1_rx_tail) || (*UART1_URXCON > 0))
+#elif UART1_RX_INTERRUPTS
+#define uart1_can_get() (u1_rx_head!=u1_rx_tail)
+#else
 #define uart1_can_get() (*UART1_URXCON > 0)
+#endif
 uint8_t uart1_getc(void);
 
 

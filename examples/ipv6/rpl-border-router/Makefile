@@ -16,7 +16,8 @@ APPS += webserver
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -DWEBSERVER
 PROJECT_SOURCEFILES += slip-bridge.c httpd-simple.c
 endif
-
+# do make clean after changing cflags!
+CFLAGS+=-DUART1_RX_HYBRID_INTERRUPTS
 include $(CONTIKI)/Makefile.include
 
 $(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
