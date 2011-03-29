@@ -635,7 +635,7 @@ uip_ds6_get_global(int8_t state)
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_maddr_t *
-uip_ds6_maddr_add(uip_ipaddr_t *ipaddr)
+uip_ds6_maddr_add(uip_ipaddr_t *ipaddr) __banked
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_if.maddr_list, UIP_DS6_MADDR_NB,
