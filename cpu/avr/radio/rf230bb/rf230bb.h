@@ -204,13 +204,12 @@ const struct radio_driver rf230_driver;
 int rf230_init(void);
 void rf230_warm_reset(void);
 void rf230_start_sneeze(void);
-//int rf230_on(void);
-//int rf230_off(void);
-void rf230_set_channel(uint8_t channel);
-void rf230_listen_channel(uint8_t channel);
+
+bool rf230_set_channel(uint8_t channel);
+bool rf230_listen_channel(uint8_t channel);
 uint8_t rf230_get_channel(void);
 void rf230_set_pan_addr(unsigned pan,unsigned addr,const uint8_t ieee_addr[8]);
-void rf230_set_txpower(uint8_t power);
+bool rf230_set_txpower(uint8_t power);
 uint8_t rf230_get_txpower(void);
 
 void rf230_set_promiscuous_mode(bool isPromiscuous);

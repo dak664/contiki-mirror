@@ -70,15 +70,13 @@ RNDIS Status Information:
 #include "uip.h"
 #include "serial/uart_usb_lib.h"
 #include "sicslow_ethernet.h"
-#include <avr/pgmspace.h>
-#include <string.h>
-#if RF230BB
+//#include <avr/pgmspace.h>
+//#include <string.h>
 #include "rf230bb.h"
-#endif
 
-#include <stdio.h>
-#include <avr/pgmspace.h>
-#include <util/delay.h>
+//#include <stdio.h>
+//#include <avr/pgmspace.h>
+//#include <util/delay.h>
 
 
 //_____ M A C R O S ________________________________________________________
@@ -868,7 +866,9 @@ uint8_t rndis_process(void)
 #endif
 
 	//Connected!
+#if !JACKDAW_CONF_ALT_LED_SCHEME
 	Led0_on();
+#endif
 
 	Usb_select_endpoint(RX_EP);
 
@@ -1068,9 +1068,7 @@ uint8_t rndis_send(uint8_t * senddata, uint16_t sendlen, uint8_t led)
     //Wait for ready
 	if(usb_endpoint_wait_for_IN_ready()!=0) {
 		USB_ETH_HOOK_TX_ERROR("Timeout: IN ready");
-		return 0;
 	}
-
 	return 1;
 }
 

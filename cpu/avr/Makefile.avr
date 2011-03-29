@@ -103,7 +103,7 @@ AS       = avr-as
 AR       = avr-ar
 OBJCOPY  = avr-objcopy
 STRIP    = avr-strip
-CFLAGSNO = -Wall -mmcu=$(MCU) -gdwarf-2 \
+CFLAGSNO = -Wall -Wno-unknown-pragmas -mmcu=$(MCU) -gdwarf-2 \
            -I. -I$(CONTIKI)/core -I$(CONTIKI_CPU) $(USB_INCLUDES) \
            -I$(CONTIKI)/platform/$(TARGET) \
            $(CONTIKI_PLAT_DEFS)
@@ -114,6 +114,10 @@ endif
 
 LDFLAGS  += -mmcu=$(MCU) -Wl,-Map=contiki-$(TARGET).map \
            -Wl,--section-start=.bootloader=$(BOOTLOADER_START)
+
+# The following two lines strip out unused functions and symbols, making the executable smaller.
+CFLAGS += -ffunction-sections -fdata-sections 
+LDFLAGS += -Wl,--gc-sections
 
 ### Setup directory search path for source files
 
@@ -157,6 +161,12 @@ endif
 
 #%.hex: %.elf
 #	$(OBJCOPY) -R .eeprom -R .fuse -R .signature $^ -O ihex $@
+
+#%-eeprom.hex: %.elf
+#	$(OBJCOPY) -j .eeprom $^ -O ihex $@
+
+#%-fuse.hex: %.elf
+#	$(OBJCOPY) -j .fuse $^ -O ihex $@
 
 %.eep: %.out
 	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \

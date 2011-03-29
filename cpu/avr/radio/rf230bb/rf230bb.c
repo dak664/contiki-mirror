@@ -56,6 +56,9 @@
 #endif
 
 #include "dev/leds.h"
+#if JACKDAW_CONF_ALT_LED_SCHEME
+#include "status_leds.h"
+#endif
 #include "dev/spi.h"
 #include "rf230bb.h"
 
@@ -142,7 +145,7 @@ struct timestamp {
 #endif
 
 /* See clock.c and httpd-cgi.c for RADIOSTATS code */
-#if WEBSERVER
+#if WEBSERVER || RF230_CONF_RADIOSTATS
 #define RADIOSTATS 1
 #endif
 #if RADIOSTATS
@@ -718,7 +721,9 @@ rf230_init(void)
 void rf230_warm_reset(void) {
 #if RF230_CONF_SNEEZER && JACKDAW
   /* Take jackdaw radio out of test mode */
+#warning
 #warning Manipulating PORTB pins for RF230 Sneezer mode!
+#warning
   PORTB &= ~(1<<7);
   DDRB  &= ~(1<<7);
 #endif
@@ -1074,23 +1079,28 @@ rf230_get_channel(void)
   return channel;
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 rf230_set_channel(uint8_t c)
 {
+ if ((c<11) || (c>26)) return false;
  /* Wait for any transmission to end. */
   PRINTF("rf230: Set Channel %u\n",c);
   rf230_waitidle();
   channel=c;
   hal_subregister_write(SR_CHANNEL, c);
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 rf230_listen_channel(uint8_t c)
 {
  /* Same as set channel but forces RX_ON state for sniffer or energy scan */
 //  PRINTF("rf230: Listen Channel %u\n",c);
-  rf230_set_channel(c);
-  radio_set_trx_state(RX_ON);
+  if (rf230_set_channel(c)) {
+    radio_set_trx_state(RX_ON);
+	return true;
+  }
+  return false;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -1407,12 +1417,14 @@ if (RF230_receive_on) {
 #endif
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 rf230_set_txpower(uint8_t power)
 {
+  if (power > TX_PWR_17_2DBM) return false;
   GET_LOCK();
   set_txpower(power);
   RELEASE_LOCK();
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 uint8_t

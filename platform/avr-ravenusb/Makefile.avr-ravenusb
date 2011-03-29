@@ -25,7 +25,7 @@ USB +=       scsi_decoder.c ctrl_access.c storage_task.c avr_flash.c
 CONTIKI_TARGET_SOURCEFILES +=   cfs-eeprom.c eeprom.c random.c \
                                 mmem.c contiki-raven-default-init-lowlevel.c \
                                 contiki-raven-default-init-net.c contiki-raven-main.c httpd-simple-avr.c \
-                                sicslow_ethernet.c queuebuf.c packetbuf.c rng.c \
+                                sicslow_ethernet.c queuebuf.c packetbuf.c rng.c status_leds.c\
                 $(RPL) \
                 $(USB)
 

@@ -47,6 +47,9 @@
 #include "usb_descriptors.h"
 #include "serial/uart_usb_lib.h"
 #include "cdc_task.h"
+#if JACKDAW_CONF_ALT_LED_SCHEME
+#include "status_leds.h"
+#endif
 #include <stdio.h>
 
 /**
@@ -173,6 +176,7 @@ uint8_t uart_usb_get_control_line_state(void) {
 void uart_usb_set_control_line_state(uint8_t control_line_state)
 {
 	uart_usb_control_line_state = control_line_state;
+
 	USB_CDC_ACM_HOOK_CLS_CHANGED(control_line_state);
 }
 

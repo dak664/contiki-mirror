@@ -81,12 +81,20 @@ unsigned long clock_seconds(void);
 #define RIME_CONF_BROADCAST_ANNOUNCEMENT_MAX_TIME CLOCK_CONF_SECOND * 524UL /* Default uses 600UL */
 #define COLLECT_CONF_BROADCAST_ANNOUNCEMENT_MAX_TIME CLOCK_CONF_SECOND * 524UL /* Default uses 600UL */
 
+/* The LED scheme. Original scheme was blue=online, red=tx, green=rx, yellow=serial I/O
+ * Alternate scheme uses a separate LED process and hooks for easier reconfiguration.
+ * The default for the alternate is blue=serial, red=rx, green=tx, yellow=online(optional 50% duty)
+ * The "ready" led can be dimmed through lowering the duty cycle in the main loop.
+ */
+#define JACKDAW_CONF_ALT_LED_SCHEME     0
+#define JACKDAW_CONF_DIM_ONLINE_LED     1
+
 /* Use EEPROM settings manager, or hard-coded EEPROM reads? */
 /* Generate random MAC address on first startup? */
 /* Random number from radio clock skew or ADC noise? */
-#define JACKDAW_CONF_USE_SETTINGS		0
-#define JACKDAW_CONF_RANDOM_MAC         0
-#define RNG_CONF_USE_RADIO_CLOCK	    1
+#define JACKDAW_CONF_USE_SETTINGS		1
+#define JACKDAW_CONF_RANDOM_MAC			0
+#define RNG_CONF_USE_RADIO_CLOCK		1
 //#define RNG_CONF_USE_ADC	1
 
 /* COM port to be used for SLIP connection. Not tested on Jackdaw. */
@@ -99,41 +107,30 @@ unsigned long clock_seconds(void);
 /* Starting address for code received via the codeprop facility. Not tested on Jackdaw */
 //#define EEPROMFS_ADDR_CODEPROP 0x8000
 
-/* Simple stack monitor. Status is displayed from the USB menu with 'm' command */
-#define CONFIG_STACK_MONITOR 1
-
 /* ************************************************************************** */
 //#pragma mark USB Ethernet Hooks
 /* ************************************************************************** */
-
-#ifndef USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET
-#if RF230BB
-#define	USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET()		rf230_is_ready_to_send()
+#if JACKDAW_CONF_ALT_LED_SCHEME
+#define USB_HOOK_UNENUMERATED()		status_leds_unenumerated()
+#define USB_ETH_HOOK_READY()		status_leds_ready()
+#define USB_ETH_HOOK_INACTIVE()		status_leds_inactive()
 #else
-static inline uint8_t radio_is_ready_to_send_() {
-	switch(radio_get_trx_state()) {
-		case BUSY_TX:
-		case BUSY_TX_ARET:
-			return 0;
-	}
-	return 1;
-}
-#define	USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET()		radio_is_ready_to_send_()
-#endif
-#endif
-
-#ifndef USB_ETH_HOOK_HANDLE_INBOUND_PACKET
-#define USB_ETH_HOOK_HANDLE_INBOUND_PACKET(buffer,len)	do { uip_len = len ; mac_ethernetToLowpan(buffer); } while(0)
+#define USB_ETH_HOOK_RX_START()	   rx_start_led()
+#define USB_ETH_HOOK_TX_END()	   tx_end_led()
+#define USB_HOOK_UNENUMERATED()
+#define USB_ETH_HOOK_READY()
+#define USB_ETH_HOOK_INACTIVE()		Led0_toggle()
 #endif
 
 #ifndef USB_ETH_HOOK_SET_PROMISCIOUS_MODE
-#if RF230BB
 #define USB_ETH_HOOK_SET_PROMISCIOUS_MODE(value)	rf230_set_promiscuous_mode(value)
-#else		
-#define USB_ETH_HOOK_SET_PROMISCIOUS_MODE(value)	radio_set_trx_state(value?RX_ON:RX_AACK_ON)
 #endif
+#ifndef USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET
+#define	USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET()		rf230_is_ready_to_send()
 #endif
-
+#ifndef USB_ETH_HOOK_HANDLE_INBOUND_PACKET
+#define USB_ETH_HOOK_HANDLE_INBOUND_PACKET(buffer,len)	do { uip_len = len ; mac_ethernetToLowpan(buffer); } while(0)
+#endif
 #ifndef USB_ETH_HOOK_INIT
 #define USB_ETH_HOOK_INIT()		mac_ethernetSetup()
 #endif
@@ -141,9 +138,13 @@ static inline uint8_t radio_is_ready_to_send_() {
 /* ************************************************************************** */
 //#pragma mark RF230BB Hooks
 /* ************************************************************************** */
-
-//#define RF230BB_HOOK_RADIO_OFF()	Led1_off()
-//#define RF230BB_HOOK_RADIO_ON()		Led1_on()
+#if JACKDAW_CONF_ALT_LED_SCHEME
+#define RF230BB_HOOK_RADIO_OFF() status_leds_radio_off()
+#define RF230BB_HOOK_RADIO_ON()  status_leds_radio_on()
+#else
+#define RF230BB_HOOK_RADIO_OFF()
+#define RF230BB_HOOK_RADIO_ON()
+#endif
 #define RF230BB_HOOK_TX_PACKET(buffer,total_len) mac_log_802_15_4_tx(buffer,total_len)
 #define RF230BB_HOOK_RX_PACKET(buffer,total_len) mac_log_802_15_4_rx(buffer,total_len)
 #define	RF230BB_HOOK_IS_SEND_ENABLED()	mac_is_send_enabled()
@@ -155,10 +156,16 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 /* ************************************************************************** */
 //#pragma mark USB CDC-ACM (UART) Hooks
 /* ************************************************************************** */
-
+#if JACKDAW_CONF_ALT_LED_SCHEME
+#define USB_CDC_ACM_HOOK_RX(char)				status_leds_serial_rx()
+#define USB_CDC_ACM_HOOK_TX_END(char)			status_leds_serial_tx()
+#define USB_CDC_ACM_HOOK_CLS_CHANGED(state)		status_leds_serial_rx()
+#define USB_CDC_ACM_HOOK_CONFIGURED()			status_leds_serial_rx()
+#else
 #define USB_CDC_ACM_HOOK_TX_END(char)			vcptx_end_led()
 #define USB_CDC_ACM_HOOK_CLS_CHANGED(state)		vcptx_end_led()
 #define USB_CDC_ACM_HOOK_CONFIGURED()			vcptx_end_led()
+#endif
 
 /* ************************************************************************** */
 //#pragma mark Serial Port Settings
@@ -168,7 +175,7 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
  * TODO:Serial port would enumerate in all cases and prevent falling through to
  * the supported network interface if USB_CONF_MACINTOSH is used with Windows
  * or vice versa. The Mac configuration is set up to still enumerate as RNDIS-ONLY
- * on Windows (without the serial port). 
+ * on Windows (without the serial port). TODO:probably broken again, PID is different. 
  * At present the Windows configuration will not enumerate on the Mac at all,
  * since it wants a custom descriptor for USB composite devices.
  */ 
@@ -181,14 +188,33 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 #define USB_CONF_SERIAL          1
  
 /* RS232 debugs have less effect on network timing and are less likely
- * to be dropped due to buffer overflow. Only tx is implemented at present.
+ * to be dropped due to buffer overflow.
  * The tx pad is the middle one behind the jackdaw leds.
- * RS232 output will work with or without enabling the USB serial port
+ * RS232 output will work with or without enabling the USB serial port.
+ * If USB serial not enabled the Jackdaw menu is available through the RS232 port.
  */
 #define USB_CONF_RS232           0
 
+/* Jack menu options */
+#define USB_CONF_BOOTLOADER      1
+#define USB_CONF_WATCHDOGRESET   1
+#define USB_CONF_WINDOWSSWITCH   1
+#define USB_CONF_STORAGESWITCH   1
+/* Sneeze mode is useful for testing CCA on other radios.
+ * During sneezing, attempted radio access may hang the MCU and cause a watchdog reset.
+ * The host interface, jackdaw menu and rf230_send routines are temporarily disabled to prevent this.
+ * but some calls from an internal uip stack might get through, e.g. from CCA or low power protocols.
+ * Temporarily disabling all the possible accesses would add considerable complication to the radio driver.
+ */
+#define RF230_CONF_SNEEZER        1
+
+/* Jackdaw menu 'm' reporting options */
+#define SICSLOW_ETHERNET_CONF_UPDATE_USB_ETH_STATS  1
+#define RF230_CONF_RADIOSTATS    1
+#define CONFIG_STACK_MONITOR     1
+
 /* Disable mass storage enumeration for more program space */
-//#define USB_CONF_STORAGE         1   /* TODO: Mass storage is currently broken */
+#define USB_CONF_STORAGE         0   /* TODO: Mass storage is currently broken */
 
 /* ************************************************************************** */
 //#pragma mark UIP Settings
@@ -196,10 +222,9 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 /* Network setup. The new NETSTACK interface requires RF230BB (as does ip4) */
 /* These mostly have no effect when the Jackdaw is a repeater (CONTIKI_NO_NET=1 using fakeuip.c) */
 
-#if RF230BB
-#else
-#define PACKETBUF_CONF_HDR_SIZE    0         //RF230 combined driver/mac handles headers internally
-#endif /*RF230BB */
+#if !RF230BB
+#warning legacy RF230 driver no longer functional
+#endif
 
 #if UIP_CONF_IPV6
 #define RIMEADDR_CONF_SIZE       8
@@ -266,27 +291,19 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 /* AUTOACK receive mode gives better rssi measurements, even if ACK is never requested */
 #define RF230_CONF_AUTOACK        1
 /* Request 802.15.4 ACK on all packets sent by sicslowpan.c (else autoretry) */
-/* Broadcasts will be duplicated by the retry count, since no one will ACK them! */
+/* Primarily for testing, since all broadcasts will be retransmitted (no one will ACK them) */
 #define SICSLOWPAN_CONF_ACK_ALL   0
 /* Number of auto retry attempts 0-15 (0 implies don't use extended TX_ARET_ON mode with CCA) */
 #define RF230_CONF_AUTORETRIES    1
 /* CCA theshold energy -91 to -61 dBm (default -77). Set this smaller than the expected minimum rssi to avoid packet collisions */
-/* The Jackdaw menu 'm' command is helpful for determining the smallest ever received rssi */
+/* The Jackdaw menu 'm' command shows the smallest ever received rssi */
 #define RF230_CONF_CCA_THRES    -85
-/* Allow sneeze command from jackdaw menu. Useful for testing CCA on other radios */
-/* During sneezing, any access to an RF230 register will hang the MCU and cause a watchdog reset */
-/* The host interface, jackdaw menu and rf230_send routines are temporarily disabled to prevent this */
-/* But some calls from an internal uip stack might get through, e.g. from CCA or low power protocols, */
-/* as temporarily disabling all the possible accesses would add considerable complication to the radio driver! */
-#define RF230_CONF_SNEEZER        1
-/* Allow 6loWPAN fragmentation (more efficient for large payloads over a reliable channel) */
+/* Allow 6loWPAN fragmentation for larger payloads (more efficient on a reliable channel, more retransmits otherwise) */
 #define SICSLOWPAN_CONF_FRAG      1
 /* Timeout for fragment reassembly. A reissued browser GET will also cancel reassembly, typically in 2-3 seconds */
 #define SICSLOWPAN_CONF_MAXAGE    3
-/* Allow sneeze command from jackdaw menu */
-#define RF230_CONF_SNEEZE         1
 
-#elif 0  /* Contiki-mac radio cycling */
+#elif 0             /* Contiki-mac radio cycling */
 #define NETSTACK_CONF_MAC         nullmac_driver
 #define NETSTACK_CONF_RDC         contikimac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
@@ -299,7 +316,7 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 
 #elif 1             /* cx-mac radio cycling */
 #define NETSTACK_CONF_MAC         nullmac_driver
-//#define NETSTACK_CONF_MAC         csma_driver
+//#define NETSTACK_CONF_MAC       csma_driver
 #define NETSTACK_CONF_RDC         cxmac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
@@ -329,16 +346,17 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 #if UIP_CONF_IPV6_RPL
 
 /* Not completely working yet. Works on Ubuntu after $ifconfig usb0 -arp to drop the neighbor solitications */
-/* Dropping the NS on other OSs is more complicated, see http://www.sics.se/~adam/wiki/index.php/Jackdaw_RNDIS_RPL_border_router */
+/* Dropping the NS on other OSs is more complicated, see http://www.sics.se/contiki/wiki/index.php/Jackdaw_RNDIS_RPL_border_router */
 
 /* RPL requires the uip stack. Change #CONTIKI_NO_NET=1 to UIP_CONF_IPV6=1 in the examples makefile,
    or include the needed source files in /plaftorm/avr-ravenusb/Makefile.avr-ravenusb */
-/* For the present the buffer_length calcs in rpl-icmp6.c will need adjustment by the length difference
-   between 6lowpan (0) and ethernet (14) link-layer headers:
+/* For the present the buffer_length calcs in rpl-icmp6.c will need adjustment in three
+   places by the length difference between 6lowpan (0) and ethernet (14) link-layer headers:
  // buffer_length = uip_len - uip_l2_l3_icmp_hdr_len;
     buffer_length = uip_len - uip_l2_l3_icmp_hdr_len + UIP_LLH_LEN; //Add jackdaw ethernet header
- */
- 
+    The following define will do this hack automatically. */
+#define RPL_CONF_ADD_FALLBACK_INTERFACE_HEADER_LENGTH 1
+
 /* Define MAX_*X_POWER to reduce tx power and ignore weak rx packets for testing a miniature multihop network.
  * Leave undefined for full power and sensitivity.
  * tx=0 (3dbm, default) to 15 (-17.2dbm)

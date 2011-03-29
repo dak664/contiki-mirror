@@ -79,19 +79,16 @@
 **	USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET()
 */
 
-
+void rx_start_led(void);
+void tx_end_led(void);
 
 #ifndef USB_ETH_HOOK_RX_START
-void rx_start_led(void);
-#define USB_ETH_HOOK_RX_START()	rx_start_led()
+#define USB_ETH_HOOK_RX_START()
 #endif
-
+ 
 #ifndef USB_ETH_HOOK_TX_END
-void tx_end_led(void);
-#define USB_ETH_HOOK_TX_END()	tx_end_led()
+#define USB_ETH_HOOK_TX_END()
 #endif
-
-
 
 #ifndef USB_ETH_HOOK_TX_ERROR
 #define USB_ETH_HOOK_TX_ERROR(string)	do { } while(0)
@@ -116,6 +113,8 @@ extern uint8_t usb_eth_is_active;
 extern uint64_t usb_ethernet_addr;
 void usb_eth_get_mac_address(uint8_t dest[6]);
 void usb_eth_set_mac_address(const uint8_t src[6]);
+void usb_eth_switch_to_windows_mode();
+void usb_eth_reset();
 
 PROCESS_NAME(usb_eth_process);
 

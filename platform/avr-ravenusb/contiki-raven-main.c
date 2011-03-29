@@ -63,7 +63,7 @@
 #include "contiki-net.h"
 #include "contiki-lib.h"
 #include "contiki-raven.h"
-
+#include "status_leds.h"
 /* Set ANNOUNCE to send boot messages to USB or RS232 serial port */
 #define ANNOUNCE 1
 
@@ -94,19 +94,11 @@
 #include "settings.h"
 #endif
 
-#if RF230BB           //radio driver using contiki core mac
 #include "radio/rf230bb/rf230bb.h"
 #include "net/mac/frame802154.h"
 #define UIP_IP_BUF ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 rimeaddr_t macLongAddr;
 #define	tmp_addr	macLongAddr
-#else                 //legacy radio driver using Atmel/Cisco 802.15.4'ish MAC
-#include <stdbool.h>
-#include "mac.h"
-#include "sicslowmac.h"
-#include "sicslowpan.h"
-#include "ieee-15-4-manager.h"
-#endif /* RF230BB */
 
 /* Test rtimers, also useful for pings, time stamps, routes, stack monitor */
 #define TESTRTIMER 0
@@ -120,6 +112,29 @@ uint16_t rtime;
 struct rtimer rt;
 void rtimercycle(void) {rtimerflag=1;}
 #endif /* TESTRTIMER */
+
+#if JACKDAW_CONF_USE_CONFIGURABLE_RDC
+// EXPERIMENTAL.
+#include "net/mac/sicslowmac.h"
+#include "net/mac/contikimac.h"
+#include "net/mac/cxmac.h"
+#include "net/mac/lpp.h"
+// Selected via SETTINGS_KEY_RDC_INDEX
+const struct rdc_driver *rdc_config_choices[] = {
+	&sicslowmac_driver,
+	&contikimac_driver,
+	&cxmac_driver,
+};
+#define MAX_RDC_CONFIG_CHOICES		(sizeof(rdc_config_choices)/sizeof(*rdc_config_choices))
+const struct rdc_driver *rdc_config_driver = &sicslowmac_driver;
+void jackdaw_choose_rdc_driver(uint8_t i) {
+	if(i<MAX_RDC_CONFIG_CHOICES) {
+		rdc_config_driver->off(1);
+		rdc_config_driver = rdc_config_choices[i];
+		rdc_config_driver->init();
+	}
+}
+#endif // #if JACKDAW_CONF_USE_CONFIGURABLE_RDC
 
 #if UIP_CONF_IPV6_RPL
 /*---------------------------------------------------------------------------*/
@@ -313,7 +328,9 @@ static uint8_t get_channel_from_eeprom() {
 }
 static bool get_eui64_from_eeprom(uint8_t macptr[8]) {
 	eeprom_read_block ((void *)macptr, &eemem_mac_address, 8);
-	return macptr[0]!=0xFF;
+//	return macptr[0]!=0xFF; //TODO:Verify mac address at this point!
+    return true;
+    
 }
 static uint16_t get_panid_from_eeprom(void) {
 	return eeprom_read_word(&eemem_panid);
@@ -421,13 +438,15 @@ uint16_t p=(uint16_t)&__bss_end;
   /* Leds are referred to by number to prevent any possible confusion :) */
   /* Led0 Blue Led1 Red Led2 Green Led3 Yellow */
   Leds_init();
-  Led1_on();
-  
+  Led2_on();
+
 #if USB_CONF_RS232
   /* Use rs232 port for serial out (tx, rx, gnd are the three pads behind jackdaw leds */
   rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
-  /* Redirect stdout to second port */
   rs232_redirect_stdout(RS232_PORT_0);
+
+  /* If USB serial port does not enumerate RS232 will control the jackdaw menu */
+  rs232_set_input(RS232_PORT_0, cdc_task_rs232in);
 #if ANNOUNCE
   PRINTA("\n\n*******Booting %s*******\n",CONTIKI_VERSION_STRING);
 #endif
@@ -442,58 +461,66 @@ uint16_t p=(uint16_t)&__bss_end;
   /* etimer process must be started before USB or ctimer init */
   process_start(&etimer_process, NULL);
 
-  Led2_on();
-  /* Now we can start USB enumeration */
-  process_start(&usb_process, NULL);
-
-  /* Start CDC enumeration, bearing in mind that it may fail */
-  /* Hopefully we'll get a stdout for startup messages, if we don't already */
-#if USB_CONF_SERIAL
-  process_start(&cdc_process, NULL);
-{unsigned short i;
-  for (i=0;i<65535;i++) {
-    process_run();
-    watchdog_periodic();
-    if (stdout) break;
-  }
-#if !USB_CONF_RS232
-  PRINTA("\n\n*******Booting %s*******\n",CONTIKI_VERSION_STRING);
-#endif
-}
-#endif
-  if (!stdout) Led3_on();
+  /* It would be nice to just enumerate the USB serial port at this time */
+  /* for the startup messages. But as it stands the USB network port will */
+  /* also enumerate, which means the MAC address has to be right */
+  /* Messages during the MAC setup will not appear (except on RS232) */ 
   
-#if RF230BB
-#if JACKDAW_CONF_USE_SETTINGS
-  PRINTA("Settings manager will be used.\n");
-#else
-{uint8_t x[2];
+  /* Check EEPROM integrity, if corrupt restore using program defaults */
+#if !JACKDAW_CONF_USE_SETTINGS
+  {uint8_t x[2];
 	*(uint16_t *)x = eeprom_read_word((uint16_t *)&eemem_channel);
 	if((uint8_t)x[0]!=(uint8_t)~x[1]) {
         PRINTA("Invalid EEPROM settings detected. Rewriting with default values.\n");
         get_channel_from_eeprom();
     }
+  }
+#endif
+  /* Now get the MAC address so we can begin USB enumeration */
+  /* This is guaranteed to return something, by hook or crook */
+  if(!get_eui64_from_eeprom(tmp_addr.u8)) {
+    PRINTA("Impossible error - no MAC address/n");
+  }
+
+  //Fix MAC address for ethernet task
+  init_net();
+
+#if UIP_CONF_IPV6        //allows ipv4, rime builds
+   memcpy(&uip_lladdr.addr, &tmp_addr.u8, 8);
+#endif
+
+  /* Now we can start USB enumeration */
+  process_start(&usb_process, NULL);
+
+  /* Start jackdaw menu I/O process that handles CDC and/or RS232 input */ 
+  /* As discussed above, network enumeration must also be done at thie time */
+
+#if USB_CONF_SERIAL || USB_CONF_RS232
+    process_start(&cdc_process, NULL);
+    process_start(&usb_eth_process, NULL);
+  /* Start CDC enumeration, bearing in mind that it may fail */
+  /* Hopefully we'll get a stdout for startup messages, if we aren't already using RS232 */{unsigned short i;
+  for (i=0;i<65535;i++) {
+    process_run();
+    watchdog_periodic();
+    if (stdout) break;  //Potentially dangerous garbage chars to menu if all endpoints not fully enumerated
+  }
+#if !USB_CONF_RS232
+  PRINTA("\n\n*******Booting %s*******\n",CONTIKI_VERSION_STRING);
+#include "serial/uart_usb_lib.h"
+ // uart_usb_flush();			
+#endif
 }
+#endif
+
+#if JACKDAW_CONF_USE_SETTINGS
+  PRINTA("Using EEPROM Settings manager.\n");
 #endif
 
   ctimer_init();
   /* Start radio and radio receive process */
   /* Note this starts RF230 process, so must be done after process_init */
   NETSTACK_RADIO.init();
-
-  /* Set addresses BEFORE starting tcpip process */
-
-  memset(&tmp_addr, 0, sizeof(rimeaddr_t));
-
-  if(get_eui64_from_eeprom(tmp_addr.u8));
-   
-  //Fix MAC address
-  init_net();
-
-#if UIP_CONF_IPV6
-  memcpy(&uip_lladdr.addr, &tmp_addr.u8, 8);
-#endif
-
   rf230_set_pan_addr(
 	get_panid_from_eeprom(),
 	get_panaddr_from_eeprom(),
@@ -539,15 +566,13 @@ uint16_t p=(uint16_t)&__bss_end;
 #endif
 #endif /* UIP_CONF_IPV6_RPL */
 
-#else  /* RF230BB */
-/* The order of starting these is important! */
-  process_start(&mac_process, NULL);
-  process_start(&tcpip_process, NULL);
-#endif /* RF230BB */
-
-  /* Start ethernet network and storage process */
+  /* Start ethernet network process, unless already done above */
+#if !(USB_CONF_SERIAL || USB_CONF_RS232)
   process_start(&usb_eth_process, NULL);
+#endif
+
 #if USB_CONF_STORAGE
+  /* Start mass storage process */
   process_start(&storage_process, NULL);
 #endif
 
@@ -560,6 +585,10 @@ uint16_t p=(uint16_t)&__bss_end;
 #endif
 
 Leds_off();
+
+#if JACKDAW_CONF_ALT_LED_SCHEME
+  process_start(&status_leds_process, NULL);
+#endif
 }
 
 /*-------------------------------------------------------------------------*/
@@ -585,6 +614,20 @@ main(void)
     process_run();
 
     watchdog_periodic();
+
+#if JACKDAW_CONF_DIM_ONLINE_LED
+	/* Run status led at low duty cycle */
+#if JACKDAW_CONF_ALT_LED_SCHEME
+	status_leds_dim();
+#else
+{static uint8_t ledtimer;
+    if (ledtimer--==0) {
+       Led0_off();  //turned back on in rndis process
+	   ledtimer=10;
+	}
+}
+#endif
+#endif
 
 /* Print rssi of all received packets, useful for range testing */
 #ifdef RF230_MIN_RX_POWER

@@ -330,7 +330,9 @@ Bool sbc_inquiry (void)
 #ifndef AVRGCC
          Usb_write_byte((U8)(*ptr++));     // send tab
 #else    // AVRGCC does not support point to PGM space
-#warning with avrgcc assumes devices descriptors are stored in the lower 64Kbytes of on-chip flash memory
+#warning
+#warning Assuming device descriptors are stored in the lower 64Kbytes of program flash memory
+#warning
          Usb_write_byte(pgm_read_byte_near((unsigned int)ptr++));
 #endif
 
@@ -503,7 +505,8 @@ Bool sbc_write_10 (void)
       {
          sbc_lun_status_is_protected();
          return FALSE;
-#warning For Win98 data must be read to avoid blocking
+//Diehard Win98 users probably already know this ;)
+//#warning For Win98 data must be read to avoid blocking
       }
       else
       {

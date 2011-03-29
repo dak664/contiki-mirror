@@ -66,6 +66,9 @@ void vcptx_end_led(void);
 void rawmode_enable(void);
 void rawmode_disable(void);
 
+int cdc_task_rs232in(unsigned char c);
+extern unsigned char cdc_task_input_c;
+
 PROCESS_NAME(cdc_process);
 
 /** @} */

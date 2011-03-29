@@ -52,9 +52,8 @@
 #include "usb_specific_request.h"
 #include "rndis/rndis_task.h"
 #include "rndis/rndis_protocol.h"
-#if RF230BB
 #include "rf230bb.h"
-#endif
+
 #include "uip.h"
 #include "sicslow_ethernet.h"
 #include <stdio.h>
@@ -62,6 +61,7 @@
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include "watchdog.h"
+#include "status_leds.h"
 
 #include "rndis/cdc_ecm.h"
 #include "rndis/cdc_eem.h"
@@ -90,33 +90,14 @@
 //! Temp data buffer when adding RNDIS headers
 uint8_t usb_eth_data_buffer[64];
 
+//TODO:What should this really be?
 uint64_t usb_ethernet_addr = 0x010000000002ULL;
 
 //_____ D E C L A R A T I O N S ____________________________________________
 
-
+#if !JACKDAW_CONF_ALT_LED_SCHEME
 //! Timers for LEDs
 uint8_t led1_timer, led2_timer;
-
-uint8_t usb_eth_is_active = 1;
-
-
-uint8_t usb_eth_packet_is_available() {
-	Usb_select_endpoint(RX_EP);
-	return Is_usb_read_enabled();
-}
-
-
-uint8_t usb_eth_ready_for_next_packet() {
-#ifdef USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET
-	return USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET();
-#else
-	return 1;
-#endif
-
-	return 1;
-}
-
 void rxtx_led_update(void)
 {
 	// turn off LED's if necessary
@@ -159,6 +140,22 @@ void tx_end_led(void)
 	led2_timer|=(1<<3);
 	if(((led2_timer-1)&(1<<2)))
 		Led1_on();
+}
+#endif /* !JACKDAW_CONF_ALT_LED_SCHEME */
+
+uint8_t usb_eth_is_active = 1;
+
+uint8_t usb_eth_packet_is_available() {
+	Usb_select_endpoint(RX_EP);
+	return Is_usb_read_enabled();
+}
+
+uint8_t usb_eth_ready_for_next_packet() {
+#ifdef USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET
+	return USB_ETH_HOOK_IS_READY_FOR_INBOUND_PACKET();
+#else
+	return 1;
+#endif
 }
 
 #if USB_ETH_CONF_MASS_STORAGE_FALLBACK
@@ -247,42 +244,68 @@ PROCESS_THREAD(usb_eth_process, ev, data_proc)
 	PROCESS_BEGIN();
 
 	while(1) {
+#if !JACKDAW_CONF_ALT_LED_SCHEME
 		rxtx_led_update();
+#endif
 
+#if USB_CONF_STORAGE
+		if(usb_mode == mass_storage) {
+			etimer_set(&et, CLOCK_SECOND);
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+			continue;
+		}
+#endif
 #if USB_ETH_CONF_MASS_STORAGE_FALLBACK
 		usb_eth_setup_timeout_fallback_check();
 #endif
 		
+		if(!Is_device_enumerated()) {
+			usb_eth_reset();
+			while(!Is_device_enumerated()) {
+				etimer_set(&et, CLOCK_SECOND);
+				PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et) || Is_device_enumerated());
+			}
+#if JACKDAW_CONF_ALT_LED_SCHEME
+			USB_ETH_HOOK_INACTIVE();
+#endif
+		}
+
 		switch(usb_configuration_nb) {
 			case USB_CONFIG_RNDIS_DEBUG:
 			case USB_CONFIG_RNDIS:
-				if(Is_device_enumerated()) {
-					if(rndis_process()) {
-						etimer_set(&et, CLOCK_SECOND/80);
-					} else {
-						Led0_toggle();
-						etimer_set(&et, CLOCK_SECOND/8);
-					}
+				if(rndis_process()) {
+#if JACKDAW_CONF_ALT_LED_SCHEME
+					USB_ETH_HOOK_READY();
+#endif
+					etimer_set(&et, CLOCK_SECOND/80);
+				} else {
+					USB_ETH_HOOK_INACTIVE();
+					etimer_set(&et, CLOCK_SECOND/8);
 				}
 				break;
 			case USB_CONFIG_EEM:
-				if(Is_device_enumerated())
-					cdc_eem_process();
+				cdc_eem_process();
+#if JACKDAW_CONF_ALT_LED_SCHEME
+				USB_ETH_HOOK_READY();
+#endif
 				etimer_set(&et, CLOCK_SECOND/80);
 				break;
 			case USB_CONFIG_ECM:
 			case USB_CONFIG_ECM_DEBUG:
-				if(Is_device_enumerated()) {
-					if(cdc_ecm_process()) {
-						etimer_set(&et, CLOCK_SECOND/80);
-					} else {
-						Led0_toggle();
-						etimer_set(&et, CLOCK_SECOND/8);
-					}
+				if(cdc_ecm_process()) {
+#if JACKDAW_CONF_ALT_LED_SCHEME
+					USB_ETH_HOOK_READY();
+#endif
+					etimer_set(&et, CLOCK_SECOND/80);
+				} else {
+					USB_ETH_HOOK_INACTIVE();
+					etimer_set(&et, CLOCK_SECOND/8);
 				}
 				break;
 			default:
-				Led0_toggle();
+#if !JACKDAW_CONF_ALT_LED_SCHEME
+				USB_ETH_HOOK_INACTIVE();
+#endif
 				etimer_set(&et, CLOCK_SECOND/4);
 				break;
 		}
@@ -293,7 +316,6 @@ PROCESS_THREAD(usb_eth_process, ev, data_proc)
 
 	PROCESS_END();
 }
-
 /**
  \brief Sends a single ethernet frame over USB using appropriate low-level protocol (EEM or RNDIS)
  \param senddata Data to send
@@ -366,6 +388,53 @@ usb_eth_get_mac_address(uint8_t dest[6]) {
 void
 usb_eth_set_mac_address(const uint8_t src[6]) {
 	memcpy(&usb_ethernet_addr,src,6);
+}
+
+#include "watchdog.h"
+
+void
+usb_eth_reset() {
+	rndis_state = rndis_uninitialized;
+}
+
+void
+usb_eth_switch_to_windows_mode() {
+	Usb_detach();
+
+	usb_mode = rndis_debug;
+	rndis_state = 	rndis_uninitialized;
+
+	// Reset the USB configuration
+	usb_user_endpoint_init(0);
+
+	Leds_off();
+
+	// Wait a few seconds, displaying
+	// a pretty LED light pattern.
+	int i;
+	for(i = 0; i < 5; i++) {
+		Led0_on();
+		_delay_ms(100);
+		watchdog_periodic();
+		Led0_off();
+		Led1_on();
+		_delay_ms(100);
+		watchdog_periodic();
+		Led1_off();
+		Led2_on();
+		_delay_ms(100);
+		watchdog_periodic();
+		Led2_off();
+		Led3_on();
+		_delay_ms(100);
+		watchdog_periodic();
+		Led3_off();
+	}
+
+	Leds_off();
+
+	//Attach USB
+	Usb_attach();
 }
 
 /** @}  */
