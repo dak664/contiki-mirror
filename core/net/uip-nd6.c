@@ -73,6 +73,7 @@
 #include "net/uip-nd6.h"
 #include "net/uip-ds6.h"
 #include "lib/random.h"
+
 /*------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG

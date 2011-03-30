@@ -165,7 +165,7 @@ unsigned char tcpip_is_forwarding; /* Forwarding right now? */
 #endif /* UIP_CONF_IP_FORWARD */
 
 PROCESS(tcpip_process, "TCP/IP stack");
-static int i;
+
 /*---------------------------------------------------------------------------*/
 static void
 start_periodic_tcp_timer(void)
