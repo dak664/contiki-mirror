@@ -62,6 +62,7 @@ $(CONVERTER):
 
 ### CPU-dependent cleanup files
 CLEAN += *.lnk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex *.sensinode
+CLEAN += symbols.c symbols.h
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS = . dev
