@@ -16,8 +16,7 @@
 #define CC_CONF_UNSIGNED_CHAR_BUGS	0
 #define CC_CONF_REGISTER_ARGS		0
 #define CC_CONF_FUNCTION_POINTER_KEYWORD __reentrant
-#define CC_CONF_HAS_BANKING 1
-#define CC_CONF_STORAGE_CLASSES 1
+#define CC_CONF_CODE_BANKING 1
 
 /* Generic types. */
 typedef   signed char    int8_t;
