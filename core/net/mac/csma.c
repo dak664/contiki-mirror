@@ -95,7 +95,6 @@ static struct ctimer transmit_timer;
 static uint8_t rdc_is_transmitting;
 
 /* This shortcut is only meant to be used with sicslowmac and null RDC */
-#define CSMA_SHORTCUT 1
 #ifndef CSMA_SHORTCUT
 #define CSMA_SHORTCUT SHORTCUTS_CONF_NETSTACK
 #endif
@@ -149,7 +148,7 @@ transmit_queued_packet(void *ptr)
     rdc_is_transmitting = 1;
     NETSTACK_RDC.send(packet_sent, q);
 #if CSMA_SHORTCUT
-    packet_sent_cb(ptr, mac_status);
+    packet_sent_cb(q, mac_status);
 #endif
   }
 }
@@ -349,9 +348,13 @@ send_packet(mac_callback_t sent, void *ptr)
                          &rimeaddr_null),
            packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS));
   }
-  NETSTACK_RDC.send(packet_sent, ptr);
 #if CSMA_SHORTCUT
-  packet_sent_cb(ptr, mac_status);
+  NETSTACK_RDC.send(packet_sent, ptr);
+  if(sent) {
+    sent(ptr, mac_status, 1);
+  }
+#else
+  NETSTACK_RDC.send(sent, ptr);
 #endif
 }
 /*---------------------------------------------------------------------------*/
