@@ -42,7 +42,7 @@
 #if BUTTON_SENSOR_ON
 static uint8_t p0ien;
 static uint8_t p2ien;
-static struct timer debouncetimer[2];
+static __data struct timer debouncetimer[2];
 
 #ifdef MODEL_N740
 HWCONF_PIN(BUTTON_1, 1, 0)

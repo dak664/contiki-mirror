@@ -57,7 +57,7 @@ leds_arch_set(unsigned char leds)
 #ifdef MODEL_N740
   /* Read the current ser-par chip status - we want to change bits 7 & 8 but
    * the remaining bit values should be retained */
-  static uint8_t ser_par;
+  uint8_t ser_par;
   ser_par = n740_ser_par_get();
   if(leds & LEDS_GREEN) {
     ser_par |= N740_SER_PAR_LED_GREEN; /* Set bit 7 */

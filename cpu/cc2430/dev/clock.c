@@ -57,9 +57,9 @@
 /* Used in sleep timer interrupt for calculating the next interrupt time */
 static unsigned long timer_value;
 /*starts calculating the ticks right after reset*/
-static volatile clock_time_t count = 0;
+static volatile __data clock_time_t count = 0;
 /*calculates seconds*/
-static volatile clock_time_t seconds = 0;
+static volatile __data clock_time_t seconds = 0;
 
 /*---------------------------------------------------------------------------*/
 /**
