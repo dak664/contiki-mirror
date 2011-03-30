@@ -4,7 +4,9 @@
  *	Modified from z80 port for cc2430 port.
  *
  * \author
- *	Takahide Matsutsuka <markn@markn.org>
+ *	 Takahide Matsutsuka <markn@markn.org> (Original)
+ *	 George Oikonomou - <oikonomou@users.sourceforge.net>
+ *	   (recent updates for the contiki cc2430 port)
  */
 
 #ifndef __8051_DEF_H__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Swedish Institute of Computer Science
+ * Copyright (c) 2010, Loughborough University - Computer Science
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,6 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
- *
- * $Id$
  */
 
 /**

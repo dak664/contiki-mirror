@@ -39,7 +39,9 @@
  *         We use Timer 1 on the cc2431.
  *
  * \author
+ *         Zach Shelby (Original)
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *           (rtimer-arch implementation for cc2430)
  */
 
 #ifndef __RTIMER_ARCH_H__

@@ -27,8 +27,6 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
- *
- * $Id: watchdog-cc2430.h 121 2010-10-22 08:49:42Z cogo $
  */
 
 /**

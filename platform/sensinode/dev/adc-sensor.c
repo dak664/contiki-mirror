@@ -27,8 +27,6 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
- *
- * $Id: adc-sensor.c 51 2010-09-09 18:36:25Z cogo $
  */
 
 /**

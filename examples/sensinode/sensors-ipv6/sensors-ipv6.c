@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2010, Loughborough University - Computer Science
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -24,7 +26,21 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
+ */
+
+/**
+ * \file
+ *         Example to demonstrate-test the sensors functionality on
+ *         sensinode/cc2430 devices.
  *
+ *         A UDP/IPv6 process waits for requests from a monitoring station
+ *         and responds with sensor values.
+ *
+ *         The message exchange is based on a custom protocol.
+ *         Check sensors-driver.c for protocol details.
+ *
+ * \author
+ *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
 #include "contiki.h"

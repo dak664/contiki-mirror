@@ -27,8 +27,6 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
- *
- * $Id: sensors-node.c 82 2010-10-20 13:58:49Z cogo $
  */
 
 /**

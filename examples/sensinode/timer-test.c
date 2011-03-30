@@ -6,7 +6,9 @@
  *         (Loughborough University)in order to test the rtimer
  *
  * \author
- *         Zach Shelby <zach@sensinode.com>
+ *         Zach Shelby <zach@sensinode.com> (Original)
+ *         George Oikonomou - <oikonomou@users.sourceforge.net> (rtimer code)
+ *
  */
 
 #include "contiki.h"

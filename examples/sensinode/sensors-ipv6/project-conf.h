@@ -27,8 +27,6 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
- *
- * $Id$
  */
 
 /**
@@ -36,7 +34,7 @@
  *         Project specific configuration defines for the UDP client/server
  *         example.
  *
- *         We just turn on buttons
+ *         We just make sure that buttons and ADS are on
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
@@ -47,6 +45,5 @@
 
 #define BUTTON_SENSOR_CONF_ON   1
 #define ADC_SENSOR_CONF_ON      1
-
 
 #endif /* PROJECT_CONF_H_ */
