@@ -20,7 +20,6 @@ endif
 
 # Determine our model and (later on) add it as part of the .ihx filename
 # Handy when building for various models so we can easily tell which ihx is for what model.
-# Used by the .model target (make foo.model).
 # Defaults to N100 (which is what the contiki code does as well)
 MODEL_SUFFIX=n100
 ifdef DEFINES
@@ -49,7 +48,7 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 # Lastly, it will create a %-$(MODEL).ihx file
 %.$(TARGET): %.hex
 	cp $< $@
-	if [ -f $(<:.hex=.ihx) ] ; then cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi	
+	if [ -f $(<:.hex=.ihx) ] ; then cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi
 	egrep '(^BANK.[^=])|(^CSEG )|(^HOME  )|(^CONST)|(^XINIT)' ${<:.hex=.map} | uniq
 	egrep -A 5 'Other memory' ${<:.hex=.mem}
 
