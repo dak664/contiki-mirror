@@ -144,24 +144,4 @@
 #define __banked
 #endif
 
-#ifdef CC_CONF_STORAGE_CLASSES
-#define CC_DATA  __data
-#define CC_NEAR  __near
-#define CC_IDATA __idata
-#define CC_XDATA __xdata
-#define CC_FAR   __far
-#define CC_PDATA __pdata
-#define CC_CODE  __code
-#define CC_BIT   __bit
-#else
-#define CC_DATA
-#define CC_NEAR
-#define CC_IDATA
-#define CC_XDATA
-#define CC_FAR
-#define CC_PDATA
-#define CC_CODE
-#define CC_BIT
-#endif
-
 #endif /* __CC_H__ */

@@ -40,7 +40,6 @@
  * \author  Julien Abeille <jabeille@cisco.com> (IPv6 related code)
  */
 #include "contiki-net.h"
-#include "sys/cc.h"
 
 #include "net/uip-split.h"
 
@@ -384,7 +383,8 @@ eventhandler(process_event_t ev, process_data_t data)
   static unsigned char i;
   register struct listenport *l;
 #endif /*UIP_TCP*/
-  static struct process * CC_DATA p;
+  static struct process *p;
+
   switch(ev) {
     case PROCESS_EVENT_EXITED:
       /* This is the event we get if a process has exited. We go through
@@ -558,8 +558,8 @@ tcpip_input(void)
 void
 tcpip_ipv6_output(void) __banked
 {
-  static uip_ds6_nbr_t * CC_DATA nbr = NULL;
-  static uip_ipaddr_t* CC_DATA nexthop;
+  static uip_ds6_nbr_t *nbr = NULL;
+  static uip_ipaddr_t* nexthop;
   
   if(uip_len == 0) {
     return;
@@ -712,7 +712,7 @@ tcpip_poll_tcp(struct uip_conn *conn)
 void
 tcpip_uipcall(void)
 {
-  static uip_udp_appstate_t * CC_DATA ts;
+  static uip_udp_appstate_t *ts;
   
 #if UIP_UDP
   if(uip_conn != NULL) {
