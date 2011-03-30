@@ -264,15 +264,16 @@ void menu_print(void)
 	PRINTA("\n********* Jackdaw Menu ********\n");
 	PRINTA("     [Built "  __DATE__ "]     \n");
 	PRINTA("*  m     Print current mode   *\n");
-	PRINTA("*  s     Set to sniffer mode  *\n");
-	PRINTA("*  n     Set to network mode  *\n");
-	PRINTA("*  c     Set RF channel       *\n");
-	PRINTA("*  p     Set RF power         *\n");
+	PRINTA("*  s     Toggle sniffer mode  *\n");
+//	PRINTA("*  n     Set to network mode  *\n");
 	PRINTA("*  6     Toggle 6LoWPAN       *\n");
 	PRINTA("*  r     Toggle raw mode      *\n");
 #if USB_CONF_RS232
 	PRINTA("*  d     Toggle RS232 output  *\n");
 #endif
+	PRINTA("*  c     Set RF channel       *\n");
+	PRINTA("*  p     Set RF power         *\n");
+	PRINTA("*  e     Energy Scan          *\n");
 #if JACKDAW_CONF_USE_SETTINGS
 	PRINTA("*  E     Dump EEPROM settings *\n");
 #endif
@@ -283,16 +284,15 @@ void menu_print(void)
 	PRINTA("*  N     RPL Neighbors        *\n");
 	PRINTA("*  G     RPL Global Repair    *\n");
 #endif
-	PRINTA("*  e     Energy Scan          *\n");
 #if USB_CONF_STORAGE && USB_CONF_STORAGESWITCH
-	PRINTA("*  u     Mount as mass-storage*\n");
+	PRINTA("*  U     Mount as mass-storage*\n");
 #endif
 #if USB_CONF_WINDOWSSWITCH
 	PRINTA("*  W     Switch to RNDIS      *\n");
 #endif
 #if USB_CONF_BOOTLOADER
 	if(bootloader_is_present())
-	PRINTA("*  D     Switch to DFU mode   *\n");
+	PRINTA("*  F     DFU Firmware Update  *\n");
 #endif
 #if USB_CONF_WATCHDOGRESET
 	PRINTA("*  R     Reset (via WDT)      *\n");
@@ -333,10 +333,12 @@ void menu_process(char c)
 	{
 		normal,
 		channel,
-		txpower
+		txpower,
+		confirmwipe,
+		confirmdfuboot
 	} menustate = normal;
 	
-	static char input_string[3];
+	static char input_string[4];
 	static uint8_t input_index;
 	int input_value;
 
@@ -359,7 +361,7 @@ void menu_process(char c)
 						}
 
 					} else if (menustate==txpower) {
-						PRINTA(" "); //for some reason needs a print here to clear the string input...
+				//		PRINTA(" "); //for some reason needs a print here to clear the string input...
 						if (rf230_set_txpower(input_value)) {
 							PRINTA("\nTransmit power changed to %d",input_value);
 #if CONVERTTXPOWER
@@ -369,6 +371,30 @@ void menu_process(char c)
 						} else {
 							PRINTA("\nInvalid power level!\n");
 						}
+#if JACKDAW_CONF_USE_SETTINGS
+					} else if (menustate == confirmwipe) {
+						if ((input_string[0]=='y') || (input_string[0]=='Y')) {
+							PRINTA("Wiping all settings. . .\n");
+							settings_wipe();
+							PRINTA("Done.\n");
+						} else {
+							PRINTA("\n");
+						}
+#endif
+
+#if USB_CONF_BOOTLOADER
+					} else if (menustate == confirmdfuboot) {
+						if ((input_string[0]=='y') || (input_string[0]=='Y')) {
+							uint8_t i;
+							PRINTA("Entering DFU Mode...\n");
+							uart_usb_flush();
+							Leds_on();
+							for(i = 0; i < 10; i++)_delay_ms(100);
+							Leds_off();
+							Jump_To_Bootloader();
+						}
+						PRINTA("\n");
+#endif
 					}
 				} else {
 					if (menustate==channel) {
@@ -389,7 +415,7 @@ void menu_process(char c)
 					PRINTA("\b \b");
 				}
 				break;
-
+#if 0
 			case '0':
 			case '1':
 			case '2':
@@ -400,7 +426,9 @@ void menu_process(char c)
 			case '7':
 			case '8':
 			case '9':
-				if (input_index > 1) {  // No more than two digits at present. Beep if more.					
+#endif
+			default:
+				if (input_index > 2) {  // No more than two digits at present. Beep if more.					
 					putc('\a', stdout);
 				} else {
 					putc(c, stdout);				
@@ -408,8 +436,9 @@ void menu_process(char c)
 				}
 				break;
 
-			default:
-				break;
+	//		default:
+
+	//		break;
 		}
 
  
@@ -459,10 +488,27 @@ void menu_process(char c)
 				break;
 #endif
 			case 's':
-				PRINTA("Jackdaw now in sniffer mode\n");
-				usbstick_mode.sendToRf = 0;
-				usbstick_mode.translate = 0;
-				rf230_listen_channel(rf230_get_channel());
+			   if (usbstick_mode.sendToRf==0) {
+					PRINTA("Jackdaw now in network mode\n");
+					usbstick_mode.sendToRf = 1;
+					usbstick_mode.translate = 1;
+					rf230_set_channel(rf230_get_channel());		//receive only addressed packets
+				} else {
+					PRINTA("Jackdaw now in sniffer mode\n");
+					usbstick_mode.sendToRf = 0;
+					usbstick_mode.translate = 0;
+					rf230_listen_channel(rf230_get_channel()); 	//receive all packets
+				}
+				break;
+
+			case '6':
+				usbstick_mode.sicslowpan = !usbstick_mode.sicslowpan;
+				PRINTA("Jackdaw will%s perform 6LoWPAN translation\nm",usbstick_mode.sicslowpan?"":" not");
+				break;
+
+			case 'r':
+				usbstick_mode.raw = !usbstick_mode.raw;
+				PRINTA("Jackdaw will%s capture raw frames\n",usbstick_mode.raw?"":" not");
 				break;
 
 #if RF230BB && RF230_CONF_SNEEZER
@@ -489,23 +535,6 @@ void menu_process(char c)
 				break;
 #endif
 
-			case 'n':
-				PRINTA("Jackdaw now in network mode\n");
-				usbstick_mode.sendToRf = 1;
-				usbstick_mode.translate = 1;
-				rf230_set_channel(rf230_get_channel());   //exit state of promiscuity
-				break;
-
-			case '6':
-				usbstick_mode.sicslowpan = !usbstick_mode.sicslowpan;
-				PRINTA("Jackdaw will%s perform 6LoWPAN translation\nm",usbstick_mode.sicslowpan?"":" not");
-				break;
-
-			case 'r':
-				usbstick_mode.raw = !usbstick_mode.raw;
-				PRINTA("Jackdaw will%s capture raw frames\n",usbstick_mode.raw?"":" not");
-				break;
-
 #if USB_CONF_RS232
 			case 'd':
 				usbstick_mode.debugOn = !usbstick_mode.debugOn;
@@ -516,6 +545,10 @@ void menu_process(char c)
 #if JACKDAW_CONF_USE_SETTINGS
 			case 'E':
 				settings_debug_dump(stdout);
+				break;
+			case 'D':
+				PRINTA("\nDelete all eeprom settings [n]?");
+				menustate = confirmwipe;
 				break;
 #endif
 
@@ -753,14 +786,10 @@ uint16_t p=(uint16_t)&__bss_end;
 				break;
 
 #if USB_CONF_BOOTLOADER
-			case 'D':
-				{
-					PRINTA("Entering DFU Mode...\n");
-					uart_usb_flush();
-					Leds_on();
-					for(i = 0; i < 10; i++)_delay_ms(100);
-					Leds_off();
-					Jump_To_Bootloader();
+			case 'F':
+				if(bootloader_is_present()) {
+					PRINTA("Update firmware through USB [n]?\n");
+					menustate=confirmdfuboot;
 				}
 				break;
 #endif
@@ -790,7 +819,7 @@ uint16_t p=(uint16_t)&__bss_end;
 #endif	
 			
 #if USB_CONF_STORAGE && USB_CONF_STORAGESWITCH 
-			case 'u':
+			case 'U':
 
 				//Mass storage mode
 				usb_mode = mass_storage;

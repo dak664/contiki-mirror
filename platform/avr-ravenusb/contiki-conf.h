@@ -86,7 +86,7 @@ unsigned long clock_seconds(void);
  * The default for the alternate is blue=serial, red=rx, green=tx, yellow=online(optional 50% duty)
  * The "ready" led can be dimmed through lowering the duty cycle in the main loop.
  */
-#define JACKDAW_CONF_ALT_LED_SCHEME     0
+#define JACKDAW_CONF_ALT_LED_SCHEME     1
 #define JACKDAW_CONF_DIM_ONLINE_LED     1
 
 /* Use EEPROM settings manager, or hard-coded EEPROM reads? */
@@ -196,6 +196,7 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 #define USB_CONF_RS232           0
 
 /* Jack menu options */
+/* Jump to bootloader, if present */
 #define USB_CONF_BOOTLOADER      1
 #define USB_CONF_WATCHDOGRESET   1
 #define USB_CONF_WINDOWSSWITCH   1
@@ -210,8 +211,8 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 
 /* Jackdaw menu 'm' reporting options */
 #define SICSLOW_ETHERNET_CONF_UPDATE_USB_ETH_STATS  1
-#define RF230_CONF_RADIOSTATS    1
-#define CONFIG_STACK_MONITOR     1
+#define RF230_CONF_RADIOSTATS     1
+#define CONFIG_STACK_MONITOR      1
 
 /* Disable mass storage enumeration for more program space */
 #define USB_CONF_STORAGE         0   /* TODO: Mass storage is currently broken */
