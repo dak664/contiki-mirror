@@ -79,9 +79,7 @@
 #define settings_print(x) x==SETTINGS_STATUS_OK ? PRINTA(", and stored in EEPROM.\n") : PRINTA(", but error writing it to EEPROM\n")
 #define settings_printerror PRINTA(", but error writing it to EEPROM\n")
 #else
-#define SETTINGS_STATUS_OK 1
-#define settings_print(x) x==SETTINGS_STATUS_OK ? PRINTA(", not saved in EEPROM.\n") : PRINTA(", but error writing it to EEPROM\n")
-#define settings_set_uint8(...) SETTINGS_STATUS_OK
+#define settings_print(x) PRINTA(", not saved in EEPROM.\n")
 #endif
 
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
@@ -141,6 +139,41 @@ static void printtxpower(void) {
     PRINTA("%c%c%c.%cdBm",sign,tens,ones,tenths);
 }
 #endif
+
+#if JACKDAW_CONF_CONFIGURABLERDC  //Experimental
+#include "net/mac/nullrdc.h"
+#include "net/mac/sicslowmac.h"
+#include "net/mac/contikimac.h"
+#include "net/mac/cxmac.h"
+#include "net/mac/xmac.h"
+#include "net/mac/lpp.h"
+/* Selected via SETTINGS_KEY_RDC_INDEX
+ * Note including all of these will use a lot of RAM
+ * Replace unused entries with null to keep in sync with the eeprom ordering
+ */
+const struct rdc_driver *rdc_config_choices[] = {
+&nullrdc_driver,
+&sicslowmac_driver,
+0,//&contikimac_driver,
+0,//&xmac_driver,
+&cxmac_driver,
+&lpp_driver,
+};
+#define MAX_RDC_CONFIG_CHOICES	(sizeof(rdc_config_choices)/sizeof(*rdc_config_choices))
+const struct rdc_driver *rdc_config_driver = &nullrdc_driver;
+uint8_t jackdaw_choose_rdc_driver(uint8_t i) {
+	if(i<MAX_RDC_CONFIG_CHOICES) {
+		if (rdc_config_choices[i]!=0) {
+			rdc_config_driver->off(1);
+			rdc_config_driver = rdc_config_choices[i];
+			rdc_config_driver->init();
+			return 1;
+		}
+	}
+	return 0;
+}
+#endif /* JACKDAW_CONF_CONFIGURABLERDC */
+
 
 PROCESS(cdc_process, "Jackdaw Menu");
 
@@ -263,9 +296,8 @@ void menu_print(void)
 {
 	PRINTA("\n********* Jackdaw Menu ********\n");
 	PRINTA("     [Built "  __DATE__ "]     \n");
-	PRINTA("*  m     Print current mode   *\n");
+	PRINTA("*  m,sp  Print current mode   *\n");
 	PRINTA("*  s     Toggle sniffer mode  *\n");
-//	PRINTA("*  n     Set to network mode  *\n");
 	PRINTA("*  6     Toggle 6LoWPAN       *\n");
 	PRINTA("*  r     Toggle raw mode      *\n");
 #if USB_CONF_RS232
@@ -274,27 +306,30 @@ void menu_print(void)
 	PRINTA("*  c     Set RF channel       *\n");
 	PRINTA("*  p     Set RF power         *\n");
 	PRINTA("*  e     Energy Scan          *\n");
+#if UIP_CONF_IPV6_RPL
+	PRINTA("*  n     RPL Neighbors        *\n");
+	PRINTA("*  G,L   RPL Globl,Locl Repair*\n");
+#endif
+#if JACKDAW_CONF_CONFIGURABLERDC
+	PRINTA("*  C     Change RDC protocol  *\n");
+#endif
 #if JACKDAW_CONF_USE_SETTINGS
-	PRINTA("*  E     Dump EEPROM settings *\n");
+	PRINTA("*  D,E   Dump, erase eeprom  C *\n");
 #endif
 #if RF230BB && RF230_CONF_SNEEZER
 	PRINTA("*  S     Enable sneezer mode  *\n");
 #endif
-#if UIP_CONF_IPV6_RPL
-	PRINTA("*  N     RPL Neighbors        *\n");
-	PRINTA("*  G     RPL Global Repair    *\n");
-#endif
-#if USB_CONF_STORAGE && USB_CONF_STORAGESWITCH
+#if USB_CONF_STORAGE && JACKDAW_CONF_STORAGESWITCH
 	PRINTA("*  U     Mount as mass-storage*\n");
 #endif
-#if USB_CONF_WINDOWSSWITCH
+#if JACKDAW_CONF_WINDOWSSWITCH
 	PRINTA("*  W     Switch to RNDIS      *\n");
 #endif
-#if USB_CONF_BOOTLOADER
+#if JACKDAW_CONF_BOOTLOADER
 	if(bootloader_is_present())
 	PRINTA("*  F     DFU Firmware Update  *\n");
 #endif
-#if USB_CONF_WATCHDOGRESET
+#if JACKDAW_CONF_WATCHDOGRESET
 	PRINTA("*  R     Reset (via WDT)      *\n");
 #endif
 	PRINTA("*  h,?   Print this menu      *\n");
@@ -335,7 +370,8 @@ void menu_process(char c)
 		channel,
 		txpower,
 		confirmwipe,
-		confirmdfuboot
+		confirmdfuboot,
+		chooserdc
 	} menustate = normal;
 	
 	static char input_string[4];
@@ -347,25 +383,31 @@ void menu_process(char c)
 		switch(c) {
 			case '\r':
 			case '\n':		
-								
+
 				if (input_index)  {
 					input_string[input_index] = 0;
-					input_value = atoi(input_string);
+					input_value = atoi(input_string);	//Will be zero if starts with non-numeric character
+					while (input_index) {				//Set to -1 if any nun-numeric character
+						input_index--;
+						if ((input_string[input_index]<'0')||(input_string[input_index]>'9')) {
+							input_value = -1;			//note this passed to radio actions below!
+							break;
+						}
+					}
 
 					if (menustate==channel) {
 						if (rf230_set_channel(input_value)) {
 							PRINTA("\nChannel changed to %d",input_value);
-							settings_print(settings_set_uint8(SETTINGS_KEY_CHANNEL, input_value));   
+							settings_print(settings_set_uint8(SETTINGS_KEY_CHANNEL, input_value));
 						} else {
 							PRINTA("\nInvalid channel!\n");
 						}
 
 					} else if (menustate==txpower) {
-				//		PRINTA(" "); //for some reason needs a print here to clear the string input...
 						if (rf230_set_txpower(input_value)) {
 							PRINTA("\nTransmit power changed to %d",input_value);
 #if CONVERTTXPOWER
-                            PRINTA(" [");printtxpower();PRINTA("]");
+							PRINTA(" [");printtxpower();PRINTA("]");
 #endif
 							settings_print(settings_set_uint8(SETTINGS_KEY_TXPOWER, input_value));
 						} else {
@@ -374,7 +416,7 @@ void menu_process(char c)
 #if JACKDAW_CONF_USE_SETTINGS
 					} else if (menustate == confirmwipe) {
 						if ((input_string[0]=='y') || (input_string[0]=='Y')) {
-							PRINTA("Wiping all settings. . .\n");
+							PRINTA("\nWiping all settings. . .\n");
 							settings_wipe();
 							PRINTA("Done.\n");
 						} else {
@@ -382,11 +424,11 @@ void menu_process(char c)
 						}
 #endif
 
-#if USB_CONF_BOOTLOADER
+#if JACKDAW_CONF_BOOTLOADER
 					} else if (menustate == confirmdfuboot) {
 						if ((input_string[0]=='y') || (input_string[0]=='Y')) {
 							uint8_t i;
-							PRINTA("Entering DFU Mode...\n");
+							PRINTA("\nhEntering DFU Mode...\n");
 							uart_usb_flush();
 							Leds_on();
 							for(i = 0; i < 10; i++)_delay_ms(100);
@@ -395,15 +437,30 @@ void menu_process(char c)
 						}
 						PRINTA("\n");
 #endif
+
+#if JACKDAW_CONF_CONFIGURABLERDC
+					} else if (menustate == chooserdc) {
+						if (jackdaw_choose_rdc_driver(input_value)) {
+							PRINTA("\nRDC Driver Changed To: %s", NETSTACK_CONF_RDC.name);
+							settings_print(settings_set_uint8(SETTINGS_KEY_RDC_INDEX, input_value));
+						} else {
+							PRINTA("\nSorry, that RDC is not available.\n");
+						}
+#endif
+
 					}
 				} else {
 					if (menustate==channel) {
 						PRINTA("\nChannel unchanged.\n");
 					} else if (menustate==txpower) {
 						PRINTA("\nTransmit power unchanged.\n");
+					} else if (menustate==chooserdc) {
+						PRINTA("\nRDC unchanged.\n");
+					} else {
+						PRINTA("\n\n");
 					}
 				}
-					
+
 				menustate = normal;
 				input_index = 0;
 				break;
@@ -415,30 +472,16 @@ void menu_process(char c)
 					PRINTA("\b \b");
 				}
 				break;
-#if 0
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-#endif
+
 			default:
-				if (input_index > 2) {  // No more than two digits at present. Beep if more.					
+				if (input_index > 2) {  // No more than two digits at present. Beep if more.
 					putc('\a', stdout);
 				} else {
-					putc(c, stdout);				
+					putc(c, stdout);
 					input_string[input_index++] = c;
 				}
 				break;
 
-	//		default:
-
-	//		break;
 		}
 
  
@@ -542,16 +585,6 @@ void menu_process(char c)
 				break;
 #endif
 
-#if JACKDAW_CONF_USE_SETTINGS
-			case 'E':
-				settings_debug_dump(stdout);
-				break;
-			case 'D':
-				PRINTA("\nDelete all eeprom settings [n]?");
-				menustate = confirmwipe;
-				break;
-#endif
-
 			case 'c':
 				PRINTA("\nSelect 802.15.4 Channel in range 11-26 [%d]: ", rf230_get_channel());
 				menustate = channel;
@@ -562,23 +595,20 @@ void menu_process(char c)
 				menustate = txpower;
 				break;
 
-#if JACKDAW_CONF_USE_CONFIGURABLE_RDC
-extern void jackdaw_choose_rdc_driver(uint8_t i);
-			case '1':
-				jackdaw_choose_rdc_driver(0);
-				PRINTA("RDC Driver Changed To: %s\n", NETSTACK_CONF_RDC.name);
+#if JACKDAW_CONF_USE_SETTINGS
+			case 'E':
+				settings_debug_dump(stdout);
 				break;
-			case '2':
-				jackdaw_choose_rdc_driver(1);
-				PRINTA("RDC Driver Changed To: %s\n", NETSTACK_CONF_RDC.name);
+			case 'D':
+				PRINTA("\nDelete all eeprom settings [n]?");
+				menustate = confirmwipe;
 				break;
-			case '3':
-				jackdaw_choose_rdc_driver(2);
-				PRINTA("RDC Driver Changed To: %s\n", NETSTACK_CONF_RDC.name);
-				break;
-			case '4':
-				jackdaw_choose_rdc_driver(3);
-				PRINTA"RDC Driver Changed To: %s\n", NETSTACK_CONF_RDC.name);
+#endif
+
+#if JACKDAW_CONF_CONFIGURABLERDC
+			case 'C':
+				PRINTA("\nRDC(0=null, 1=sics 2=contiki, 3=xmac 4=cxmac 5=lpp [%s]: ", NETSTACK_CONF_RDC.name);
+				menustate = chooserdc;
 				break;
 #endif
 
@@ -587,7 +617,7 @@ extern void jackdaw_choose_rdc_driver(uint8_t i);
 extern uip_ds6_nbr_t uip_ds6_nbr_cache[];
 extern uip_ds6_route_t uip_ds6_routing_table[];
 extern uip_ds6_netif_t uip_ds6_if;
-			case 'N':
+			case 'n':
 			{	uint8_t i,j;
 				PRINTA("\nAddresses [%u max]\n",UIP_DS6_ADDR_NB);
 				for (i=0;i<UIP_DS6_ADDR_NB;i++) {
@@ -627,22 +657,23 @@ extern uip_ds6_netif_t uip_ds6_if;
 			case 'G':
 				PRINTA("Global repair returns %d\n",rpl_repair_dag(rpl_get_dag(RPL_ANY_INSTANCE))); 
 				break;
-            
-            case 'L':
-                rpl_local_repair(rpl_get_dag(RPL_ANY_INSTANCE));
-                 PRINTA("Local repair initiated\n"); 
-                 break;
- 
-            case 'Z':     //zap the routing table           
-            {   uint8_t i; 
+
+			case 'L':
+				rpl_local_repair(rpl_get_dag(RPL_ANY_INSTANCE));
+				PRINTA("Local repair initiated\n"); 
+				break;
+
+			case 'Z':     //zap the routing table           
+			{   uint8_t i; 
 				for (i = 0; i < UIP_DS6_ROUTE_NB; i++) {
 					uip_ds6_routing_table[i].isused=0;
-                }
-                PRINTA("Routing table cleared!\n"); 
-                break;
-            }
-#endif				
-			
+				}
+				PRINTA("Routing table cleared!\n"); 
+				break;
+			}
+#endif
+
+			case ' ':
 			case 'm':
 				PRINTA("Currently Jackdaw:\n  * Will ");
 				if (usbstick_mode.sendToRf == 0) { PRINTA("not ");}
@@ -661,7 +692,7 @@ extern uip_ds6_netif_t uip_ds6_if;
 				PRINTA("Output raw 802.15.4 frames\n");
 #endif
 
-				PRINTA("  * USB Ethernet MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
+				PRINTA("  * MAC=%02x:%02x:%02x:%02x:%02x:%02x",
 					((uint8_t *)&usb_ethernet_addr)[0],
 					((uint8_t *)&usb_ethernet_addr)[1],
 					((uint8_t *)&usb_ethernet_addr)[2],
@@ -669,8 +700,12 @@ extern uip_ds6_netif_t uip_ds6_if;
 					((uint8_t *)&usb_ethernet_addr)[4],
 					((uint8_t *)&usb_ethernet_addr)[5]
 				);
+				PRINTA(", config %d, USB<->ETH is ", usb_configuration_nb);
+				if (usb_eth_is_active == 0) PRINTA("not ");
+				PRINTA("active\n");
+
 				extern uint64_t macLongAddr;
-				PRINTA("  * 802.15.4 EUI-64: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+				PRINTA("  * 802.15.4 EUI-64=%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
 					((uint8_t *)&macLongAddr)[0],
 					((uint8_t *)&macLongAddr)[1],
 					((uint8_t *)&macLongAddr)[2],
@@ -680,9 +715,21 @@ extern uip_ds6_netif_t uip_ds6_if;
 					((uint8_t *)&macLongAddr)[6],
 					((uint8_t *)&macLongAddr)[7]
 				);
+
+				PRINTA("  * RDC Driver: %s", NETSTACK_RDC.name);
+				if (NETSTACK_RDC.channel_check_interval) {
+					unsigned short tmp;
+					tmp=CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval == 0 ? 1:\
+					NETSTACK_RDC.channel_check_interval());
+					if (tmp<65535) PRINTA(", check rate %u Hz",tmp);
+				}
+
 #if UIP_CONF_IPV6_RPL
-				PRINTA("  * Suports RPL mesh routing\n");
+				PRINTA(", supports RPL mesh routing\n");
+#else
+				PRINTA("\n");
 #endif
+
 #if CONVERTTXPOWER
 				PRINTA("  * Operates on channel %d with TX power ",rf230_get_channel());
 				printtxpower();PRINTA("\n");
@@ -697,8 +744,6 @@ extern uip_ds6_netif_t uip_ds6_if;
 					PRINTA("  * Current/Last/Smallest RSSI: %d/%d/--dBm\n", -91+(rf230_rssi()-1), -91+(rf230_last_rssi-1));
 				}
 
-				PRINTA("  * RDC Driver: %s\n", NETSTACK_CONF_RDC.name);
-
 #if SICSLOW_ETHERNET_CONF_UPDATE_USB_ETH_STATS
 				PRINTA("  * usb_eth_stats OK:tx %4lu, rx %4lu BAD:tx %2lu, rx %2lu\n",usb_eth_stat.txok,\
 				usb_eth_stat.rxok,usb_eth_stat.txbad,usb_eth_stat.rxbad);
@@ -710,22 +755,18 @@ extern uip_ds6_netif_t uip_ds6_if;
 					RF230_sendpackets,RF230_receivepackets,RF230_sendfail,RF230_receivefail);
 #endif
 
-				PRINTA("  * Configuration: %d, USB<->ETH is ", usb_configuration_nb);
-				if (usb_eth_is_active == 0) PRINTA("not ");
-				PRINTA("active\n");
-
 #if CONFIG_STACK_MONITOR
 /* See contiki-raven-main.c for initialization of the magic numbers */
 {
 extern uint16_t __bss_end;
 uint16_t p=(uint16_t)&__bss_end;
-    do {
-      if (*(uint16_t *)p != 0x4242) {
-        PRINTA("  * Never-used stack > %d bytes\n",p-(uint16_t)&__bss_end);
-        break;
-      }
-      p+=100;
-    } while (p<RAMEND-100);
+	do {
+		if (*(uint16_t *)p != 0x4242) {
+		PRINTA("  * Never-used stack > %d bytes\n",p-(uint16_t)&__bss_end);
+		break;
+		}
+		p+=100;
+	} while (p<RAMEND-100);
 }
 #endif
 
@@ -785,7 +826,7 @@ uint16_t p=(uint16_t)&__bss_end;
 				
 				break;
 
-#if USB_CONF_BOOTLOADER
+#if JACKDAW_CONF_BOOTLOADER
 			case 'F':
 				if(bootloader_is_present()) {
 					PRINTA("Update firmware through USB [n]?\n");
@@ -794,7 +835,7 @@ uint16_t p=(uint16_t)&__bss_end;
 				break;
 #endif
 
-#if USB_CONF_WATCHDOGRESET
+#if JACKDAW_CONF_WATCHDOGRESET
 			case 'R':
 				{
 					PRINTA("Resetting...\n");
@@ -808,7 +849,7 @@ uint16_t p=(uint16_t)&__bss_end;
 				break;
 #endif
 
-#if USB_CONF_WINDOWSSWITCH
+#if JACKDAW_CONF_WINDOWSSWITCH
 				case 'W':
 				{
 					PRINTA("Switching to windows mode...\n");
@@ -818,7 +859,7 @@ uint16_t p=(uint16_t)&__bss_end;
 				break;
 #endif	
 			
-#if USB_CONF_STORAGE && USB_CONF_STORAGESWITCH 
+#if USB_CONF_STORAGE && JACKDAW_CONF_STORAGESWITCH 
 			case 'U':
 
 				//Mass storage mode

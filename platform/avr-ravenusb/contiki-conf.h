@@ -92,7 +92,7 @@ unsigned long clock_seconds(void);
 /* Use EEPROM settings manager, or hard-coded EEPROM reads? */
 /* Generate random MAC address on first startup? */
 /* Random number from radio clock skew or ADC noise? */
-#define JACKDAW_CONF_USE_SETTINGS		1
+#define JACKDAW_CONF_USE_SETTINGS		0
 #define JACKDAW_CONF_RANDOM_MAC			0
 #define RNG_CONF_USE_RADIO_CLOCK		1
 //#define RNG_CONF_USE_ADC	1
@@ -195,17 +195,21 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
  */
 #define USB_CONF_RS232           0
 
-/* Jack menu options */
-/* Jump to bootloader, if present */
-#define USB_CONF_BOOTLOADER      1
-#define USB_CONF_WATCHDOGRESET   1
-#define USB_CONF_WINDOWSSWITCH   1
-#define USB_CONF_STORAGESWITCH   1
+/* Disable mass storage enumeration for more program space */
+#define USB_CONF_STORAGE         0   /* TODO: Mass storage is currently broken */
+
+/* Jackdaw menu options */
+#define JACKDAW_CONF_BOOTLOADER      1  //Jump to bootloader, if present
+#define JACKDAW_CONF_WATCHDOGRESET   1  //Reboot using watchdog timeout
+#define JACKDAW_CONF_WINDOWSSWITCH   1  //Re-enumerate as RNDIS network interface
+#define JACKDAW_CONF_STORAGESWITCH   1  //Re-enumerate as mass storage device
+#define JACKDAW_CONF_CONFIGURABLERDC 1  //On-the fly switch between different radio duty cycles
 /* Sneeze mode is useful for testing CCA on other radios.
  * During sneezing, attempted radio access may hang the MCU and cause a watchdog reset.
  * The host interface, jackdaw menu and rf230_send routines are temporarily disabled to prevent this.
  * but some calls from an internal uip stack might get through, e.g. from CCA or low power protocols.
  * Temporarily disabling all the possible accesses would add considerable complication to the radio driver.
+ * Continous broadcasting at high power may violate RF emission regulations in some countries.
  */
 #define RF230_CONF_SNEEZER        1
 
@@ -213,9 +217,6 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 #define SICSLOW_ETHERNET_CONF_UPDATE_USB_ETH_STATS  1
 #define RF230_CONF_RADIOSTATS     1
 #define CONFIG_STACK_MONITOR      1
-
-/* Disable mass storage enumeration for more program space */
-#define USB_CONF_STORAGE         0   /* TODO: Mass storage is currently broken */
 
 /* ************************************************************************** */
 //#pragma mark UIP Settings
@@ -285,7 +286,15 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
   /* Network setup */
 #if 1              /* No radio cycling */
 #define NETSTACK_CONF_MAC         nullmac_driver
-#define NETSTACK_CONF_RDC         sicslowmac_driver
+#if JACKDAW_CONF_CONFIGURABLERDC
+/* Configurable radio cycling */
+/* EXPERIMENTAL */
+struct rdc_driver;
+extern const struct rdc_driver *rdc_config_driver;
+#define NETSTACK_CONF_RDC         (*rdc_config_driver) 
+#else
+#define NETSTACK_CONF_RDC         nullrdc_driver
+#endif
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
 #define CHANNEL_802_15_4          26

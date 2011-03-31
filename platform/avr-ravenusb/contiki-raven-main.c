@@ -64,6 +64,7 @@
 #include "contiki-lib.h"
 #include "contiki-raven.h"
 #include "status_leds.h"
+
 /* Set ANNOUNCE to send boot messages to USB or RS232 serial port */
 #define ANNOUNCE 1
 
@@ -75,21 +76,25 @@
 #endif
 
 #include "usb_task.h"
-#if USB_CONF_SERIAL
+/* rndis_task defines the usb_eth_process used for rndis, cdc-eem or cdc-ecm */
+#include "rndis/rndis_task.h"
+
+#if USB_CONF_STORAGE
+#include "storage/storage_task.h"
+#endif
+
+/* The CDC task implements the Jackdaw menu through USB or RS232 */
+#if USB_CONF_SERIAL||USB_CONF_RS232
 #include "cdc_task.h"
 #endif
 #if USB_CONF_RS232
 #include "dev/rs232.h"
 #endif
 
-#include "rndis/rndis_task.h"
-#if USB_CONF_STORAGE
-#include "storage/storage_task.h"
-#endif
-
 #include "dev/watchdog.h"
 #include "dev/usb/usb_drv.h"
 
+/* Settings manager writes eeprom downwards from end using keywords */
 #if JACKDAW_CONF_USE_SETTINGS
 #include "settings.h"
 #endif
@@ -112,29 +117,6 @@ uint16_t rtime;
 struct rtimer rt;
 void rtimercycle(void) {rtimerflag=1;}
 #endif /* TESTRTIMER */
-
-#if JACKDAW_CONF_USE_CONFIGURABLE_RDC
-// EXPERIMENTAL.
-#include "net/mac/sicslowmac.h"
-#include "net/mac/contikimac.h"
-#include "net/mac/cxmac.h"
-#include "net/mac/lpp.h"
-// Selected via SETTINGS_KEY_RDC_INDEX
-const struct rdc_driver *rdc_config_choices[] = {
-	&sicslowmac_driver,
-	&contikimac_driver,
-	&cxmac_driver,
-};
-#define MAX_RDC_CONFIG_CHOICES		(sizeof(rdc_config_choices)/sizeof(*rdc_config_choices))
-const struct rdc_driver *rdc_config_driver = &sicslowmac_driver;
-void jackdaw_choose_rdc_driver(uint8_t i) {
-	if(i<MAX_RDC_CONFIG_CHOICES) {
-		rdc_config_driver->off(1);
-		rdc_config_driver = rdc_config_choices[i];
-		rdc_config_driver->init();
-	}
-}
-#endif // #if JACKDAW_CONF_USE_CONFIGURABLE_RDC
 
 #if UIP_CONF_IPV6_RPL
 /*---------------------------------------------------------------------------*/
@@ -316,9 +298,9 @@ static uint8_t get_channel_from_eeprom() {
 #else
     {uint8_t i; for (i=0;i<8;i++) mac[i] = pgm_read_byte_near(default_mac_address+i);}
 #endif
-	eeprom_write_block(&mac,  &eemem_mac_address, 8);
-  	eeprom_write_word(&eemem_panid  , pgm_read_word_near(&default_panid));
-   	eeprom_write_word(&eemem_panaddr, pgm_read_word_near(&default_panaddr));
+    eeprom_write_block(&mac,  &eemem_mac_address, 8);
+    eeprom_write_word(&eemem_panid  , pgm_read_word_near(&default_panid));
+    eeprom_write_word(&eemem_panaddr, pgm_read_word_near(&default_panaddr));
     eeprom_write_byte(&eemem_txpower, pgm_read_byte_near(&default_txpower));
     x[0] = pgm_read_byte_near(&default_channel);
     x[1]= ~x[0];
@@ -346,9 +328,16 @@ static uint8_t get_txpower_from_eeprom(void)
 #else /* !JACKDAW_CONF_USE_SETTINGS */
 /******************************Settings manager******************************/
 static uint8_t get_channel_from_eeprom() {
-	uint8_t x = settings_get_uint8(SETTINGS_KEY_CHANNEL, 0);
-	if(!x) x = pgm_read_byte_near(&default_channel);
-	return x;
+    uint8_t x = settings_get_uint8(SETTINGS_KEY_CHANNEL, 0);
+    if (x) {
+        PRINTD("<=Get EEPROM RF Channel.\n");
+    } else {
+        x = pgm_read_byte_near(&default_channel);
+        if (settings_add_uint8(SETTINGS_KEY_CHANNEL,x)==SETTINGS_STATUS_OK) {
+          PRINTA("->Set EEPROM RF channel to %d.\n",x);
+        }
+    }
+    return x;
 }
 static bool get_eui64_from_eeprom(uint8_t macptr[8]) {
 	size_t size = 8;
