@@ -211,6 +211,8 @@ uint8_t rf230_get_channel(void);
 void rf230_set_pan_addr(unsigned pan,unsigned addr,const uint8_t ieee_addr[8]);
 bool rf230_set_txpower(uint8_t power);
 uint8_t rf230_get_txpower(void);
+extern void rf230_set_cca(uint8_t mode, int8_t threshold);
+extern int8_t rf230_get_cca(void);
 
 void rf230_set_promiscuous_mode(bool isPromiscuous);
 bool rf230_is_ready_to_send();

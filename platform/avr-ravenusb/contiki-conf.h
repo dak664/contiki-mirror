@@ -179,7 +179,7 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
  * At present the Windows configuration will not enumerate on the Mac at all,
  * since it wants a custom descriptor for USB composite devices.
  */ 
-#define USB_CONF_MACINTOSH 0
+#define USB_CONF_MACINTOSH       1
 
 /* Set USB_CONF_SERIAL to enable the USB serial port that allows control of the
  * run-time configuration (COMx on Windows, ttyACMx on Linux, tty.usbmodemx on Mac)
@@ -195,8 +195,15 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
  */
 #define USB_CONF_RS232           0
 
-/* Disable mass storage enumeration for more program space */
-#define USB_CONF_STORAGE         0   /* TODO: Mass storage is currently broken */
+/* Mass storage uses whatever program flash is left over for a USB thumb drive.
+ * After initialization by the host (Prompt in Windows, use the disk utility in *nix)
+ * the /cpu/avr/dev/usb/INF folder can be copied to it. On a Windows machine without
+ * the RNDIS network or CDC-ACM serial driver association the thumb drive will enumerate
+ * and the files copied over. Then replug the stick and point to the INF folder.
+ * Note: Since the Windows-preferred and Macintosh-preferred builds have different serial
+ * numbers, the drivers may have to loaded twice.
+ */
+#define USB_CONF_STORAGE         1
 
 /* Jackdaw menu options */
 #define JACKDAW_CONF_BOOTLOADER      1  //Jump to bootloader, if present

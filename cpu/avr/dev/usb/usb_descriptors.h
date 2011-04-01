@@ -115,15 +115,17 @@ enum {
 	USB_STRING_CONFIG_EEM,
 	USB_STRING_CONFIG_ECM,
 	USB_STRING_CONFIG_ECM_DEBUG,
-	USB_STRING_CONFIG_MS,
 	USB_STRING_INTERFACE_RNDIS,
 	USB_STRING_INTERFACE_EEM,
 	USB_STRING_INTERFACE_ECM,
 	USB_STRING_INTERFACE_ECM_ATTACHED,
 	USB_STRING_INTERFACE_ECM_DETACHED,
 	USB_STRING_INTERFACE_SERIAL,
-	USB_STRING_INTERFACE_MS,
 
+#if USB_CONF_STORAGE
+	USB_STRING_INTERFACE_MS,
+	USB_STRING_CONFIG_MS,
+#endif
 };
 
 enum {
@@ -482,7 +484,7 @@ typedef struct
 {
    S_usb_configuration_descriptor cfg;
    S_usb_interface_descriptor     ifc0;
-   U8 CS1_INTERFACE[5+5];
+   U8 CS1_INTERFACE[5+5+4];
    S_usb_ethernet_networking_functional_descriptor fd0;
 #if CDC_ECM_USES_INTERRUPT_ENDPOINT
    S_usb_endpoint_descriptor      ep1;
@@ -502,7 +504,7 @@ typedef struct
    S_usb_configuration_descriptor cfg;
   S_usb_interface_association_descriptor   iad0;
    S_usb_interface_descriptor     ifc0;
-   U8 CS1_INTERFACE[5+5];
+   U8 CS1_INTERFACE[5+5+4];
    S_usb_ethernet_networking_functional_descriptor fd0;
 #if CDC_ECM_USES_INTERRUPT_ENDPOINT
    S_usb_endpoint_descriptor      ep1;

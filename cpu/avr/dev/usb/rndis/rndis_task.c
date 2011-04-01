@@ -204,7 +204,7 @@ usb_eth_setup_timeout_fallback_check() {
 	} //usb_mode == rndis_debug
 
 
-	 /* Device is Enumerated but RNDIS STIL not loading. We just
+	 /* Device is Enumerated but RNDIS STILL not loading. We just
 		have RNDIS interface, so obviously no drivers on target.
 		Just go ahead and mount ourselves as mass storage... */
 	if (usb_mode == rndis_only) {
@@ -403,6 +403,7 @@ usb_eth_switch_to_windows_mode() {
 
 	usb_mode = rndis_debug;
 	rndis_state = 	rndis_uninitialized;
+	usb_configuration_nb = 0; //dak -doesnt help
 
 	// Reset the USB configuration
 	usb_user_endpoint_init(0);

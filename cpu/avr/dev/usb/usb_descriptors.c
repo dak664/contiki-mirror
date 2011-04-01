@@ -60,6 +60,11 @@
 
 //_____ M A C R O S ________________________________________________________
 
+#define FUNC_DESC_ACM_D3	(1<<3)
+#define FUNC_DESC_ACM_D2	(1<<2)
+#define FUNC_DESC_ACM_D1	(1<<1)
+#define FUNC_DESC_ACM_D0	(1<<0)
+
 
 #define USB_ETH_NET_FUNC_DESC(MACAddrString,etherStat,maxSegmentSize,nMCFilters,nPowerFilters) \
  { sizeof(S_usb_ethernet_networking_functional_descriptor)	\
@@ -189,7 +194,7 @@ USB_INTERFACEDESC(	\
 {	\
 		FUNC_DESC_HEADER, \
 		FUNC_DESC_CALL_MANAGEMENT(0x03/*caps*/,0x03/*dataInterface*/), \
-		FUNC_DESC_ABSTRACT_CONTROL_MANAGEMENT(0x02), \
+		FUNC_DESC_ABSTRACT_CONTROL_MANAGEMENT(FUNC_DESC_ACM_D1), \
 		FUNC_DESC_UNION(0x02,0x03), \
 },	\
 USB_ENDPOINT(ENDPOINT_NB_4,EP_ATTRIBUTES_4,EP_SIZE_4,EP_INTERVAL_4),	\
@@ -222,9 +227,11 @@ USB_INTERFACEDESC(	\
 
 
 #if CDC_ECM_USES_INTERRUPT_ENDPOINT
+#define CDC_ECM_ACM_CAPS	FUNC_DESC_ACM_D3
 #define CDC_ECM_CONTROL_ENDPOINT_COUNT	1
 #define CDC_ECM_CONTROL_ENDPOINT	USB_ENDPOINT(ENDPOINT_NB_1,EP_ATTRIBUTES_1,EP_SIZE_1,EP_INTERVAL_1),
 #else
+#define CDC_ECM_ACM_CAPS	0x00
 #define CDC_ECM_CONTROL_ENDPOINT_COUNT	0
 #define CDC_ECM_CONTROL_ENDPOINT
 #endif
@@ -242,6 +249,7 @@ USB_INTERFACEDESC(	\
 ),	\
 {	\
 		FUNC_DESC_HEADER, \
+		FUNC_DESC_ABSTRACT_CONTROL_MANAGEMENT(CDC_ECM_ACM_CAPS),\
 		FUNC_DESC_UNION(0x00,0x01), \
 },	\
 	USB_ETH_NET_FUNC_DESC(	\
@@ -290,15 +298,15 @@ USB_INTERFACEDESC(	\
 #if USB_CONF_MACINTOSH
 /* Prefer CDC-ECM network enumeration (Macintosh, linux) */
 FLASH uint8_t usb_dev_config_order[] = {
-	USB_CONFIG_RNDIS, //windows gets networking only (if not here gets serial only)
 #if USB_CONF_SERIAL
 	USB_CONFIG_ECM_DEBUG, //mac, linux get networking and serial port
 #endif
 	USB_CONFIG_ECM,
+//	USB_CONFIG_RNDIS, //windows gets networking only (if not here gets serial only)
 #if USB_CONF_SERIAL
 	USB_CONFIG_RNDIS_DEBUG,
 #endif
-//	USB_CONFIG_RNDIS,
+	USB_CONFIG_RNDIS,
 	USB_CONFIG_EEM,
 #if USB_CONF_STORAGE
 	USB_CONFIG_MS,
@@ -309,15 +317,16 @@ FLASH uint8_t usb_dev_config_order[] = {
 FLASH uint8_t usb_dev_config_order[] = {
 
 //	USB_CONFIG_ECM, //windows doesnt like this here, will not go on to RNDIS
+	USB_CONFIG_ECM_DEBUG,
 #if USB_CONF_SERIAL
 	USB_CONFIG_RNDIS_DEBUG,
 #else
 	USB_CONFIG_RNDIS,
 #endif
-#if 0 //XP may have a problem with these extra configurations
+#if 1 //XP may have a problem with these extra configurations
 	USB_CONFIG_RNDIS,
 #if USB_CONF_SERIAL
-	USB_CONFIG_ECM_DEBUG,
+//	USB_CONFIG_ECM_DEBUG,
 #endif
 	USB_CONFIG_ECM,
 	USB_CONFIG_EEM,
@@ -501,7 +510,7 @@ FLASH S_usb_user_configuration_descriptor_ecm_debug usb_conf_desc_ecm_debug = {
 
 /****************** MASS-STORAGE DEVICE DESCRIPTORS **************************/
 
-/*
+#if USB_CONF_STORAGE
 FLASH S_usb_device_descriptor usb_dev_desc_mass =
 {
   sizeof(usb_dev_desc_mass)
@@ -517,10 +526,8 @@ FLASH S_usb_device_descriptor usb_dev_desc_mass =
 , USB_STRING_MAN
 , USB_STRING_PRODUCT
 , USB_STRING_SERIAL
-, NB_CONFIGURATION
+, 1
 };
-*/
-#if USB_CONF_STORAGE
 
 // usb_user_configuration_descriptor FS
 FLASH S_usb_user_configuration_descriptor_mass usb_conf_desc_mass = {
@@ -583,44 +590,34 @@ FLASH S_usb_language_id usb_user_language_id = {
 
 PGM_VOID_P Usb_get_dev_desc_pointer(void)
 {
-#if 1
-	return &(usb_dev_desc_composite.bLength);
-#else  //these are all the same length
-	if (usb_mode == rndis_only)
-		return &(usb_dev_desc_network.bLength);
-
-	if (usb_mode == rndis_debug)
-		return &(usb_dev_desc_composite.bLength);
-
-	if (usb_mode == eem)
-		return &(usb_dev_desc_eem.bLength);
-
-	return &(usb_dev_desc_mass.bLength);
+#if USB_CONF_STORAGE
+	if (usb_mode == mass_storage)
+		return &(usb_dev_desc_mass.bLength);
 #endif
+
+	return &(usb_dev_desc_composite.bLength);
 }
 
 
 U8 Usb_get_dev_desc_length(void)
 {
-#if 1 
-	return sizeof(usb_dev_desc_composite);
-#else  //these are all the same size
-	if (usb_mode == rndis_only)
-		return sizeof(usb_dev_desc_network);
-
-	if (usb_mode == rndis_debug)
-		return sizeof(usb_dev_desc_composite);
-
-	if (usb_mode == eem)
-		return sizeof(usb_dev_desc_eem);
-
-	return sizeof(usb_dev_desc_mass);
+#if USB_CONF_STORAGE
+	if (usb_mode == mass_storage)
+		return sizeof(usb_dev_desc_mass);
 #endif
+
+	return sizeof(usb_dev_desc_composite);
 }
 
 
 PGM_VOID_P  Usb_get_conf_desc_pointer(U8 index)
 {
+#if USB_CONF_STORAGE
+	if (usb_mode == mass_storage)
+		return &(usb_conf_desc_mass.cfg.bLength);
+#endif
+	if (usb_mode == rndis_debug)
+		return &(usb_conf_desc_composite.cfg.bLength);
 	
 	switch(pgm_read_byte_near(&usb_dev_config_order[index])) {
 		case USB_CONFIG_ECM:
@@ -645,6 +642,12 @@ PGM_VOID_P  Usb_get_conf_desc_pointer(U8 index)
 
 U8  Usb_get_conf_desc_length(U8 index)
 {
+#if USB_CONF_STORAGE
+	if (usb_mode == mass_storage)
+		return sizeof(usb_conf_desc_mass);
+#endif
+	if (usb_mode == rndis_debug)
+		return sizeof(usb_conf_desc_composite);
 	switch(pgm_read_byte_near(&usb_dev_config_order[index])) {
 		case USB_CONFIG_ECM:
 			return sizeof(usb_conf_desc_ecm);

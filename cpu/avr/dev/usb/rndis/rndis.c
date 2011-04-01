@@ -866,6 +866,15 @@ uint8_t rndis_process(void)
 #endif
 
 	//Connected!
+
+	if(!usb_eth_is_active) {
+		// If we aren't active, just eat the packets.
+		if(Is_usb_read_enabled()) {
+			Usb_ack_receive_out();
+		}
+		return 0;
+	}
+
 #if !JACKDAW_CONF_ALT_LED_SCHEME
 	Led0_on();
 #endif

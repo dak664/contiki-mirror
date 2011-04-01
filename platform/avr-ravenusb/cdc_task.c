@@ -303,8 +303,10 @@ void menu_print(void)
 #if USB_CONF_RS232
 	PRINTA("*  d     Toggle RS232 output  *\n");
 #endif
+	PRINTA("*  +,-   Network up/down      *\n");
 	PRINTA("*  c     Set RF channel       *\n");
 	PRINTA("*  p     Set RF power         *\n");
+	PRINTA("*  q     Set CCA threshold    *\n");
 	PRINTA("*  e     Energy Scan          *\n");
 #if UIP_CONF_IPV6_RPL
 	PRINTA("*  n     RPL Neighbors        *\n");
@@ -371,7 +373,8 @@ void menu_process(char c)
 		txpower,
 		confirmwipe,
 		confirmdfuboot,
-		chooserdc
+		chooserdc,
+		ccathresh
 	} menustate = normal;
 	
 	static char input_string[4];
@@ -447,7 +450,10 @@ void menu_process(char c)
 							PRINTA("\nSorry, that RDC is not available.\n");
 						}
 #endif
-
+					} else if (menustate == ccathresh) {
+						rf230_set_cca(1,-input_value);
+						PRINTA("\nCCA threshold now %d dBm", rf230_get_cca());
+						settings_print(settings_set_int8(SETTINGS_KEY_CCATHRESH, input_value));
 					}
 				} else {
 					if (menustate==channel) {
@@ -456,6 +462,8 @@ void menu_process(char c)
 						PRINTA("\nTransmit power unchanged.\n");
 					} else if (menustate==chooserdc) {
 						PRINTA("\nRDC unchanged.\n");
+					} else if (menustate==ccathresh) {
+						PRINTA("\nCCA unchanged.\n");
 					} else {
 						PRINTA("\n\n");
 					}
@@ -502,14 +510,19 @@ void menu_process(char c)
 			case '?':
 				menu_print();
 				break;
+
 			case '-':
-				PRINTA("Bringing interface down\n");
-				usb_eth_set_active(0);
+				if (usb_eth_is_active) {
+					PRINTA("Bringing interface down\n");
+					usb_eth_set_active(0);
+				}
 				break;
-			case '=':
+//			case '=':
 			case '+':
-				PRINTA("Bringing interface up\n");
-				usb_eth_set_active(1);
+				if (!usb_eth_is_active) {
+					PRINTA("Bringing interface up\n");
+					usb_eth_set_active(1);
+				}
 				break;
 #if JACKDAW_CONF_RANDOM_MAC
 			case 'T':
@@ -595,6 +608,11 @@ void menu_process(char c)
 				menustate = txpower;
 				break;
 
+			case 'q':
+				PRINTA("\nCCA threshold(-dBm) [%d]: ", -rf230_get_cca());
+				menustate = ccathresh;
+				break;							
+
 #if JACKDAW_CONF_USE_SETTINGS
 			case 'E':
 				settings_debug_dump(stdout);
@@ -675,7 +693,28 @@ extern uip_ds6_netif_t uip_ds6_if;
 
 			case ' ':
 			case 'm':
-				PRINTA("Currently Jackdaw:\n  * Will ");
+{
+extern unsigned long seconds, sleepseconds;
+uint16_t h,m,s;
+uint8_t p1,p2;
+	h=seconds/3600;s=seconds-h*3600;m=s/60;s=s-m*60;
+	PRINTA("Uptime %02d:%02d:%02d",h,m,s);
+	if (sleepseconds) {
+		p1=100UL*sleepseconds/seconds;
+		h=sleepseconds/3600;
+		s=sleepseconds-h*3600;
+		m=s/60;
+		s=s-m*60;
+	}
+#if RF230_CONF_RADIOSTATS
+extern unsigned long radioontime;
+	s=(10000UL*radioontime)/seconds;
+	p1=s/100;p2=s-p1*100;
+	h=radioontime/3600;s=radioontime-h*3600;m=s/60;s=s-m*60;
+	PRINTA(" Radio ontime %02d:%02d:%02d (%d.%02d%%)",h,m,s,p1,p2);
+#endif
+}
+				PRINTA("\nCurrently Jackdaw:\n  * Will ");
 				if (usbstick_mode.sendToRf == 0) { PRINTA("not ");}
 				PRINTA("send data over RF\n\r  * Will ");
 				if (usbstick_mode.translate == 0) { PRINTA("not ");}
@@ -725,7 +764,7 @@ extern uip_ds6_netif_t uip_ds6_if;
 				}
 
 #if UIP_CONF_IPV6_RPL
-				PRINTA(", supports RPL mesh routing\n");
+				PRINTA(", RPL enabled.\n");
 #else
 				PRINTA("\n");
 #endif
@@ -737,12 +776,14 @@ extern uip_ds6_netif_t uip_ds6_if;
 				PRINTA("  * Operates on channel %d\n", rf230_get_channel());
 				PRINTA("  * TX Power(0=+3dBm, 15=-17.2dBm): %d\n", rf230_get_txpower());
 #endif
+
 				if (rf230_smallest_rssi) {
-					PRINTA("  * Current/Last/Smallest RSSI: %d/%d/%ddBm\n", -91+(rf230_rssi()-1), -91+(rf230_last_rssi-1),-91+(rf230_smallest_rssi-1));
+					PRINTA("  * Current/Last/Smallest RSSI: %d/%d/%d", -91+(rf230_rssi()-1), -91+(rf230_last_rssi-1),-91+(rf230_smallest_rssi-1));
 					rf230_smallest_rssi=0;
 				} else {
-					PRINTA("  * Current/Last/Smallest RSSI: %d/%d/--dBm\n", -91+(rf230_rssi()-1), -91+(rf230_last_rssi-1));
+					PRINTA("  * Current/Last/Smallest RSSI: %d/%d/--", -91+(rf230_rssi()-1), -91+(rf230_last_rssi-1));
 				}
+				PRINTA(" CCA %ddBm\n", rf230_get_cca());
 
 #if SICSLOW_ETHERNET_CONF_UPDATE_USB_ETH_STATS
 				PRINTA("  * usb_eth_stats OK:tx %4lu, rx %4lu BAD:tx %2lu, rx %2lu\n",usb_eth_stat.txok,\
@@ -837,32 +878,33 @@ uint16_t p=(uint16_t)&__bss_end;
 
 #if JACKDAW_CONF_WATCHDOGRESET
 			case 'R':
-				{
-					PRINTA("Resetting...\n");
-					uart_usb_flush();
-					Leds_on();
-					for(i = 0; i < 10; i++)_delay_ms(100);
-					Usb_detach();
-					for(i = 0; i < 20; i++)_delay_ms(100);
-					watchdog_reboot();
-				}
+				PRINTA("Resetting...\n");
+				uart_usb_flush();
+				Leds_on();
+				for(i = 0; i < 10; i++)_delay_ms(100);
+				Usb_detach();
+				for(i = 0; i < 20; i++)_delay_ms(100);
+				watchdog_reboot();
 				break;
 #endif
 
 #if JACKDAW_CONF_WINDOWSSWITCH
-				case 'W':
-				{
-					PRINTA("Switching to windows mode...\n");
-					uart_usb_flush();
-					usb_eth_switch_to_windows_mode();
-				}
+			case 'W':
+				PRINTA("Switching to windows mode...\n");
+				uart_usb_flush();
+				Leds_on();
+				for(i = 0; i < 10; i++)_delay_ms(100);
+				usb_eth_switch_to_windows_mode();
 				break;
 #endif	
 			
 #if USB_CONF_STORAGE && JACKDAW_CONF_STORAGESWITCH 
 			case 'U':
-
-				//Mass storage mode
+				PRINTA("Switching to Mass storage mode...\n");
+				uart_usb_flush();
+				Leds_on();
+				for(i = 0; i < 10; i++)_delay_ms(100);
+				
 				usb_mode = mass_storage;
 
 				//No more USB serial port

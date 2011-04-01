@@ -569,7 +569,10 @@ set_txpower(uint8_t power)
 void
 calibrate_rc_osc_32k(void)
 {
-#if 1
+/* Commented out - seems to take three or four calls at startup to get a stable value.
+ * From then on the value seems to be the same as the factory setting anyway.
+ */
+#if 0
 
     /* Calibrate RC Oscillator: The calibration routine is done by clocking TIMER2
      * from the external 32kHz crystal while running an internal timer simultaneously.
@@ -716,6 +719,7 @@ rf230_init(void)
 
   return 1;
 }
+
 /*---------------------------------------------------------------------------*/
 /* Used to reinitialize radio parameters without losing pan and mac address, channel, power, etc. */
 void rf230_warm_reset(void) {
@@ -738,7 +742,7 @@ void rf230_warm_reset(void) {
   hal_register_write(RG_CSMA_BE, 0x80);       //min backoff exponent 0, max 8 (highest allowed)
   hal_register_write(RG_CSMA_SEED_0,hal_register_read(RG_PHY_RSSI) );//upper two RSSI reg bits RND_VALUE are random in rf231
  // hal_register_write(CSMA_SEED_1,42 );
-
+ 
   /* CCA Mode Mode 1=Energy above threshold  2=Carrier sense only  3=Both 0=Either (RF231 only) */
 //hal_subregister_write(SR_CCA_MODE,1);  //1 is the power-on default
 
@@ -771,6 +775,19 @@ void rf230_warm_reset(void) {
   set_txpower(RF230_MAX_TX_POWER);  //0=3dbm 15=-17.2dbm
 #endif
 }
+/*---------------------------------------------------------------------------*/
+/* Get CCA threshold, signed dBm */
+int8_t rf230_get_cca(void) {
+//  mode=hal_subregister_read(SR_CCA_MODE);
+  return 2*hal_subregister_read(SR_CCA_ED_THRES)-91;
+}  
+ /* Set CCA mode and threshold, see above for input parameters */
+void rf230_set_cca(uint8_t mode, int8_t threshold) {
+  threshold = (threshold+91)/2;
+  if (threshold<0) threshold=0;else if (threshold>15) threshold=15;
+  hal_subregister_write(SR_CCA_MODE,mode);
+  hal_subregister_write(SR_CCA_ED_THRES,threshold);
+}  
 /*---------------------------------------------------------------------------*/
 static uint8_t buffer[RF230_MAX_TX_FRAME_LENGTH+AUX_LEN];
 static int

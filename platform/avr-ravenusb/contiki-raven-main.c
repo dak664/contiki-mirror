@@ -240,6 +240,11 @@ uint8_t default_txpower PROGMEM = RF230_MAX_TX_POWER;
 #else
 uint8_t default_txpower PROGMEM = 0;
 #endif
+#ifdef RF230_CONF_CCA_THRES
+int8_t default_ccathresh PROGMEM = RF230_CONF_CCA_THRES;
+#else
+int8_t eemem_ccathresh PROGMEM = -77;
+#endif
 
 #if JACKDAW_CONF_RANDOM_MAC
 #include "rng.h"
@@ -286,6 +291,12 @@ uint8_t eemem_txpower EEMEM = RF230_MAX_TX_POWER;
 #else
 uint8_t eemem_txpower EEMEM = 0;
 #endif
+#ifdef RF230_CONF_CCA_THRES
+int8_t eemem_ccathresh EEMEM = RF230_CONF_CCA_THRES;
+#else
+int8_t eemem_ccathresh EEMEM = -77;
+#endif
+
 static uint8_t get_channel_from_eeprom() {
 	uint8_t x[2];
 	*(uint16_t *)x = eeprom_read_word ((uint16_t *)&eemem_channel);
@@ -302,6 +313,8 @@ static uint8_t get_channel_from_eeprom() {
     eeprom_write_word(&eemem_panid  , pgm_read_word_near(&default_panid));
     eeprom_write_word(&eemem_panaddr, pgm_read_word_near(&default_panaddr));
     eeprom_write_byte(&eemem_txpower, pgm_read_byte_near(&default_txpower));
+	eeprom_write_byte((uint8_t*)&eemem_ccathresh, pgm_read_byte_near(&default_ccathresh));
+	
     x[0] = pgm_read_byte_near(&default_channel);
     x[1]= ~x[0];
     eeprom_write_word((uint16_t *)&eemem_channel, *(uint16_t *)x);    
@@ -323,6 +336,10 @@ static uint16_t get_panaddr_from_eeprom(void) {
 static uint8_t get_txpower_from_eeprom(void)
 {
 	return eeprom_read_byte(&eemem_txpower);
+}
+static int8_t get_ccathresh_from_eeprom(void)
+{
+	return (int8_t) eeprom_read_byte((uint8_t *)&eemem_ccathresh);
 }
 
 #else /* !JACKDAW_CONF_USE_SETTINGS */
@@ -389,7 +406,20 @@ static uint8_t get_txpower_from_eeprom(void) {
     } else {
 	    x=pgm_read_byte_near(&default_txpower);
         if (settings_add_uint8(SETTINGS_KEY_TXPOWER,x)==SETTINGS_STATUS_OK) {
-          PRINTA("->Set EEPROM tx power of %d. (0=max)\n",x);
+          PRINTA("->Set EEPROM tx power to %d. (0=max)\n",x);
+        }
+    }
+	return x;
+}
+static int8_t get_ccathresh_from_eeprom(void) {
+    int8_t x;
+    if (settings_check(SETTINGS_KEY_CCATHRESH,0)) {
+        x = settings_get_int8(SETTINGS_KEY_CCATHRESH,0);
+        PRINTD("<-Get CCA threshold of %ddBm.\n",x);
+    } else {
+	    x=pgm_read_byte_near(&default_ccathresh);
+        if (settings_add_int8(SETTINGS_KEY_CCATHRESH,x)==SETTINGS_STATUS_OK) {
+          PRINTA("->Set EEPROM CCA threshold to %ddBm\n",x);
         }
     }
 	return x;
@@ -518,6 +548,7 @@ uint16_t p=(uint16_t)&__bss_end;
   
   rf230_set_channel(get_channel_from_eeprom());
   rf230_set_txpower(get_txpower_from_eeprom());
+  rf230_set_cca(1,get_ccathresh_from_eeprom());  /* CCA Mode Mode 1=Energy above threshold  2=Carrier sense only  3=Both 0=Either (RF231 only) */
 
   rimeaddr_set_node_addr(&tmp_addr); 
 

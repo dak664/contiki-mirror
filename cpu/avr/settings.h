@@ -39,6 +39,7 @@ typedef uint16_t settings_length_t;
 #define SETTINGS_KEY_AES128ENABLED	TCC('S','E')	//!< Value always 16 bytes long
 #define SETTINGS_KEY_HOSTNAME		TCC('H','N')	//!< Variable Length
 #define SETTINGS_KEY_DOMAINNAME		TCC('D','N')	//!< Variable Length
+#define SETTINGS_KEY_CCATHRESH		TCC('C','C')	//!< Value always 1 byte long
 
 #pragma mark - Experimental Settings Keys
 
