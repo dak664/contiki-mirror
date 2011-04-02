@@ -92,10 +92,21 @@
 #define VENDOR_ID             0x03EB // Atmel vendor ID = 03EBh
 
 #if USB_CONF_MACINTOSH
-//A different product ID avoids instant windows corruption when it tries to use the cached drivers
+/* A different product ID avoids instant windows corruption when it tries to use the cached
+ * RNDIS drivers on a cdc-ecm build. If "the device can not start" just delete the drivers.
+ * If plugging the stick gives the BSOD that's harder to do.
+ * In that case increment the PIDs so you can start with a new driver association.
+ */
 //TODO:Get some valid ID's from Atmel
+#if JACKDAW_GIVES_THE_BSOD || 0
+#define COMPOSITE_PRODUCT_ID  0x9941 //Alternate Product ID for composite device
+#define NETWORK_PRODUCT_ID    0x9929 //Alternate Product ID for just CDC-ECM device
+#else
+bomb
 #define COMPOSITE_PRODUCT_ID  0x9921 //Product ID for composite device
 #define NETWORK_PRODUCT_ID    0x9919 //Product ID for just CDC-ECM device
+#endif
+
 #else
 #define COMPOSITE_PRODUCT_ID  0x2021 //Product ID for composite device
 #define NETWORK_PRODUCT_ID    0x2019 //Product ID for just RNDIS device

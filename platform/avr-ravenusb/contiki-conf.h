@@ -173,9 +173,10 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
 /* Set USB_CONF_MACINTOSH to prefer CDC-ECM+DEBUG enumeration for Mac/Linux 
  * Leave undefined to prefer RNDIS+DEBUG enumeration for Windows/Linux
  * The Mac configuration will still enumerate as RNDIS-ONLY
- * on Windows (without the serial port).
+ * on Windows (without the serial port). You will have to point to the
+ * INF folder to associate the different Mac VID/PID with RNDIS.
  * At present the Windows configuration will not enumerate on the Mac at all,
- * since it wants a custom descriptor for USB composite devices.
+ * since it uses a custom descriptor for USB composite devices.
  */ 
 #define USB_CONF_MACINTOSH       0
 

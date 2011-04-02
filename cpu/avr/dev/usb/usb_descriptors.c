@@ -289,22 +289,37 @@ USB_INTERFACEDESC(	\
 //_____ D E F I N I T I O N ________________________________________________
 
 /************* COMPOSITE DEVICE DESCRIPTORS (using IAD) **********/
-//TODO:Serial port enumeration will prevent falling through to the
-//supported network on Mac or Windows. Linux will take either.
-//Once Windows loads the RNDIS driver it will use it on a subsequent
-//Mac enumeration, and the device will fail to start.
-//This doesn't seem to hurt anything but beware, system corruption is
-//a possibility.
+/* Microsoft seems to need a COMPOSITE_DEVICE_CLASS of 0xEF
+ * in order to enumerate more than one usb type. This class is
+ * accepted by Ubuntu but not Macs, so the Macintosh configuration
+ * uses the standard 0x02 composite class.
+ *
+ * In the Windows configuration, Windows and Ubuntu will enumerate
+ * the composite RNDIS and serial port. In the Mac configuration
+ * RNDIS will not enumerate and it will fall through to CDC-ECM+DEBUG
+ *
+ * But using the Mac build with windows RNDIS_DEBUG would enumerat
+ * only as RNDIS, no CDC-ACM. Unfortunately there is nothing to tell
+ * you that, and if you try to attach the serial driver (by changing
+ * the RNDIS_DEBUG .INF for the Mac configuration VID/PID) you will
+ * likely get the blue screen of death (immediately, and any later
+ * time a jackdaw ith the same VID/PID is plugged in).
+ *
+ * Make a Windows system restore point before trying the Jackdaw
+ * Macintosh build. But since restoring to that point takes a long
+ * time, during testing you can keep changing the PID in usb_decsriptors.h
+ * and not use the old PIDs until you have done the system restore.
+ */
 #if USB_CONF_MACINTOSH
 /* Prefer CDC-ECM network enumeration (Macintosh, linux) */
 FLASH uint8_t usb_dev_config_order[] = {
+	USB_CONFIG_RNDIS,      //windows gets networking only!
 #if USB_CONF_SERIAL
-	USB_CONFIG_ECM_DEBUG, //mac, linux get networking and serial port
+	USB_CONFIG_ECM_DEBUG,  //mac, linux get networking and serial port
 #endif
 	USB_CONFIG_ECM,
-	USB_CONFIG_RNDIS, //windows gets networking only (if not here gets serial only)
 #if USB_CONF_SERIAL
-	USB_CONFIG_RNDIS_DEBUG,
+//	USB_CONFIG_RNDIS_DEBUG, //verra dangerous
 #endif
 //	USB_CONFIG_RNDIS,
 	USB_CONFIG_EEM,
