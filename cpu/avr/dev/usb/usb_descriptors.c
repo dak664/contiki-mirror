@@ -302,11 +302,11 @@ FLASH uint8_t usb_dev_config_order[] = {
 	USB_CONFIG_ECM_DEBUG, //mac, linux get networking and serial port
 #endif
 	USB_CONFIG_ECM,
-//	USB_CONFIG_RNDIS, //windows gets networking only (if not here gets serial only)
+	USB_CONFIG_RNDIS, //windows gets networking only (if not here gets serial only)
 #if USB_CONF_SERIAL
 	USB_CONFIG_RNDIS_DEBUG,
 #endif
-	USB_CONFIG_RNDIS,
+//	USB_CONFIG_RNDIS,
 	USB_CONFIG_EEM,
 #if USB_CONF_STORAGE
 	USB_CONFIG_MS,
@@ -317,7 +317,7 @@ FLASH uint8_t usb_dev_config_order[] = {
 FLASH uint8_t usb_dev_config_order[] = {
 
 //	USB_CONFIG_ECM, //windows doesnt like this here, will not go on to RNDIS
-	USB_CONFIG_ECM_DEBUG,
+
 #if USB_CONF_SERIAL
 	USB_CONFIG_RNDIS_DEBUG,
 #else
@@ -326,7 +326,7 @@ FLASH uint8_t usb_dev_config_order[] = {
 #if 1 //XP may have a problem with these extra configurations
 	USB_CONFIG_RNDIS,
 #if USB_CONF_SERIAL
-//	USB_CONFIG_ECM_DEBUG,
+	USB_CONFIG_ECM_DEBUG,
 #endif
 	USB_CONFIG_ECM,
 	USB_CONFIG_EEM,

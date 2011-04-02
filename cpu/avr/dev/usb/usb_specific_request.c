@@ -58,6 +58,9 @@
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 #include <string.h>
+#if JACKDAW_CONF_ALT_LED_SCHEME
+#include "status_leds.h"
+#endif
 
 //_____ M A C R O S ________________________________________________________
 
@@ -336,9 +339,11 @@ void usb_user_endpoint_init(U8 conf_nb)
 {
 	usb_eth_reset();
 
+	#if JACKDAW_CONF_ALT_LED_SCHEME
 #if defined(USB_HOOK_UNENUMERATED)
 	if(conf_nb==0)
 		USB_HOOK_UNENUMERATED();
+#endif
 #endif
 
 	if(USB_CONFIG_HAS_DEBUG_PORT(conf_nb)) {

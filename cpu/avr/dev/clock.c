@@ -12,7 +12,9 @@ volatile unsigned long seconds;
 long sleepseconds;
 
 /* Set RADIOSTATS to monitor radio on time (must also be set in the radio driver) */
-#if RF230BB && WEBSERVER
+#if RF230BB && WEBSERVER  //TODO:put webserver platform on RF230_CONF_RADIOSTATS
+#define RADIOSTATS 1
+#elif RF230_CONF_RADIOSTATS
 #define RADIOSTATS 1
 #endif
 
