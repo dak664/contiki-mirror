@@ -102,7 +102,6 @@
 #define COMPOSITE_PRODUCT_ID  0x9941 //Alternate Product ID for composite device
 #define NETWORK_PRODUCT_ID    0x9929 //Alternate Product ID for just CDC-ECM device
 #else
-bomb
 #define COMPOSITE_PRODUCT_ID  0x9921 //Product ID for composite device
 #define NETWORK_PRODUCT_ID    0x9919 //Product ID for just CDC-ECM device
 #endif

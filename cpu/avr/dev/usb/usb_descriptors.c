@@ -298,15 +298,15 @@ USB_INTERFACEDESC(	\
  * the composite RNDIS and serial port. In the Mac configuration
  * RNDIS will not enumerate and it will fall through to CDC-ECM+DEBUG
  *
- * But using the Mac build with windows RNDIS_DEBUG would enumerat
+ * But using the Mac build with windows RNDIS_DEBUG would enumerate
  * only as RNDIS, no CDC-ACM. Unfortunately there is nothing to tell
  * you that, and if you try to attach the serial driver (by changing
  * the RNDIS_DEBUG .INF for the Mac configuration VID/PID) you will
  * likely get the blue screen of death (immediately, and any later
  * time a jackdaw ith the same VID/PID is plugged in).
  *
- * Make a Windows system restore point before trying the Jackdaw
- * Macintosh build. But since restoring to that point takes a long
+ * Make a Windows system restore point before trying the Jackdaw with
+ * the Macintosh build. But since restoring to that point takes a long
  * time, during testing you can keep changing the PID in usb_decsriptors.h
  * and not use the old PIDs until you have done the system restore.
  */
