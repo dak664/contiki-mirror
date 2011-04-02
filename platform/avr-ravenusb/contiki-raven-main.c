@@ -442,8 +442,8 @@ extern uint16_t __bss_end;
 uint16_t p=(uint16_t)&__bss_end;
     do {
       *(uint16_t *)p = 0x4242;
-      p+=100;
-    } while (p<SP-100); //don't overwrite our own stack
+      p+=10;
+    } while (p<SP-10); //don't overwrite our own stack
 }
 #endif
 
@@ -747,7 +747,7 @@ if ((rtime%STACKMONITOR)==3) {
       PRINTA("Never-used stack > %d bytes\n",p-(uint16_t)&__bss_end);
       break;
     }
-    p+=100;
+    p+=10;
   } while (p<RAMEND-10);
 }
 #endif

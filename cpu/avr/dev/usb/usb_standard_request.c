@@ -92,9 +92,11 @@ static  U8   bmRequestType;
 
         U8   usb_configuration_nb;
 
-
+#if USB_CONF_MACINTOSH
 		usb_mode_t usb_mode = default_usb_mode;
-	//	usb_mode_t usb_mode = rndis_debug; dak
+#else
+		usb_mode_t usb_mode = rndis_debug;
+#endif
 
 
 extern  bit     usb_connected;
@@ -476,8 +478,8 @@ void usb_get_descriptor(void)
 		MSBwLength = Usb_read_byte();
 		byteswereread=1;
 		if( usb_user_get_descriptor(descriptor_type, string_type)==FALSE ) {
-		 //   Usb_enable_stall_handshake(); //TODO:is this necessary, Win7 flaky without? dak worked with it
-		//	Usb_ack_receive_setup();
+		    Usb_enable_stall_handshake(); //TODO:is this necessary, Win7 flaky without?
+			Usb_ack_receive_setup();
 			return;
 		}
 	  break;

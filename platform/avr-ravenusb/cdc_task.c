@@ -806,8 +806,8 @@ uint16_t p=(uint16_t)&__bss_end;
 		PRINTA("  * Never-used stack > %d bytes\n",p-(uint16_t)&__bss_end);
 		break;
 		}
-		p+=100;
-	} while (p<RAMEND-100);
+		p+=10;
+	} while (p<RAMEND-10);
 }
 #endif
 

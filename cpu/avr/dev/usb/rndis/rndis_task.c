@@ -159,6 +159,7 @@ uint8_t usb_eth_ready_for_next_packet() {
 }
 
 #if USB_ETH_CONF_MASS_STORAGE_FALLBACK
+TODO:remove the rndis_only mode
 static void
 usb_eth_setup_timeout_fallback_check() {
 	extern uint8_t fingerPresent;
@@ -403,7 +404,7 @@ usb_eth_switch_to_windows_mode() {
 
 	usb_mode = rndis_debug;
 	rndis_state = 	rndis_uninitialized;
-	usb_configuration_nb = 0; //dak -doesnt help
+//	usb_configuration_nb = 0; //dak -doesnt help?
 
 	// Reset the USB configuration
 	usb_user_endpoint_init(0);

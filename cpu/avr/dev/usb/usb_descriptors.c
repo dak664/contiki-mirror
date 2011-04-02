@@ -317,11 +317,8 @@ FLASH uint8_t usb_dev_config_order[] = {
 FLASH uint8_t usb_dev_config_order[] = {
 
 //	USB_CONFIG_ECM, //windows doesnt like this here, will not go on to RNDIS
-
 #if USB_CONF_SERIAL
 	USB_CONFIG_RNDIS_DEBUG,
-#else
-	USB_CONFIG_RNDIS,
 #endif
 #if 1 //XP may have a problem with these extra configurations
 	USB_CONFIG_RNDIS,
