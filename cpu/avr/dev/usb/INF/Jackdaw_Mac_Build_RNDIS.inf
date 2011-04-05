@@ -16,6 +16,8 @@
 ; It enumerates on Windows as RNDIS only.
 ; Verify the PID/VID against that shown by the device manager.
 ; Contiki sets the PID/VID in usb_descriptors.h
+;
+; Note: Wireshark will not see the interface until after a reboot.
 
 [Version]
 Signature           = "$Windows NT$"

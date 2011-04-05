@@ -333,8 +333,8 @@ Bool sbc_inquiry (void)
 #warning
 #warning Assuming device descriptors are stored in the lower 64Kbytes of program flash memory
 #warning
- //        Usb_write_byte(pgm_read_byte_near((unsigned int)ptr++));
-		 Usb_write_byte(pgm_read_byte_far((unsigned int)ptr++));  //TODO:does this work always?
+         Usb_write_byte(pgm_read_byte_near((unsigned int)ptr++));
+//		 Usb_write_byte(pgm_read_byte_far((unsigned int)ptr++));  //TODO:does this work always?
 #endif
 
       }

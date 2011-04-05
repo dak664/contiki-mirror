@@ -414,11 +414,11 @@ static uint8_t get_txpower_from_eeprom(void) {
 static int8_t get_ccathresh_from_eeprom(void) {
     int8_t x;
     if (settings_check(SETTINGS_KEY_CCATHRESH,0)) {
-        x = settings_get_int8(SETTINGS_KEY_CCATHRESH,0);
+        x = settings_get_uint8(SETTINGS_KEY_CCATHRESH,0);
         PRINTD("<-Get CCA threshold of %ddBm.\n",x);
     } else {
 	    x=pgm_read_byte_near(&default_ccathresh);
-        if (settings_add_int8(SETTINGS_KEY_CCATHRESH,x)==SETTINGS_STATUS_OK) {
+        if (settings_add_uint8(SETTINGS_KEY_CCATHRESH,x)==SETTINGS_STATUS_OK) {
           PRINTA("->Set EEPROM CCA threshold to %ddBm\n",x);
         }
     }
@@ -463,7 +463,6 @@ uint16_t p=(uint16_t)&__bss_end;
   /* Use rs232 port for serial out (tx, rx, gnd are the three pads behind jackdaw leds */
   rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
   rs232_redirect_stdout(RS232_PORT_0);
-
   /* If USB serial port does not enumerate RS232 will control the jackdaw menu */
   rs232_set_input(RS232_PORT_0, cdc_task_rs232in);
 #if ANNOUNCE
@@ -519,10 +518,11 @@ uint16_t p=(uint16_t)&__bss_end;
     process_start(&usb_eth_process, NULL);
   /* Start CDC enumeration, bearing in mind that it may fail */
   /* Hopefully we'll get a stdout for startup messages, if we aren't already using RS232 */{unsigned short i;
-  for (i=0;i<65535;i++) {
+  for (i=0;i<16384;i++) {
+ // for (i=0;i<65535;i++) {
     process_run();
     watchdog_periodic();
-    if (stdout) break;  //Potentially dangerous garbage chars to menu if all endpoints not fully enumerated
+ //  if (stdout) break;  //Potentially dangerous garbage chars to menu if all endpoints not fully enumerated
   }
 #if !USB_CONF_RS232
   PRINTA("\n\n*******Booting %s*******\n",CONTIKI_VERSION_STRING);
@@ -610,7 +610,7 @@ Leds_off();
   process_start(&status_leds_process, NULL);
 #endif
 }
-
+uint8_t usb_accept_input;
 /*-------------------------------------------------------------------------*/
 /*---------------------------------Main Routine----------------------------*/
 int
@@ -629,7 +629,7 @@ main(void)
  }
 }
 #endif
-
+usb_accept_input=1;
   while(1) {
     process_run();
 

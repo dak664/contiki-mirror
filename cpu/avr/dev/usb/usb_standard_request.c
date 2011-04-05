@@ -460,28 +460,46 @@ void usb_get_descriptor(void)
 	  pbuffer          = Usb_get_dev_desc_pointer();
 	  break;
 
-	  case CONFIGURATION_DESCRIPTOR:
+	case CONFIGURATION_DESCRIPTOR:
 		data_to_transfer = Usb_get_conf_desc_length(string_type); //!< sizeof (usb_user_configuration_descriptor);
 		pbuffer          = Usb_get_conf_desc_pointer(string_type);
 	  break;
 
 	case STRING_DESCRIPTOR:
-	  if(string_type!=LANG_ID) {
-		usb_get_string_descriptor(string_type);
+	  if(string_type==LANG_ID) {
+		data_to_transfer = sizeof (usb_user_language_id);
+		pbuffer = &(usb_user_language_id.bLength);
+	  } else {
+		usb_get_string_descriptor(string_type);  //this reads dummy and length bytes
 		return;
-	  }  //fall through to default
+	  }
+	  break;
 
+//	case INTERFACE_DESCRIPTOR:
+
+//	case ENDPOINT_DESCRIPTOR:
+
+	case DEVICE_QUALIFIER_DESCRIPTOR:
+		data_to_transfer = Usb_get_dev_qual_desc_length(); //!< sizeof (usb_user_device_descriptor);
+		pbuffer          = Usb_get_dev_qual_desc_pointer();
+		break;
+	
+//	case OTHER_SPEED_CONGIRUATION_DESCRIPTOR:
+	
 	default:
+#if 0
 		dummy = Usb_read_byte();
 		dummy = Usb_read_byte();
 		LSBwLength = Usb_read_byte();
 		MSBwLength = Usb_read_byte();
 		byteswereread=1;
-		if( usb_user_get_descriptor(descriptor_type, string_type)==FALSE ) {
+
+		if( usb_user_get_descriptor(descriptor_type, string_type)==TRUE ) {
 		    Usb_enable_stall_handshake(); //TODO:is this necessary, Win7 flaky without?
 			Usb_ack_receive_setup();
 			return;
 		}
+#endif
 	  break;
 	}
 	if (byteswereread==0) {

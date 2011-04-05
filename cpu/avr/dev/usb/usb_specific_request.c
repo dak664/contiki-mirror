@@ -193,7 +193,7 @@ Bool usb_user_read_request(U8 type, U8 request)
 	 
   	return FALSE;
 }
-
+#if 0
 //! usb_user_get_descriptor.
 //!
 //! @brief This function returns the size and the pointer on a user information
@@ -225,6 +225,7 @@ Bool usb_user_get_descriptor(U8 type, U8 string)
 
 	return FALSE;
 }
+#endif
 static char itoh(unsigned char i) {
 	char ret;
 	ret = pgm_read_byte_near(PSTR("0123456789abcdef")+(i&0xF));

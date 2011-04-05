@@ -83,7 +83,7 @@ unsigned long clock_seconds(void);
 
 /* The LED scheme. Original scheme was blue=online, red=tx, green=rx, yellow=serial I/O
  * Alternate scheme uses a separate LED process and hooks for easier reconfiguration.
- * The default for the alternate is blue=serial, red=rx, green=tx, yellow=online(optional 50% duty)
+ * The default for the alternate is blue=serial, red=rx, green=tx, yellow=online
  * The "ready" led can be dimmed through lowering the duty cycle in the main loop.
  */
 #define JACKDAW_CONF_ALT_LED_SCHEME     1
@@ -92,7 +92,7 @@ unsigned long clock_seconds(void);
 /* Use EEPROM settings manager, or hard-coded EEPROM reads? */
 /* Generate random MAC address on first startup? */
 /* Random number from radio clock skew or ADC noise? */
-#define JACKDAW_CONF_USE_SETTINGS		0
+#define JACKDAW_CONF_USE_SETTINGS		1
 #define JACKDAW_CONF_RANDOM_MAC			0
 #define RNG_CONF_USE_RADIO_CLOCK		1
 //#define RNG_CONF_USE_ADC	1
@@ -178,7 +178,8 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
  * At present the Windows configuration will not enumerate on the Mac at all,
  * since it uses a custom descriptor for USB composite devices.
  */ 
-#define USB_CONF_MACINTOSH       0
+#define USB_CONF_MACINTOSH       1
+//#define WATCHDOG_CONF_TIMEOUT WDTO_4S
 
 /* Set USB_CONF_SERIAL to enable the USB serial port that allows control of the
  * run-time configuration (COMx on Windows, ttyACMx on Linux, tty.usbmodemx on Mac)
@@ -192,7 +193,8 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
  * RS232 output will work with or without enabling the USB serial port.
  * If USB serial not enabled the Jackdaw menu is available through the RS232 port.
  */
-#define USB_CONF_RS232           0
+ /*TODO:if RS232 not enabled CDC-ECM enumeration cycles (but only on a fast ubuntu 10.10) */
+#define USB_CONF_RS232           1
 
 /* Mass storage uses whatever program flash is left over for a USB thumb drive.
  * After initialization by the host (Prompt in Windows, use the disk utility in *nix)
@@ -200,7 +202,9 @@ extern void mac_log_802_15_4_rx(const uint8_t* buffer, size_t total_len);
  * the RNDIS network or CDC-ACM serial driver association the thumb drive will enumerate
  * and the files copied over. Then replug the stick and point to the INF folder.
  * Note: Since the Windows-preferred and Macintosh-preferred builds have different serial
- * numbers, the drivers may have to loaded twice.
+ * numbers, the drivers may have to loaded twice. Wireshark will not see the
+ * new interface until after a reboot.
+ * Currently the drive has 50KB capacity.
  */
 #define USB_CONF_STORAGE         1
 

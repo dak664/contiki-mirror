@@ -552,6 +552,8 @@ typedef struct
 
 PGM_VOID_P Usb_get_dev_desc_pointer(void);
 U8 Usb_get_dev_desc_length(void);
+PGM_VOID_P Usb_get_dev_qual_desc_pointer(void);
+U8 Usb_get_dev_qual_desc_length(void);
 PGM_VOID_P  Usb_get_conf_desc_pointer(U8 index) ;
 U8  Usb_get_conf_desc_length(U8 index);
 

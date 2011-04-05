@@ -541,6 +541,19 @@ FLASH S_usb_device_descriptor usb_dev_desc_mass =
 , 1
 };
 
+FLASH S_usb_device_descriptor usb_dev_qual_desc_mass =
+{
+  sizeof(usb_dev_qual_desc_mass)
+, DEVICE_QUALIFIER_DESCRIPTOR	//qualifier for low speed usb operation
+, 0x200						//Version 2.00
+, 0							//independent interface
+, 0
+, MASS_DEVICE_PROTOCOL
+, EP_CONTROL_LENGTH			//Same protocol as high speed
+, 0							//# other configs
+, 0							//reserved
+};
+
 // usb_user_configuration_descriptor FS
 FLASH S_usb_user_configuration_descriptor_mass usb_conf_desc_mass = {
  { sizeof(S_usb_configuration_descriptor)
@@ -619,6 +632,22 @@ U8 Usb_get_dev_desc_length(void)
 #endif
 
 	return sizeof(usb_dev_desc_composite);
+}
+
+PGM_VOID_P Usb_get_dev_qual_desc_pointer(void)
+{
+#if USB_CONF_STORAGE
+		return &(usb_dev_qual_desc_mass.bLength);
+#endif
+	return 0;
+}
+
+U8 Usb_get_dev_qual_desc_length(void)
+{
+#if USB_CONF_STORAGE
+		return sizeof(usb_dev_qual_desc_mass);
+#endif
+	return 0;
 }
 
 
