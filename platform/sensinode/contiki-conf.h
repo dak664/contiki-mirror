@@ -70,6 +70,17 @@ typedef unsigned short clock_time_t;
 #define UIP_FALLBACK_INTERFACE slip_interface
 #endif
 
+/* Output all captured frames over the UART in hexdump format */
+#ifndef CC2430_RF_CONF_HEXDUMP
+#define CC2430_RF_CONF_HEXDUMP 0
+#endif
+
+#if CC2430_RF_CONF_HEXDUMP
+/* We need UART1 output */
+#undef UART_ONE_CONF_ENABLE
+#define UART_ONE_CONF_ENABLE   1
+#endif
+
 /* Code Shortcuts */
 /*
  * When set, the RF driver is no longer a contiki process and the RX ISR is
@@ -134,6 +145,7 @@ typedef unsigned short clock_time_t;
 #define NETSTACK_CONF_MAC     csma_driver
 #endif
 #define NETSTACK_CONF_RADIO   cc2430_rf_driver
+#define RF_DEFAULT_CHANNEL    25
 
 /* #define CC2420_CONF_AUTOACK                  1  // this is useful. check for similar in cc2430 */
 /* MDMCTRL0L.AUTOACK p165 in datasheet */
