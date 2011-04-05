@@ -73,7 +73,7 @@ print_local_addresses(void)
 void
 request_prefix(void) {
   /* mess up uip_buf with a dirty request... */
-  uip_buf[0] = '!';
+  uip_buf[0] = '?';
   uip_buf[1] = 'P';
   uip_len = 2;
   slip_send();
