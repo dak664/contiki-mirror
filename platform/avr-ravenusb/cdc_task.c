@@ -207,7 +207,8 @@ PROCESS_THREAD(cdc_process, ev, data_proc)
 	while(1) {								//loop forever
 
 #if USB_CONF_SERIAL							//USB serial port is enabled
-
+extern uint8_t usb_accept_input;
+if (usb_accept_input) {
 #if !JACKDAW_CONF_ALT_LED_SCHEME
 	    // turn off LED's if necessary
 		if (led3_timer) led3_timer--;
@@ -261,6 +262,7 @@ PROCESS_THREAD(cdc_process, ev, data_proc)
 			}
 #endif
 		}  //if (Is_device_enumerated())
+}	//if (usb_accept_input)
        
 #elif USB_CONF_RS232						//USB not enabled, but serial is
 		stdout=rs232_stdout;				//restore jackdaw menu prints
@@ -453,7 +455,7 @@ void menu_process(char c)
 					} else if (menustate == ccathresh) {
 						rf230_set_cca(1,-input_value);
 						PRINTA("\nCCA threshold now %d dBm", rf230_get_cca());
-						settings_print(settings_set_int8(SETTINGS_KEY_CCATHRESH, input_value));
+						settings_print(settings_set_uint8(SETTINGS_KEY_CCATHRESH, -input_value));
 					}
 				} else {
 					if (menustate==channel) {
@@ -739,7 +741,16 @@ extern unsigned long radioontime;
 					((uint8_t *)&usb_ethernet_addr)[4],
 					((uint8_t *)&usb_ethernet_addr)[5]
 				);
+#if 0
 				PRINTA(", config %d, USB<->ETH is ", usb_configuration_nb);
+#else
+/* toto:pick up the right strings */
+				if (usb_configuration_nb==130) {
+					PRINTA(", CDC-ECM is ");
+				} else {
+					PRINTA(", RNDIS is ");
+				}			
+#endif
 				if (usb_eth_is_active == 0) PRINTA("not ");
 				PRINTA("active\n");
 
