@@ -56,7 +56,6 @@
 #define __RIMEADDR_H__
 
 #include "contiki-conf.h"
-#include "sys/cc.h"
 
 #ifdef RIMEADDR_CONF_SIZE
 #define RIMEADDR_SIZE RIMEADDR_CONF_SIZE
@@ -78,7 +77,7 @@ typedef union {
  *             to another.
  *
  */
-void rimeaddr_copy(rimeaddr_t *dest, const rimeaddr_t *from) __banked;
+void rimeaddr_copy(rimeaddr_t *dest, const rimeaddr_t *from);
 
 /**
  * \brief      Compare two Rime addresses
@@ -92,7 +91,7 @@ void rimeaddr_copy(rimeaddr_t *dest, const rimeaddr_t *from) __banked;
  *             are the same, and zero if the addresses are different.
  *
  */
-int rimeaddr_cmp(const rimeaddr_t *addr1, const rimeaddr_t *addr2) __banked;
+int rimeaddr_cmp(const rimeaddr_t *addr1, const rimeaddr_t *addr2);
 
 
 /**
@@ -102,7 +101,7 @@ int rimeaddr_cmp(const rimeaddr_t *addr1, const rimeaddr_t *addr2) __banked;
  *             This function sets the Rime address of the node.
  *
  */
-void rimeaddr_set_node_addr(rimeaddr_t *addr) __banked;
+void rimeaddr_set_node_addr(rimeaddr_t *addr);
 
 /**
  * \brief      The Rime address of the node

@@ -79,7 +79,7 @@ void uip_log(char *msg);
 extern struct uip_fallback_interface UIP_FALLBACK_INTERFACE;
 #endif
 #if UIP_CONF_IPV6_RPL
-void rpl_init(void) __banked;
+void rpl_init(void);
 #endif
 process_event_t tcpip_event;
 #if UIP_CONF_ICMP6
@@ -317,7 +317,7 @@ udp_attach(struct uip_udp_conn *conn,
 }
 /*---------------------------------------------------------------------------*/
 struct uip_udp_conn *
-udp_new(const uip_ipaddr_t *ripaddr, u16_t port, void *appstate) __banked
+udp_new(const uip_ipaddr_t *ripaddr, u16_t port, void *appstate)
 {
   struct uip_udp_conn *c;
   uip_udp_appstate_t *s;
@@ -556,7 +556,7 @@ tcpip_input(void)
 /*---------------------------------------------------------------------------*/
 #if UIP_CONF_IPV6
 void
-tcpip_ipv6_output(void) __banked
+tcpip_ipv6_output(void)
 {
   static uip_ds6_nbr_t *nbr = NULL;
   static uip_ipaddr_t* nexthop;

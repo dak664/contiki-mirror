@@ -249,11 +249,11 @@ struct rpl_dag {
 typedef struct rpl_dag rpl_dag_t;
 /*---------------------------------------------------------------------------*/
 /* Public RPL functions. */
-void rpl_init(void) __banked;
-rpl_dag_t *rpl_set_root(uip_ipaddr_t *) __banked;
-int rpl_set_prefix(rpl_dag_t *dag, uip_ipaddr_t *prefix, int len) __banked;
-int rpl_repair_dag(rpl_dag_t *dag) __banked;
-int rpl_set_default_route(rpl_dag_t *dag, uip_ipaddr_t *from) __banked;
-rpl_dag_t *rpl_get_dag(int instance_id) __banked;
+void rpl_init(void);
+rpl_dag_t *rpl_set_root(uip_ipaddr_t *);
+int rpl_set_prefix(rpl_dag_t *dag, uip_ipaddr_t *prefix, int len);
+int rpl_repair_dag(rpl_dag_t *dag);
+int rpl_set_default_route(rpl_dag_t *dag, uip_ipaddr_t *from);
+rpl_dag_t *rpl_get_dag(int instance_id);
 /*---------------------------------------------------------------------------*/
 #endif /* RPL_H */

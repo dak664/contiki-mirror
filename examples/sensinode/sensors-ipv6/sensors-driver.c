@@ -41,7 +41,6 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "dev/banked.h"
 #include "contiki-conf.h"
 #include "uip.h" /* for htons / htonl */
 #include "dev/leds.h"
@@ -78,7 +77,7 @@
 
 /*---------------------------------------------------------------------------*/
 int8_t
-read_sensor(char * rs) __banked
+read_sensor(char * rs)
 {
   /* Sensor Values */
   static int rv;

@@ -276,7 +276,7 @@ main(void)
     len = NETSTACK_RADIO.pending_packet();
     if(len) {
       packetbuf_clear();
-      len = cc2430_rf_read(packetbuf_dataptr(), PACKETBUF_SIZE);
+      len = NETSTACK_RADIO.read(packetbuf_dataptr(), PACKETBUF_SIZE);
       if(len > 0) {
         packetbuf_set_datalen(len);
         NETSTACK_RDC.input();

@@ -9,9 +9,6 @@ DEFINES=MODEL_N601,PROJECT_CONF_H
 HAVE_BANKING=1
 UIP_CONF_IPV6=1
 
-# Use the large memory model because we are using printfs
-MEMORY_MODEL=large
-
 PROJECT_SOURCEFILES += slip-bridge.c
 
 CONTIKI_PROJECT = border-router

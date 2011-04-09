@@ -3,7 +3,6 @@
 
 #include "8051def.h"
 #include "sys/cc.h"
-#include "dev/banked.h"
 #include <string.h>
 
 /* Include Project Specific conf */

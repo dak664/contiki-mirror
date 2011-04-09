@@ -95,7 +95,7 @@ set_attr(struct neighbor_attr *attr, uint16_t index)
 }
 /*---------------------------------------------------------------------------*/
 int
-neighbor_attr_register(struct neighbor_attr *def) __banked
+neighbor_attr_register(struct neighbor_attr *def)
 {
   struct neighbor_addr *addr;
 
@@ -109,13 +109,13 @@ neighbor_attr_register(struct neighbor_attr *def) __banked
 }
 /*---------------------------------------------------------------------------*/
 int
-neighbor_attr_has_neighbor(const rimeaddr_t *addr) __banked
+neighbor_attr_has_neighbor(const rimeaddr_t *addr)
 {
   return neighbor_addr_get(addr) != NULL;
 }
 /*---------------------------------------------------------------------------*/
 int
-neighbor_attr_add_neighbor(const rimeaddr_t *addr) __banked
+neighbor_attr_add_neighbor(const rimeaddr_t *addr)
 {
   struct neighbor_attr *def;
   struct neighbor_addr *item;
@@ -167,7 +167,7 @@ neighbor_attr_remove_neighbor(const rimeaddr_t *addr)
 }
 /*---------------------------------------------------------------------------*/
 void *
-neighbor_attr_get_data(struct neighbor_attr *def, const rimeaddr_t *addr) __banked
+neighbor_attr_get_data(struct neighbor_attr *def, const rimeaddr_t *addr)
 {
   struct neighbor_addr *attr = neighbor_addr_get(addr);
 
@@ -179,7 +179,7 @@ neighbor_attr_get_data(struct neighbor_attr *def, const rimeaddr_t *addr) __bank
 /*---------------------------------------------------------------------------*/
 int
 neighbor_attr_set_data(struct neighbor_attr *def, const rimeaddr_t *addr,
-                       void *data) __banked
+                       void *data)
 {
   struct neighbor_addr *attr = neighbor_addr_get(addr);
 

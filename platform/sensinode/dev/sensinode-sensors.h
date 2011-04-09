@@ -51,8 +51,8 @@
 #include "dev/models.h"
 #include "lib/sensors.h"
 
-void sensinode_sensors_activate() __banked;
-void sensinode_sensors_deactivate() __banked;
+void sensinode_sensors_activate();
+void sensinode_sensors_deactivate();
 
 /* ADC Sensor Types */
 #define ADC_SENSOR "ADC"

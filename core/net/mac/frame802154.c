@@ -157,7 +157,7 @@ field_len(frame802154_t *p, field_length_t *flen)
  *   \return The length of the frame header.
 */
 uint8_t
-frame802154_hdrlen(frame802154_t *p) __banked
+frame802154_hdrlen(frame802154_t *p)
 {
   field_len(p, &flen);
   return 3 + flen.dest_pid_len + flen.dest_addr_len +
@@ -179,7 +179,7 @@ frame802154_hdrlen(frame802154_t *p) __banked
  *   insufficient space in the buffer for the frame headers.
 */
 uint8_t
-frame802154_create(frame802154_t *p, uint8_t *buf, uint8_t buf_len) __banked
+frame802154_create(frame802154_t *p, uint8_t *buf, uint8_t buf_len)
 {
   int c;
   uint8_t *tx_frame_buffer;
@@ -250,7 +250,7 @@ frame802154_create(frame802154_t *p, uint8_t *buf, uint8_t buf_len) __banked
  *   \param pf The frame802154_t struct to store the parsed frame information.
  */
 uint8_t
-frame802154_parse(uint8_t *data, uint8_t len, frame802154_t *pf) __banked
+frame802154_parse(uint8_t *data, uint8_t len, frame802154_t *pf)
 {
   uint8_t *p;
   uint8_t c;

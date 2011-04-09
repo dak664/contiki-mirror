@@ -9,10 +9,6 @@ PACKIHX  = packihx
 CONVERTER_DIR = $(CONTIKI)/cpu/cc2430/converter
 CONVERTER = $(CONVERTER_DIR)/converter
 
-ifndef MEMORY_MODEL
-MEMORY_MODEL=large
-endif
-
 CFLAGS  += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430
 CFLAGS  += --std-c99 
 
@@ -25,6 +21,7 @@ AROPTS   = -a
 
 ifeq ($(HAVE_BANKING),1)
 #banking
+MEMORY_MODEL=huge
 LDFLAGS += --code-size 0x20000 
 LDFLAGS += -Wl-bCSEG=0x000000 
 LDFLAGS += -Wl-bBANK1=0x018000
@@ -42,6 +39,7 @@ code_segment = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | perl 
 
 else
 #no banking
+MEMORY_MODEL=large
 LDFLAGS += --code-loc 0000 --code-size 65500
 code_segment =
 
@@ -69,7 +67,7 @@ CONTIKI_CPU_DIRS = . dev
 
 ### CPU-dependent source files
 CONTIKI_SOURCEFILES += bus.c clock.c uart.c cc2430_rf.c dma.c
-CONTIKI_SOURCEFILES += uart_init.c uart_intr.c cc2430_rf_intr.c dma_intr.c
+CONTIKI_SOURCEFILES += uart_intr.c cc2430_rf_intr.c dma_intr.c
 CONTIKI_SOURCEFILES += watchdog-cc2430.c rtimer-arch.c slip-arch.c slip.c
 CONTIKI_ASMFILES +=
 

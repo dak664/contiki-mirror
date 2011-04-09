@@ -68,7 +68,6 @@
 #define __TCPIP_H__
 
 #include "contiki.h"
-#include "sys/cc.h"
 
 struct uip_conn;
 
@@ -228,7 +227,7 @@ void udp_attach(struct uip_udp_conn *conn,
  * memory could not be allocated for the connection.
  */
 CCIF struct uip_udp_conn *udp_new(const uip_ipaddr_t *ripaddr, u16_t port,
-				  void *appstate) __banked;
+				  void *appstate);
 
 /**
  * Create a new UDP broadcast connection.
@@ -353,7 +352,7 @@ void tcpip_set_outputfunc(u8_t (* f)(void));
  * \brief This function does address resolution and then calls tcpip_output
  */
 #if UIP_CONF_IPV6
-void tcpip_ipv6_output(void) __banked;
+void tcpip_ipv6_output(void);
 #endif
 
 /**

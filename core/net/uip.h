@@ -1207,16 +1207,16 @@ struct uip_udp_conn *uip_udp_new(const uip_ipaddr_t *ripaddr, u16_t rport);
  * byte order to network byte order. For converting constants to
  * network byte order, use the UIP_HTONS() macro instead.
  */
-#ifndef htons
-CCIF u16_t uip_htons(u16_t val) __banked;
-#endif /* htons */
+#ifndef uip_htons
+CCIF u16_t uip_htons(u16_t val);
+#endif /* uip_htons */
 #ifndef uip_ntohs
 #define uip_ntohs uip_htons
 #endif
 
-#ifndef htonl
-CCIF u32_t uip_htonl(u32_t val) __banked;
-#endif /* htonl */
+#ifndef uip_htonl
+CCIF u32_t uip_htonl(u32_t val);
+#endif /* uip_htonl */
 #ifndef uip_ntohl
 #define uip_ntohl uip_htonl
 #endif
@@ -1525,7 +1525,7 @@ uip_ext_hdr_options_process(); */
  *
  * The actual uIP function which does all the work.
  */
-void uip_process(u8_t flag) __banked;
+void uip_process(u8_t flag);
   
   /* The following flags are passed as an argument to the uip_process()
    function. They are used to distinguish between the two cases where
@@ -2172,7 +2172,7 @@ u16_t uip_udpchksum(void);
  *
  * \return The ICMP checksum of the ICMP packet in uip_buf
  */
-u16_t uip_icmp6chksum(void) __banked;
+u16_t uip_icmp6chksum(void);
 
 
 #endif /* __UIP_H__ */

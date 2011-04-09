@@ -41,7 +41,7 @@
 
 /*---------------------------------------------------------------------------*/
 void
-uip_debug_ipaddr_print(const uip_ipaddr_t *addr) __banked
+uip_debug_ipaddr_print(const uip_ipaddr_t *addr)
 {
 #if UIP_CONF_IPV6
   uint16_t a;
@@ -68,7 +68,7 @@ uip_debug_ipaddr_print(const uip_ipaddr_t *addr) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_debug_lladdr_print(const uip_lladdr_t *addr) __banked
+uip_debug_lladdr_print(const uip_lladdr_t *addr)
 {
   unsigned int i;
   for(i = 0; i < sizeof(uip_lladdr_t); i++) {

@@ -161,9 +161,9 @@ typedef struct {
 
 /* Prototypes */
 
-uint8_t frame802154_hdrlen(frame802154_t *p) __banked;
-uint8_t frame802154_create(frame802154_t *p, uint8_t *buf, uint8_t buf_len) __banked;
-uint8_t frame802154_parse(uint8_t *data, uint8_t length, frame802154_t *pf) __banked;
+uint8_t frame802154_hdrlen(frame802154_t *p);
+uint8_t frame802154_create(frame802154_t *p, uint8_t *buf, uint8_t buf_len);
+uint8_t frame802154_parse(uint8_t *data, uint8_t length, frame802154_t *pf);
 
 /** @} */
 #endif /* FRAME_802154_H */

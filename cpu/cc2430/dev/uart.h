@@ -19,7 +19,7 @@
 #endif
 
 #if UART_ZERO_ENABLE
-void uart0_init(uint32_t speed) __banked;
+void uart0_init(uint32_t speed);
 void uart0_writeb(uint8_t byte);
 
 void uart0_set_input(int (*input)(unsigned char c));
@@ -31,7 +31,7 @@ void uart0_tx_ISR( void ) __interrupt (UTX0_VECTOR);
 #endif
 
 #if UART_ONE_ENABLE
-void uart1_init(uint32_t speed) __banked;
+void uart1_init(uint32_t speed);
 void uart1_writeb(uint8_t byte);
 
 void uart1_set_input(int (*input)(unsigned char c));

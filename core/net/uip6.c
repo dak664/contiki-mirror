@@ -95,7 +95,7 @@
 #endif
 
 #if UIP_CONF_IPV6_RPL
-void uip_rpl_input(void) __banked;
+void uip_rpl_input(void);
 #endif /* UIP_CONF_IPV6_RPL */
 
 #if UIP_LOGGING == 1
@@ -862,7 +862,7 @@ ext_hdr_options_process() {
 
 /*---------------------------------------------------------------------------*/
 void
-uip_process(u8_t flag) __banked
+uip_process(u8_t flag)
 {
 #if UIP_TCP
   register struct uip_conn *uip_connr = uip_conn;
@@ -2189,13 +2189,13 @@ uip_process(u8_t flag) __banked
 }
 /*---------------------------------------------------------------------------*/
 u16_t
-uip_htons(u16_t val) __banked
+uip_htons(u16_t val)
 {
   return UIP_HTONS(val);
 }
 
 u32_t
-uip_htonl(u32_t val) __banked
+uip_htonl(u32_t val)
 {
   return UIP_HTONL(val);
 }

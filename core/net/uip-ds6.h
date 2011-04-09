@@ -292,10 +292,10 @@ extern struct etimer uip_ds6_timer_rs;
 
 /*---------------------------------------------------------------------------*/
 /** \brief Initialize data structures */
-void uip_ds6_init(void) __banked;
+void uip_ds6_init(void);
 
 /** \brief Periodic processing of data structures */
-void uip_ds6_periodic(void) __banked;
+void uip_ds6_periodic(void);
 
 /** \brief Generic loop routine on an abstract data structure, which generalizes
  * all data structures used in DS6 */
@@ -307,19 +307,19 @@ uint8_t uip_ds6_list_loop(uip_ds6_element_t *list, uint8_t size,
 /** \name Neighbor Cache basic routines */
 /** @{ */
 uip_ds6_nbr_t *uip_ds6_nbr_add(uip_ipaddr_t *ipaddr, uip_lladdr_t *lladdr,
-                               uint8_t isrouter, uint8_t state) __banked;
+                               uint8_t isrouter, uint8_t state);
 void uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr);
-uip_ds6_nbr_t *uip_ds6_nbr_lookup(uip_ipaddr_t *ipaddr) __banked;
+uip_ds6_nbr_t *uip_ds6_nbr_lookup(uip_ipaddr_t *ipaddr);
 
 /** @} */
 
 /** \name Default router list basic routines */
 /** @{ */
 uip_ds6_defrt_t *uip_ds6_defrt_add(uip_ipaddr_t *ipaddr,
-                                   unsigned long interval) __banked;
-void uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt) __banked;
-uip_ds6_defrt_t *uip_ds6_defrt_lookup(uip_ipaddr_t *ipaddr) __banked;
-uip_ipaddr_t *uip_ds6_defrt_choose(void) __banked;
+                                   unsigned long interval);
+void uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt);
+uip_ds6_defrt_t *uip_ds6_defrt_lookup(uip_ipaddr_t *ipaddr);
+uip_ipaddr_t *uip_ds6_defrt_choose(void);
 
 /** @} */
 
@@ -337,26 +337,26 @@ uip_ds6_prefix_t *uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t length,
 void uip_ds6_prefix_rm(uip_ds6_prefix_t *prefix);
 uip_ds6_prefix_t *uip_ds6_prefix_lookup(uip_ipaddr_t *ipaddr,
                                         uint8_t ipaddrlen);
-uint8_t uip_ds6_is_addr_onlink(uip_ipaddr_t *ipaddr) __banked;
+uint8_t uip_ds6_is_addr_onlink(uip_ipaddr_t *ipaddr);
 
 /** @} */
 
 /** \name Unicast address list basic routines */
 /** @{ */
 uip_ds6_addr_t *uip_ds6_addr_add(uip_ipaddr_t *ipaddr,
-                                 unsigned long vlifetime, uint8_t type) __banked;
+                                 unsigned long vlifetime, uint8_t type);
 void uip_ds6_addr_rm(uip_ds6_addr_t *addr);
-uip_ds6_addr_t *uip_ds6_addr_lookup(uip_ipaddr_t *ipaddr) __banked;
-uip_ds6_addr_t *uip_ds6_get_link_local(int8_t state) __banked;
+uip_ds6_addr_t *uip_ds6_addr_lookup(uip_ipaddr_t *ipaddr);
+uip_ds6_addr_t *uip_ds6_get_link_local(int8_t state);
 uip_ds6_addr_t *uip_ds6_get_global(int8_t state);
 
 /** @} */
 
 /** \name Multicast address list basic routines */
 /** @{ */
-uip_ds6_maddr_t *uip_ds6_maddr_add(uip_ipaddr_t *ipaddr) __banked;
+uip_ds6_maddr_t *uip_ds6_maddr_add(uip_ipaddr_t *ipaddr);
 void uip_ds6_maddr_rm(uip_ds6_maddr_t *maddr);
-uip_ds6_maddr_t *uip_ds6_maddr_lookup(uip_ipaddr_t *ipaddr) __banked;
+uip_ds6_maddr_t *uip_ds6_maddr_lookup(uip_ipaddr_t *ipaddr);
 
 /** @} */
 
@@ -364,23 +364,23 @@ uip_ds6_maddr_t *uip_ds6_maddr_lookup(uip_ipaddr_t *ipaddr) __banked;
 /** @{ */
 uip_ds6_aaddr_t *uip_ds6_aaddr_add(uip_ipaddr_t *ipaddr);
 void uip_ds6_aaddr_rm(uip_ds6_aaddr_t *aaddr);
-uip_ds6_aaddr_t *uip_ds6_aaddr_lookup(uip_ipaddr_t *ipaddr) __banked;
+uip_ds6_aaddr_t *uip_ds6_aaddr_lookup(uip_ipaddr_t *ipaddr);
 
 /** @} */
 
 
 /** \name Routing Table basic routines */
 /** @{ */
-uip_ds6_route_t *uip_ds6_route_lookup(uip_ipaddr_t *destipaddr) __banked;
+uip_ds6_route_t *uip_ds6_route_lookup(uip_ipaddr_t *destipaddr);
 uip_ds6_route_t *uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length,
-                                   uip_ipaddr_t *next_hop, uint8_t metric) __banked;
-void uip_ds6_route_rm(uip_ds6_route_t *route) __banked;
-void uip_ds6_route_rm_by_nexthop(uip_ipaddr_t *nexthop) __banked;
+                                   uip_ipaddr_t *next_hop, uint8_t metric);
+void uip_ds6_route_rm(uip_ds6_route_t *route);
+void uip_ds6_route_rm_by_nexthop(uip_ipaddr_t *nexthop);
 
 /** @} */
 
 /** \brief set the last 64 bits of an IP address based on the MAC address */
-void uip_ds6_set_addr_iid(uip_ipaddr_t * ipaddr, uip_lladdr_t * lladdr) __banked;
+void uip_ds6_set_addr_iid(uip_ipaddr_t * ipaddr, uip_lladdr_t * lladdr);
 
 /** \brief Get the number of matching bits of two addresses */
 uint8_t get_match_length(uip_ipaddr_t * src, uip_ipaddr_t * dst);
@@ -392,7 +392,7 @@ void uip_ds6_dad(uip_ds6_addr_t * ifaddr);
 int uip_ds6_dad_failed(uip_ds6_addr_t * ifaddr);
 
 /** \brief Source address selection, see RFC 3484 */
-void uip_ds6_select_src(uip_ipaddr_t * src, uip_ipaddr_t * dst) __banked;
+void uip_ds6_select_src(uip_ipaddr_t * src, uip_ipaddr_t * dst);
 
 #if UIP_CONF_ROUTER
 #if UIP_ND6_SEND_RA
@@ -404,7 +404,7 @@ void uip_ds6_send_ra_periodic(void);
 #endif /* UIP_ND6_SEND_RA */
 #else /* UIP_CONF_ROUTER */
 /** \brief Send periodic RS to find router */
-void uip_ds6_send_rs(void) __banked;
+void uip_ds6_send_rs(void);
 #endif /* UIP_CONF_ROUTER */
 
 /** \brief Compute the reachable time based on base reachable time, see RFC 4861*/

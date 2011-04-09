@@ -137,11 +137,4 @@
  */
 #define CC_CONCAT(s1, s2) CC_CONCAT2(s1, s2)
 
-/* banking and storage class extensions */
-#ifdef CC_CONF_CODE_BANKING
-#include "dev/banked.h"
-#else
-#define __banked
-#endif
-
 #endif /* __CC_H__ */

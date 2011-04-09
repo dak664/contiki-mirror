@@ -8,7 +8,6 @@
 #ifndef __CC2430_RF_H__
 #define __CC2430_RF_H__
 
-#include "dev/banked.h"
 #include "contiki.h"
 #include "dev/radio.h"
 #include "cc2430_sfr.h"
@@ -28,20 +27,20 @@ typedef enum rf_address_mode_t
 }rf_address_mode_t;
 
 /*CSP command set*/
-#define SSTOP		0xDF
+#define SSTOP		  0xDF
 /*this is not a real command but a way of having rf_command
   wait until the script is done*/
 #define SSTART		0xDE
 
-#define SNOP		0xC0
+#define SNOP		  0xC0
 #define STXCALN 	0xC1
-#define SRXON		0xC2
-#define STXON		0xC3
+#define SRXON		  0xC2
+#define STXON		  0xC3
 #define STXONCCA	0xC4
 #define SRFOFF		0xC5
 #define SFLUSHRX	0xC6
 #define SFLUSHTX	0xC7
-#define SACK		0xC8
+#define SACK		  0xC8
 #define SACKPEND	0xC9
 
 #define ISTXCALN 	0xE1
@@ -51,7 +50,7 @@ typedef enum rf_address_mode_t
 #define ISRFOFF		0xE5
 #define ISFLUSHRX	0xE6
 #define ISFLUSHTX	0xE7
-#define ISACK		0xE8
+#define ISACK		  0xE8
 #define ISACKPEND	0xE9
 
 #define ISSTOP		0xFF
@@ -73,24 +72,10 @@ typedef enum rf_address_mode_t
 
 extern const struct radio_driver cc2430_rf_driver;
 
-extern unsigned short cc2430_rf_payload_len;
-extern void *cc2430_rf_payload;
-
-/* RF driver functions */
-int cc2430_rf_init(void) __banked;
-int cc2430_rf_prepare(const void *data, unsigned short len) __banked;
-int cc2430_rf_transmit(void) __banked;
-int cc2430_rf_read(void *buf, unsigned short bufsize) __banked;
-int cc2430_rf_cca_check(uint8_t backoff_count, uint8_t slotted) __banked;
-int cc2430_rf_receiving_packet(void) __banked;
-int cc2430_rf_pending_packet(void) __banked;
-int cc2430_rf_rx_enable(void) __banked;
-int cc2430_rf_rx_disable(void) __banked;
-
 void cc2430_rf_command(uint8_t command);
-int8_t cc2430_rf_channel_set(uint8_t channel) __banked;
-int8_t cc2430_rf_power_set(uint8_t new_power) __banked;
-void cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr) __banked;
+int8_t cc2430_rf_channel_set(uint8_t channel);
+int8_t cc2430_rf_power_set(uint8_t new_power);
+void cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr);
 
 #if !SHORTCUTS_CONF_NETSTACK
 extern void cc2430_rf_ISR( void ) __interrupt (RF_VECTOR);
@@ -102,6 +87,5 @@ extern void cc2430_rf_error_ISR( void ) __interrupt (RFERR_VECTOR);
 #ifdef HAVE_RF_DMA
 void rf_dma_callback_isr(void);
 #endif
-
 
 #endif /* __CC2430_RF_H__ */

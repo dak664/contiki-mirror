@@ -47,9 +47,8 @@
 #include "dev/uart.h"
 
 void putchar(char c);
-void putstring(char *s) __banked;
-void puthex(uint8_t c) __banked;
-void putbin(uint8_t c) __banked;
-void putbank() __banked;
+void putstring(char *s);
+void puthex(uint8_t c);
+void putbin(uint8_t c);
 
 #endif /* SENSINODE_DEBUG_H_ */

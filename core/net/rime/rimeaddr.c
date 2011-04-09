@@ -57,7 +57,7 @@ const rimeaddr_t rimeaddr_null = { { 0, 0, 0, 0, 0, 0, 0, 0 } };
 
 /*---------------------------------------------------------------------------*/
 void
-rimeaddr_copy(rimeaddr_t *dest, const rimeaddr_t *src) __banked
+rimeaddr_copy(rimeaddr_t *dest, const rimeaddr_t *src)
 {
   u8_t i;
   for(i = 0; i < RIMEADDR_SIZE; i++) {
@@ -66,7 +66,7 @@ rimeaddr_copy(rimeaddr_t *dest, const rimeaddr_t *src) __banked
 }
 /*---------------------------------------------------------------------------*/
 int
-rimeaddr_cmp(const rimeaddr_t *addr1, const rimeaddr_t *addr2) __banked
+rimeaddr_cmp(const rimeaddr_t *addr1, const rimeaddr_t *addr2)
 {
   u8_t i;
   for(i = 0; i < RIMEADDR_SIZE; i++) {
@@ -78,7 +78,7 @@ rimeaddr_cmp(const rimeaddr_t *addr1, const rimeaddr_t *addr2) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-rimeaddr_set_node_addr(rimeaddr_t *t) __banked
+rimeaddr_set_node_addr(rimeaddr_t *t)
 {
   rimeaddr_copy(&rimeaddr_node_addr, t);
 }

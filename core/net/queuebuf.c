@@ -101,7 +101,7 @@ uint8_t queuebuf_len, queuebuf_ref_len, queuebuf_max_len;
 
 /*---------------------------------------------------------------------------*/
 void
-queuebuf_init(void) __banked
+queuebuf_init(void)
 {
   memb_init(&bufmem);
   memb_init(&refbufmem);
@@ -115,7 +115,7 @@ struct queuebuf *
 queuebuf_new_from_packetbuf_debug(const char *file, int line)
 #else /* QUEUEBUF_DEBUG */
 struct queuebuf *
-queuebuf_new_from_packetbuf(void) __banked
+queuebuf_new_from_packetbuf(void)
 #endif /* QUEUEBUF_DEBUG */
 {
   struct queuebuf *buf;
@@ -163,7 +163,7 @@ queuebuf_new_from_packetbuf(void) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-queuebuf_free(struct queuebuf *buf) __banked
+queuebuf_free(struct queuebuf *buf)
 {
   if(memb_inmemb(&bufmem, buf)) {
     memb_free(&bufmem, buf);
@@ -183,7 +183,7 @@ queuebuf_free(struct queuebuf *buf) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-queuebuf_to_packetbuf(struct queuebuf *b) __banked
+queuebuf_to_packetbuf(struct queuebuf *b)
 {
   struct queuebuf_ref *r;
 
@@ -200,7 +200,7 @@ queuebuf_to_packetbuf(struct queuebuf *b) __banked
 }
 /*---------------------------------------------------------------------------*/
 void *
-queuebuf_dataptr(struct queuebuf *b) __banked
+queuebuf_dataptr(struct queuebuf *b)
 {
   struct queuebuf_ref *r;
   
@@ -214,19 +214,19 @@ queuebuf_dataptr(struct queuebuf *b) __banked
 }
 /*---------------------------------------------------------------------------*/
 int
-queuebuf_datalen(struct queuebuf *b) __banked
+queuebuf_datalen(struct queuebuf *b)
 {
   return b->len;
 }
 /*---------------------------------------------------------------------------*/
 rimeaddr_t *
-queuebuf_addr(struct queuebuf *b, uint8_t type) __banked
+queuebuf_addr(struct queuebuf *b, uint8_t type)
 {
   return &b->addrs[type - PACKETBUF_ADDR_FIRST].addr;
 }
 /*---------------------------------------------------------------------------*/
 packetbuf_attr_t
-queuebuf_attr(struct queuebuf *b, uint8_t type) __banked
+queuebuf_attr(struct queuebuf *b, uint8_t type)
 {
   return b->attrs[type].val;
 }

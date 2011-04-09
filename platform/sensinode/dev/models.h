@@ -1,8 +1,6 @@
 #ifndef __MODELS_H__
 #define __MODELS_H__
 
-#include "dev/banked.h"
-
 /* Define model text */
 #ifdef MODEL_N100
 #define SENSINODE_MODEL "N100 Module (CC2431-F128)"
@@ -54,6 +52,6 @@
 #endif
 
 /* Model-Specific startup functions */
-void model_init() __banked;
-void model_uart_intr_en() __banked;
+void model_init();
+void model_uart_intr_en();
 #endif /* __MODELS_H__ */

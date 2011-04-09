@@ -20,7 +20,7 @@ struct process * dma_callback[4];
 
 /*---------------------------------------------------------------------------*/
 void
-dma_init(void) __banked
+dma_init(void)
 {
   uint16_t tmp_ptr;
   memset(dma_conf, 0, 4*sizeof(dma_config_t));
@@ -56,7 +56,7 @@ dma_init(void) __banked
 xDMAHandle
 dma_config(uint8_t channel, void *src, dma_inc_t src_inc, void *dst, dma_inc_t dst_inc,
 	   uint16_t length, dma_vlen_t vlen_mode, dma_type_t t_mode, dma_trigger_t trigger,
-	   struct process * proc) __banked
+	   struct process * proc)
 {
   return dma_config2(channel,src,src_inc, dst, dst_inc, length, 0, vlen_mode, t_mode, trigger, proc);
 }
@@ -83,7 +83,7 @@ dma_config(uint8_t channel, void *src, dma_inc_t src_inc, void *dst, dma_inc_t d
 xDMAHandle
 dma_config2(uint8_t channel, void *src, dma_inc_t src_inc, void *dst, dma_inc_t dst_inc,
 	   uint16_t length, uint8_t word_mode, dma_vlen_t vlen_mode, dma_type_t t_mode, dma_trigger_t trigger,
-	   struct process * proc) __banked
+	   struct process * proc)
 {
   unsigned char jj;
   if((!channel) || (channel > 4)) {
@@ -122,7 +122,7 @@ dma_config2(uint8_t channel, void *src, dma_inc_t src_inc, void *dst, dma_inc_t 
  * \return pdFALSE	semaphore creation failed
  */
 uint8_t
-dma_arm(xDMAHandle channel) __banked
+dma_arm(xDMAHandle channel)
 {
   uint8_t ch_id = ((uint8_t)channel);
   if(!ch_id || (ch_id > 4)) {
@@ -141,7 +141,7 @@ dma_arm(xDMAHandle channel) __banked
  * \return pdFALSE	semaphore creation failed
  */
 uint8_t
-dma_abort(xDMAHandle channel) __banked
+dma_abort(xDMAHandle channel)
 {
   uint8_t ch_id = ((uint8_t) channel);
   if(!ch_id || (ch_id > 4)) {
@@ -160,7 +160,7 @@ dma_abort(xDMAHandle channel) __banked
  * \return pdFALSE	semaphore creation failed
  */
 uint8_t
-dma_trigger(xDMAHandle channel) __banked
+dma_trigger(xDMAHandle channel)
 {
   uint8_t ch_id = ((uint8_t) channel);
   if(!ch_id || (ch_id > 4)) {
@@ -179,7 +179,7 @@ dma_trigger(xDMAHandle channel) __banked
  * \return pdFALSE	not active
  */
 uint8_t
-dma_state(xDMAHandle channel) __banked
+dma_state(xDMAHandle channel)
 {
   uint8_t ch_id = ((uint8_t)channel);
   if(!ch_id || (ch_id > 4)) {
@@ -192,7 +192,7 @@ dma_state(xDMAHandle channel) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-dma_config_print(xDMAHandle channel) __banked
+dma_config_print(xDMAHandle channel)
 {
   uint8_t ch_id = channel - 1;
   

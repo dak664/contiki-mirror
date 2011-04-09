@@ -40,12 +40,11 @@
  */
 
 #include "dev/models.h"
-#include "dev/banked.h"
 #include "dev/uart.h"
 
 /*---------------------------------------------------------------------------*/
 void
-model_init() __banked
+model_init()
 {
 
 #ifdef MODEL_N740
@@ -65,7 +64,7 @@ model_init() __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-model_uart_intr_en() __banked
+model_uart_intr_en()
 {
 #ifdef MODEL_N740
   /*

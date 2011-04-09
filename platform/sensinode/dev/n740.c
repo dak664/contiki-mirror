@@ -63,7 +63,6 @@
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "dev/banked.h"
 #include "dev/n740.h"
 #include "dev/uart.h"
 
@@ -78,7 +77,7 @@ static __data uint8_t ser_par_status;
  *   - Set I/O direction for all 3 pins (P0_2, P1_1 and P1_3) to output
  */
 void
-n740_ser_par_init() __banked
+n740_ser_par_init()
 {
   /* bus_init and uart1_init also touch the I/O direction for those pins */
   P1DIR |= 0x0A;
@@ -91,7 +90,7 @@ n740_ser_par_init() __banked
  * byte, each bit controls a different feature on the sensor.
  */
 void
-n740_ser_par_set(uint8_t data) __banked
+n740_ser_par_set(uint8_t data)
 {
   uint8_t i;
   uint8_t mask = 1;
@@ -131,13 +130,13 @@ n740_ser_par_set(uint8_t data) __banked
  * actual status will end up out of sync.
  */
 uint8_t
-n740_ser_par_get() __banked
+n740_ser_par_get()
 {
   return ser_par_status;
 }
 /*---------------------------------------------------------------------------*/
 void
-n740_analog_switch(uint8_t state) __banked
+n740_analog_switch(uint8_t state)
 {
   /* Turn off the UART RX interrupt before switching */
   DISABLE_INTERRUPTS();

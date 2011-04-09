@@ -21,34 +21,8 @@ HOME random.c # header in core/lib. Can not bank this
 HOME rtimer-arch.c        # Contains ISRs. Keep it in HOME
 HOME watchdog-cc2430.c    # Prototypes in core thus we can't __banked them. Keep this in HOME
 
-# These are safe to put in whatever bank
-BANK3 frame802154.c
-BANK2 queuebuf.c
-BANK3 rimeaddr.c
-
-# Files containing functions invoked via ctimers (FP calls)
-# HOME is the safe option. BANK1 "if you know what you're doing"
-BANK1 rpl-timers.c
-BANK1 neighbor-attr.c
-
-# calls from neighbor-info.c to rpl.c via FPs. Those files need to be in
-# the same BANK. rpl defaults to BANK3
-BANK3 neighbor-info.c
-
-# Networking code
-# Many function calls through pointers with the NETSTACK.
-HOME netstack.c
-HOME packetbuf.c
-HOME packetqueue.c
-
-# Keep those crucial files in the same bank as the NETSTACK
-BANK1 sicslowpan.c
-BANK1 uip6.c
-BANK1 tcpip.c
-
 # Other Port files (cpu/cc2430 stuff)
 BANK3 uart_init.c
-BANK2 dma.c
 HOME cc2430/dev/bus.c
 BANK2 cc2430_rf.c     # The radio driver is bankable
 BANK1 cc2430/         # cc2430 port in BANK1 if unspecified

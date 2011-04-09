@@ -156,7 +156,7 @@ acceptable_rank(rpl_dag_t *dag, rpl_rank_t rank)
 }
 /************************************************************************/
 rpl_dag_t *
-rpl_set_root(uip_ipaddr_t *dag_id) __banked
+rpl_set_root(uip_ipaddr_t *dag_id)
 {
   rpl_dag_t *dag;
   int version;
@@ -211,7 +211,7 @@ rpl_set_root(uip_ipaddr_t *dag_id) __banked
 }
 /************************************************************************/
 int
-rpl_set_prefix(rpl_dag_t *dag, uip_ipaddr_t *prefix, int len) __banked
+rpl_set_prefix(rpl_dag_t *dag, uip_ipaddr_t *prefix, int len)
 {
   if(len <= 128) {
     memset(&dag->prefix_info.prefix, 0, 16);
@@ -225,7 +225,7 @@ rpl_set_prefix(rpl_dag_t *dag, uip_ipaddr_t *prefix, int len) __banked
 }
 /************************************************************************/
 int
-rpl_set_default_route(rpl_dag_t *dag, uip_ipaddr_t *from) __banked
+rpl_set_default_route(rpl_dag_t *dag, uip_ipaddr_t *from)
 {
   if(dag->def_route != NULL) {
     PRINTF("RPL: Removing default route through ");
@@ -252,7 +252,7 @@ rpl_set_default_route(rpl_dag_t *dag, uip_ipaddr_t *from) __banked
 }
 /************************************************************************/
 rpl_dag_t *
-rpl_alloc_dag(uint8_t instance_id) __banked
+rpl_alloc_dag(uint8_t instance_id)
 {
   rpl_dag_t *dag;
   rpl_dag_t *end;
@@ -275,7 +275,7 @@ rpl_alloc_dag(uint8_t instance_id) __banked
 }
 /************************************************************************/
 void
-rpl_free_dag(rpl_dag_t *dag) __banked
+rpl_free_dag(rpl_dag_t *dag)
 {
   PRINTF("RPL: Leaving the DAG ");
   PRINT6ADDR(&dag->dag_id);
@@ -296,7 +296,7 @@ rpl_free_dag(rpl_dag_t *dag) __banked
 }
 /************************************************************************/
 rpl_parent_t *
-rpl_add_parent(rpl_dag_t *dag, rpl_dio_t *dio, uip_ipaddr_t *addr) __banked
+rpl_add_parent(rpl_dag_t *dag, rpl_dio_t *dio, uip_ipaddr_t *addr)
 {
   rpl_parent_t *p;
 
@@ -320,7 +320,7 @@ rpl_add_parent(rpl_dag_t *dag, rpl_dio_t *dio, uip_ipaddr_t *addr) __banked
 }
 /************************************************************************/
 rpl_parent_t *
-rpl_find_parent(rpl_dag_t *dag, uip_ipaddr_t *addr) __banked
+rpl_find_parent(rpl_dag_t *dag, uip_ipaddr_t *addr)
 {
   rpl_parent_t *p;
 
@@ -335,7 +335,7 @@ rpl_find_parent(rpl_dag_t *dag, uip_ipaddr_t *addr) __banked
 
 /************************************************************************/
 rpl_parent_t *
-rpl_select_parent(rpl_dag_t *dag) __banked
+rpl_select_parent(rpl_dag_t *dag)
 {
   static rpl_parent_t *p;
   static rpl_parent_t *best;
@@ -387,7 +387,7 @@ rpl_select_parent(rpl_dag_t *dag) __banked
 }
 /************************************************************************/
 int
-rpl_remove_parent(rpl_dag_t *dag, rpl_parent_t *parent) __banked
+rpl_remove_parent(rpl_dag_t *dag, rpl_parent_t *parent)
 {
   uip_ds6_defrt_t *defrt;
 
@@ -416,7 +416,7 @@ rpl_remove_parent(rpl_dag_t *dag, rpl_parent_t *parent) __banked
 }
 /************************************************************************/
 rpl_dag_t *
-rpl_get_dag(int instance_id) __banked
+rpl_get_dag(int instance_id)
 {
   int i;
 
@@ -430,7 +430,7 @@ rpl_get_dag(int instance_id) __banked
 }
 /************************************************************************/
 rpl_of_t *
-rpl_find_of(rpl_ocp_t ocp) __banked
+rpl_find_of(rpl_ocp_t ocp)
 {
   unsigned int i;
 
@@ -568,7 +568,7 @@ global_repair(uip_ipaddr_t *from, rpl_dag_t *dag, rpl_dio_t *dio)
 }
 /************************************************************************/
 int
-rpl_repair_dag(rpl_dag_t *dag) __banked
+rpl_repair_dag(rpl_dag_t *dag)
 {
   if(dag->rank == ROOT_RANK(dag)) {
     dag->version++;
@@ -580,7 +580,7 @@ rpl_repair_dag(rpl_dag_t *dag) __banked
 }
 /************************************************************************/
 void
-rpl_local_repair(rpl_dag_t *dag) __banked
+rpl_local_repair(rpl_dag_t *dag)
 {
   PRINTF("RPL: Starting a local DAG repair\n");
 
@@ -592,7 +592,7 @@ rpl_local_repair(rpl_dag_t *dag) __banked
 }
 /************************************************************************/
 void
-rpl_recalculate_ranks(void) __banked
+rpl_recalculate_ranks(void)
 {
   rpl_dag_t *dag;
   rpl_parent_t *p;
@@ -620,7 +620,7 @@ rpl_recalculate_ranks(void) __banked
 }
 /************************************************************************/
 int
-rpl_process_parent_event(rpl_dag_t *dag, rpl_parent_t *p) __banked
+rpl_process_parent_event(rpl_dag_t *dag, rpl_parent_t *p)
 {
   rpl_rank_t parent_rank;
   rpl_rank_t old_rank;
@@ -660,7 +660,7 @@ rpl_process_parent_event(rpl_dag_t *dag, rpl_parent_t *p) __banked
 }
 /************************************************************************/
 void
-rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio) __banked
+rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
   rpl_dag_t *dag;
   rpl_parent_t *p;

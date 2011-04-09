@@ -45,7 +45,6 @@
 
 #include "dev/sensinode-sensors.h"
 #include "sys/energest.h"
-#include "dev/banked.h"
 
 const struct sensors_sensor *sensors[] = {
 #if ADC_SENSOR_ON
@@ -62,7 +61,7 @@ unsigned char sensors_flags[(sizeof(sensors) / sizeof(struct sensors_sensor *))]
 
 /*---------------------------------------------------------------------------*/
 void
-sensinode_sensors_activate() __banked
+sensinode_sensors_activate()
 {
   struct sensors_sensor *sensor;
   sensor = sensors_first();
@@ -74,7 +73,7 @@ sensinode_sensors_activate() __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-sensinode_sensors_deactivate() __banked
+sensinode_sensors_deactivate()
 {
   struct sensors_sensor *sensor;
   sensor = sensors_first();

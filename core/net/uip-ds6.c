@@ -52,7 +52,7 @@
 
 #ifdef UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED
 #define NEIGHBOR_STATE_CHANGED(n) UIP_CONF_DS6_NEIGHBOR_STATE_CHANGED(n)
-void NEIGHBOR_STATE_CHANGED(uip_ds6_nbr_t *n) __banked;
+void NEIGHBOR_STATE_CHANGED(uip_ds6_nbr_t *n);
 #else
 #define NEIGHBOR_STATE_CHANGED(n)
 #endif /* UIP_DS6_CONF_NEIGHBOR_STATE_CHANGED */
@@ -95,7 +95,7 @@ static uip_ds6_route_t *locroute;
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_init(void) __banked
+uip_ds6_init(void)
 {
   PRINTF("Init of IPv6 data structures\n");
   PRINTF("%u neighbors\n%u default routers\n%u prefixes\n%u routes\n%u unicast addresses\n%u multicast addresses\n%u anycast addresses\n",
@@ -146,7 +146,7 @@ uip_ds6_init(void) __banked
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_periodic(void) __banked
+uip_ds6_periodic(void)
 {
   /* Periodic processing on unicast addresses */
   for(locaddr = uip_ds6_if.addr_list;
@@ -276,7 +276,7 @@ uip_ds6_list_loop(uip_ds6_element_t *list, uint8_t size,
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
 uip_ds6_nbr_add(uip_ipaddr_t *ipaddr, uip_lladdr_t * lladdr,
-                uint8_t isrouter, uint8_t state) __banked
+                uint8_t isrouter, uint8_t state)
 {
   int r;
 
@@ -355,7 +355,7 @@ uip_ds6_nbr_rm(uip_ds6_nbr_t *nbr)
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
-uip_ds6_nbr_lookup(uip_ipaddr_t *ipaddr) __banked
+uip_ds6_nbr_lookup(uip_ipaddr_t *ipaddr)
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_nbr_cache, UIP_DS6_NBR_NB,
@@ -368,7 +368,7 @@ uip_ds6_nbr_lookup(uip_ipaddr_t *ipaddr) __banked
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_defrt_t *
-uip_ds6_defrt_add(uip_ipaddr_t *ipaddr, unsigned long interval) __banked
+uip_ds6_defrt_add(uip_ipaddr_t *ipaddr, unsigned long interval)
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_defrt_list, UIP_DS6_DEFRT_NB,
@@ -396,7 +396,7 @@ uip_ds6_defrt_add(uip_ipaddr_t *ipaddr, unsigned long interval) __banked
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt) __banked
+uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt)
 {
   if(defrt != NULL) {
     defrt->isused = 0;
@@ -407,7 +407,7 @@ uip_ds6_defrt_rm(uip_ds6_defrt_t *defrt) __banked
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_defrt_t *
-uip_ds6_defrt_lookup(uip_ipaddr_t *ipaddr) __banked
+uip_ds6_defrt_lookup(uip_ipaddr_t *ipaddr)
 {
   if(uip_ds6_list_loop((uip_ds6_element_t *)uip_ds6_defrt_list,
 		       UIP_DS6_DEFRT_NB, sizeof(uip_ds6_defrt_t), ipaddr, 128,
@@ -419,7 +419,7 @@ uip_ds6_defrt_lookup(uip_ipaddr_t *ipaddr) __banked
 
 /*---------------------------------------------------------------------------*/
 uip_ipaddr_t *
-uip_ds6_defrt_choose(void) __banked
+uip_ds6_defrt_choose(void)
 {
   uip_ds6_nbr_t *bestnbr;
 
@@ -527,7 +527,7 @@ uip_ds6_prefix_lookup(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen)
 
 /*---------------------------------------------------------------------------*/
 uint8_t
-uip_ds6_is_addr_onlink(uip_ipaddr_t *ipaddr) __banked
+uip_ds6_is_addr_onlink(uip_ipaddr_t *ipaddr)
 {
   for(locprefix = uip_ds6_prefix_list;
       locprefix < uip_ds6_prefix_list + UIP_DS6_PREFIX_NB; locprefix++) {
@@ -541,7 +541,7 @@ uip_ds6_is_addr_onlink(uip_ipaddr_t *ipaddr) __banked
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_addr_t *
-uip_ds6_addr_add(uip_ipaddr_t *ipaddr, unsigned long vlifetime, uint8_t type) __banked
+uip_ds6_addr_add(uip_ipaddr_t *ipaddr, unsigned long vlifetime, uint8_t type)
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_if.addr_list, UIP_DS6_ADDR_NB,
@@ -584,7 +584,7 @@ uip_ds6_addr_rm(uip_ds6_addr_t *addr)
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_addr_t *
-uip_ds6_addr_lookup(uip_ipaddr_t *ipaddr) __banked
+uip_ds6_addr_lookup(uip_ipaddr_t *ipaddr)
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_if.addr_list, UIP_DS6_ADDR_NB,
@@ -602,7 +602,7 @@ uip_ds6_addr_lookup(uip_ipaddr_t *ipaddr) __banked
  * (TENTATIVE, PREFERRED, DEPRECATED)
  */
 uip_ds6_addr_t *
-uip_ds6_get_link_local(int8_t state) __banked
+uip_ds6_get_link_local(int8_t state)
 {
   for(locaddr = uip_ds6_if.addr_list;
       locaddr < uip_ds6_if.addr_list + UIP_DS6_ADDR_NB; locaddr++) {
@@ -635,7 +635,7 @@ uip_ds6_get_global(int8_t state)
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_maddr_t *
-uip_ds6_maddr_add(uip_ipaddr_t *ipaddr) __banked
+uip_ds6_maddr_add(uip_ipaddr_t *ipaddr)
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_if.maddr_list, UIP_DS6_MADDR_NB,
@@ -660,7 +660,7 @@ uip_ds6_maddr_rm(uip_ds6_maddr_t * maddr)
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_maddr_t *
-uip_ds6_maddr_lookup(uip_ipaddr_t *ipaddr) __banked
+uip_ds6_maddr_lookup(uip_ipaddr_t *ipaddr)
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_if.maddr_list, UIP_DS6_MADDR_NB,
@@ -699,7 +699,7 @@ uip_ds6_aaddr_rm(uip_ds6_aaddr_t * aaddr)
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_aaddr_t *
-uip_ds6_aaddr_lookup(uip_ipaddr_t *ipaddr) __banked
+uip_ds6_aaddr_lookup(uip_ipaddr_t *ipaddr)
 {
   if(uip_ds6_list_loop((uip_ds6_element_t *)uip_ds6_if.aaddr_list,
 		       UIP_DS6_AADDR_NB, sizeof(uip_ds6_aaddr_t), ipaddr, 128,
@@ -711,7 +711,7 @@ uip_ds6_aaddr_lookup(uip_ipaddr_t *ipaddr) __banked
 
 /*---------------------------------------------------------------------------*/
 uip_ds6_route_t *
-uip_ds6_route_lookup(uip_ipaddr_t *destipaddr)  __banked
+uip_ds6_route_lookup(uip_ipaddr_t *destipaddr)
 {
   uip_ds6_route_t *locrt = NULL;
   uint8_t longestmatch = 0;
@@ -747,7 +747,7 @@ uip_ds6_route_lookup(uip_ipaddr_t *destipaddr)  __banked
 /*---------------------------------------------------------------------------*/
 uip_ds6_route_t *
 uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length, uip_ipaddr_t *nexthop,
-                  uint8_t metric) __banked
+                  uint8_t metric)
 {
   if(uip_ds6_list_loop
      ((uip_ds6_element_t *)uip_ds6_routing_table, UIP_DS6_ROUTE_NB,
@@ -772,7 +772,7 @@ uip_ds6_route_add(uip_ipaddr_t *ipaddr, uint8_t length, uip_ipaddr_t *nexthop,
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_route_rm(uip_ds6_route_t *route) __banked
+uip_ds6_route_rm(uip_ds6_route_t *route)
 {
   route->isused = 0;
 #if (DEBUG & DEBUG_ANNOTATE) == DEBUG_ANNOTATE
@@ -791,7 +791,7 @@ uip_ds6_route_rm(uip_ds6_route_t *route) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_route_rm_by_nexthop(uip_ipaddr_t *nexthop) __banked
+uip_ds6_route_rm_by_nexthop(uip_ipaddr_t *nexthop)
 {
   for(locroute = uip_ds6_routing_table;
       locroute < uip_ds6_routing_table + UIP_DS6_ROUTE_NB;
@@ -805,7 +805,7 @@ uip_ds6_route_rm_by_nexthop(uip_ipaddr_t *nexthop) __banked
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_select_src(uip_ipaddr_t *src, uip_ipaddr_t *dst) __banked
+uip_ds6_select_src(uip_ipaddr_t *src, uip_ipaddr_t *dst)
 {
   uint8_t best = 0;             /* number of bit in common with best match */
   uint8_t n = 0;
@@ -839,7 +839,7 @@ uip_ds6_select_src(uip_ipaddr_t *src, uip_ipaddr_t *dst) __banked
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, uip_lladdr_t * lladdr) __banked
+uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, uip_lladdr_t * lladdr)
 {
   /* We consider only links with IEEE EUI-64 identifier or
    * IEEE 48-bit MAC addresses */
@@ -979,7 +979,7 @@ uip_ds6_send_ra_periodic(void)
 #else /* UIP_CONF_ROUTER */
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_send_rs(void) __banked
+uip_ds6_send_rs(void)
 {
   if((uip_ds6_defrt_choose() == NULL)
      && (rscount < UIP_ND6_MAX_RTR_SOLICITATIONS)) {

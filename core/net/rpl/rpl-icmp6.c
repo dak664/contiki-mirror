@@ -138,7 +138,7 @@ dis_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-dis_output(uip_ipaddr_t *addr) __banked
+dis_output(uip_ipaddr_t *addr)
 {
   unsigned char *buffer;
   static uip_ipaddr_t tmpaddr;
@@ -345,7 +345,7 @@ dio_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-dio_output(rpl_dag_t *dag, uip_ipaddr_t *uc_addr) __banked
+dio_output(rpl_dag_t *dag, uip_ipaddr_t *uc_addr)
 {
   unsigned char *buffer;
   int pos;
@@ -602,7 +602,7 @@ dao_input(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-dao_output(rpl_parent_t *n, uint32_t lifetime) __banked
+dao_output(rpl_parent_t *n, uint32_t lifetime)
 {
   rpl_dag_t *dag;
   unsigned char *buffer;
@@ -717,7 +717,7 @@ dao_ack_output(rpl_dag_t *dag, uip_ipaddr_t *dest, uint8_t sequence)
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_rpl_input(void) __banked
+uip_rpl_input(void)
 {
   PRINTF("Received an RPL control message\n");
   switch(UIP_ICMP_BUF->icode) {

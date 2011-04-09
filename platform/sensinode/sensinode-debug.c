@@ -24,7 +24,7 @@ static const char binconv[] = "01";
 
 /*---------------------------------------------------------------------------*/
 void
-putstring(char *s) __banked
+putstring(char *s)
 {
   while(*s) {
     putchar(*s++);
@@ -32,14 +32,14 @@ putstring(char *s) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-puthex(uint8_t c) __banked
+puthex(uint8_t c)
 {
   putchar(hexconv[c >> 4]);
   putchar(hexconv[c & 0x0f]);
 }
 /*---------------------------------------------------------------------------*/
 void
-putbin(uint8_t c) __banked
+putbin(uint8_t c)
 {
   unsigned char i = 0x80;
   while(i) {
@@ -48,15 +48,3 @@ putbin(uint8_t c) __banked
   }
 }
 /*---------------------------------------------------------------------------*/
-void
-putbank() __banked
-{
-  putchar('B');
-  putchar('a');
-  putchar('n');
-  putchar('k');
-  putchar(':');
-  putchar(' ');
-  putbin(PSBANK);
-  putchar('\n');
-}

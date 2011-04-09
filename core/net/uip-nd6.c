@@ -152,7 +152,7 @@ create_llao(uint8_t *llao, uint8_t type) {
 
 
 void
-uip_nd6_ns_input(void) __banked
+uip_nd6_ns_input(void)
 {
   u8_t flags;
   PRINTF("Received NS from");
@@ -324,7 +324,7 @@ discard:
 
 /*------------------------------------------------------------------*/
 void
-uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt) __banked
+uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
 {
   uip_ext_len = 0;
   UIP_IP_BUF->vtc = 0x60;
@@ -385,7 +385,7 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt) _
 
 /*------------------------------------------------------------------*/
 void
-uip_nd6_na_input(void) __banked
+uip_nd6_na_input(void)
 {
   u8_t is_llchange;
   u8_t is_router;
@@ -537,7 +537,7 @@ discard:
 #if UIP_ND6_SEND_RA
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_rs_input(void) __banked
+uip_nd6_rs_input(void)
 {
 
   PRINTF("Received RS from");
@@ -619,7 +619,7 @@ discard:
 
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_ra_output(uip_ipaddr_t * dest) __banked
+uip_nd6_ra_output(uip_ipaddr_t * dest)
 {
 
   UIP_IP_BUF->vtc = 0x60;
@@ -707,7 +707,7 @@ uip_nd6_ra_output(uip_ipaddr_t * dest) __banked
 #if !UIP_CONF_ROUTER
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_rs_output(void) __banked
+uip_nd6_rs_output(void)
 {
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
@@ -747,7 +747,7 @@ uip_nd6_rs_output(void) __banked
 
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_ra_input(void) __banked
+uip_nd6_ra_input(void)
 {
   PRINTF("Received RA from");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);

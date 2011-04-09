@@ -111,7 +111,7 @@ typedef struct uip_icmp6_error{
  * built here.
   */
 void
-uip_icmp6_echo_request_input(void) __banked;
+uip_icmp6_echo_request_input(void);
 
 /**
  * \brief Send an icmpv6 error message
@@ -120,7 +120,7 @@ uip_icmp6_echo_request_input(void) __banked;
  * \param type 32 bit parameter of the error message, semantic depends on error 
  */
 void
-uip_icmp6_error_output(u8_t type, u8_t code, u32_t param) __banked;
+uip_icmp6_error_output(u8_t type, u8_t code, u32_t param); 
 
 /**
  * \brief Send an icmpv6 message
@@ -130,7 +130,7 @@ uip_icmp6_error_output(u8_t type, u8_t code, u32_t param) __banked;
  * \param payload_len length of the payload
  */
 void
-uip_icmp6_send(uip_ipaddr_t *dest, uint8_t type, uint8_t code, uint8_t payload_len) __banked;
+uip_icmp6_send(uip_ipaddr_t *dest, uint8_t type, uint8_t code, uint8_t payload_len);
 
 
 /** @} */

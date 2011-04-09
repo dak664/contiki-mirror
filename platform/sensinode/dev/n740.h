@@ -45,7 +45,6 @@
 #define N740SERPAR_H_
 
 #include "8051def.h"
-#include "dev/banked.h"
 
 #define N740_SER_PAR_ACC_GSEL    0x01 /* Acceleration Sensor g-Select */
 #define N740_SER_PAR_CHIP_SEL    0x02 /* Flash Chip Select */
@@ -56,9 +55,9 @@
 #define N740_SER_PAR_LED_GREEN   0x40 /* Led 1 */
 #define N740_SER_PAR_LED_RED     0x80 /* Led 2 */
 
-void n740_ser_par_init(void) __banked;
-void n740_ser_par_set(uint8_t data) __banked ;
-uint8_t n740_ser_par_get(void) __banked;
-void n740_analog_switch(uint8_t state) __banked;
+void n740_ser_par_init(void);
+void n740_ser_par_set(uint8_t data) ;
+uint8_t n740_ser_par_get(void);
+void n740_analog_switch(uint8_t state);
 
 #endif /* N740SERPAR_H_ */

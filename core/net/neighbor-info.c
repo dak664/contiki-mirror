@@ -101,7 +101,7 @@ add_neighbor(const rimeaddr_t *addr)
 }
 /*---------------------------------------------------------------------------*/
 void
-neighbor_info_packet_sent(int status, int numtx) __banked
+neighbor_info_packet_sent(int status, int numtx)
 {
   static const rimeaddr_t *dest;
   static link_metric_t packet_metric;
@@ -140,7 +140,7 @@ neighbor_info_packet_sent(int status, int numtx) __banked
 }
 /*---------------------------------------------------------------------------*/
 void
-neighbor_info_packet_received(void) __banked
+neighbor_info_packet_received(void)
 {
   const rimeaddr_t *src;
 

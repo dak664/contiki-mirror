@@ -82,7 +82,7 @@ static uip_ipaddr_t ipaddr;
 #define SENSOR_ADC_OFF 1
 #define SENSOR_UNKNOWN 2
 
-int8_t read_sensor(char * rs) __banked;
+int8_t read_sensor(char * rs);
 /*---------------------------------------------------------------------------*/
 extern const struct sensors_sensor adc_sensor;
 /*---------------------------------------------------------------------------*/

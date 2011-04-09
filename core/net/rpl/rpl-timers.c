@@ -167,7 +167,7 @@ handle_dio_timer(void *ptr)
 }
 /************************************************************************/
 void
-rpl_reset_periodic_timer(void) __banked
+rpl_reset_periodic_timer(void)
 {
   next_dis = RPL_DIS_INTERVAL - RPL_DIS_START_DELAY;
   ctimer_set(&periodic_timer, CLOCK_SECOND, handle_periodic_timer, NULL);
@@ -175,7 +175,7 @@ rpl_reset_periodic_timer(void) __banked
 /************************************************************************/
 /* Resets the DIO timer in the DAG to its minimal interval. */
 void
-rpl_reset_dio_timer(rpl_dag_t *dag, uint8_t force) __banked
+rpl_reset_dio_timer(rpl_dag_t *dag, uint8_t force)
 {
   /* only reset if not just reset or started */
   if(force || dag->dio_intcurrent > dag->dio_intmin) {
@@ -214,7 +214,7 @@ handle_dao_timer(void *ptr)
 }
 /************************************************************************/
 void
-rpl_schedule_dao(rpl_dag_t *dag) __banked
+rpl_schedule_dao(rpl_dag_t *dag)
 {
   clock_time_t expiration_time;
 

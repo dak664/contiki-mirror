@@ -34,7 +34,6 @@
 #define NEIGHBORATTR_H_
 
 #include "net/rime.h"
-#include "sys/cc.h"
 
 /**
  * define how many neighbors you can store
@@ -87,13 +86,13 @@ struct neighbor_attr {
 #define NEIGHBOR_ATTRIBUTE_NONSTATIC(type, name, default_value_ptr) \
 	  static type _##name##_mem[MAX_NEIGHBORS]; \
 	  struct neighbor_attr name = \
-	    {NULL, sizeof(type), default_value_ptr, (void*)_##name##_mem} ; \
+	    {NULL, sizeof(type), default_value_ptr, (void*)_##name##_mem}
 
 /**
  * \brief      register a neighbor attribute
  * \retval     non-zero if successful, zero if not
  */
-int neighbor_attr_register(struct neighbor_attr *) __banked;
+int neighbor_attr_register(struct neighbor_attr *);
 
 /**
  * \retval     head of neighbor list, useful for iterating over all neighbors
@@ -104,14 +103,14 @@ struct neighbor_addr *neighbor_attr_list_neighbors(void);
  * \brief      Check if a neighbor is already added to the neighbor table
  * \retval     non-zero if present, zero if not
  */
-int neighbor_attr_has_neighbor(const rimeaddr_t * addr) __banked;
+int neighbor_attr_has_neighbor(const rimeaddr_t * addr);
 
 /**
  * \brief      Add a neighbor entry to neighbor table
  * \retval     -1 if unsuccessful, 0 if the neighbor was already
  *             in the table, and 1 if successful
  */
-int neighbor_attr_add_neighbor(const rimeaddr_t * addr) __banked;
+int neighbor_attr_add_neighbor(const rimeaddr_t * addr);
 
 /**
  * \brief      Remove a neighbor entry to neighbor table
@@ -130,7 +129,7 @@ int neighbor_attr_remove_neighbor(const rimeaddr_t * addr);
  *             This pointer should not be saved, as it may point to data from another
  *             neighbor in the future if neighbors get removed/added over time.
  */
-void *neighbor_attr_get_data(struct neighbor_attr *, const rimeaddr_t * addr) __banked;
+void *neighbor_attr_get_data(struct neighbor_attr *, const rimeaddr_t * addr);
 
 /**
  * \brief      Copy data to neighbor table
@@ -141,7 +140,7 @@ void *neighbor_attr_get_data(struct neighbor_attr *, const rimeaddr_t * addr) __
  *             If neighbor was not found, this will add a new neighbor to the table.
  */
 int neighbor_attr_set_data(struct neighbor_attr *, const rimeaddr_t * addr,
-                           void *data) __banked;
+                           void *data);
 
 /**
  * \brief      Set global lifetime of neighbor entries.

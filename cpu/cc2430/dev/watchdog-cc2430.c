@@ -33,10 +33,7 @@
  * \file
  *         Hardware-dependent functions used for the cc2430 watchdog timer.
  *
- *         Function prototypes are in core/dev, we thus can't __banked them.
- *         Additionally, this file contains an ISR.
- *
- *         As such, this file must reside in the HOME bank.
+ *         This file contains an ISR and must reside in the HOME bank.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>

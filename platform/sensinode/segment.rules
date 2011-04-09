@@ -11,9 +11,13 @@ HOME contiki-sensinode-main.c
 BANK3 n740.c 			
 BANK3 models.c
 
+BANK1 tcpip.c
+BANK1 uip6.c
+BANK1 sicslowpan.c
+
 # Debugging functions
-HOME putchar.c            # Keep putchar() in HOME.
-HOME sensinode-debug.c    # This is actually bankable
+BANK3 putchar.c            # Keep putchar() in HOME.
+BANK3 sensinode-debug.c    # This is actually bankable
 
 # sensor code
 # Careful. sensinode-sensors.c will match the sensors.c rule, if there is one.

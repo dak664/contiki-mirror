@@ -92,7 +92,7 @@ typedef struct dma_config_t
 
 }dma_config_t;
 
-extern void dma_init(void) __banked;
+extern void dma_init(void);
 typedef void (*dma_func)(void *);
 
 extern dma_config_t dma_conf[4];
@@ -108,12 +108,12 @@ typedef uint8_t xDMAHandle;
 */
 extern xDMAHandle dma_config2(uint8_t channel, void *src, dma_inc_t src_inc, void *dst, dma_inc_t dst_inc,
                              uint16_t length, uint8_t word_mode, dma_vlen_t vlen_mode, dma_type_t t_mode,
-			     dma_trigger_t trigger, struct process * p) __banked;
-extern uint8_t dma_arm(xDMAHandle channel) __banked;
-extern uint8_t dma_abort(xDMAHandle channel) __banked;
-extern uint8_t dma_trigger(xDMAHandle channel) __banked;
-extern uint8_t dma_state(xDMAHandle channel) __banked;
-void dma_config_print(xDMAHandle channel) __banked;
+			     dma_trigger_t trigger, struct process * p);
+extern uint8_t dma_arm(xDMAHandle channel);
+extern uint8_t dma_abort(xDMAHandle channel);
+extern uint8_t dma_trigger(xDMAHandle channel);
+extern uint8_t dma_state(xDMAHandle channel);
+void dma_config_print(xDMAHandle channel);
 #endif
 
 extern void dma_ISR( void ) __interrupt (DMA_VECTOR);

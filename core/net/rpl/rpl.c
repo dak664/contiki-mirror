@@ -62,7 +62,7 @@ static rpl_parent_t *parent;
 extern uip_ds6_route_t uip_ds6_routing_table[UIP_DS6_ROUTE_NB];
 /************************************************************************/
 void
-rpl_purge_routes(void) __banked
+rpl_purge_routes(void)
 {
   int i;
 
@@ -167,7 +167,7 @@ rpl_link_neighbor_callback(const rimeaddr_t *addr, int known, int etx)
 }
 /************************************************************************/
 void
-rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr) __banked
+rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
 {
   rpl_dag_t *dag;
 
@@ -197,7 +197,7 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr) __banked
 }
 /************************************************************************/
 void
-rpl_init(void) __banked
+rpl_init(void)
 {
   uip_ipaddr_t rplmaddr;
   PRINTF("RPL started\n");
