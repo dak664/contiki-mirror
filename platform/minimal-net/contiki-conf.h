@@ -81,6 +81,7 @@ typedef unsigned long clock_time_t;
 #define INFINITE_TIME ULONG_MAX
 
 #define LOG_CONF_ENABLED 1
+#define HTTPD_CONF_PASS_QUERY_STRING 10
 
 /* Not part of C99 but actually present */
 int strcasecmp(const char*, const char*);

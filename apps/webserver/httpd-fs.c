@@ -38,6 +38,13 @@
 #include "httpd-fs.h"
 #include "httpd-fsdata.h"
 
+/* In a static filesystem build httpd-fsdata.c contains all of the web pages.
+ * It is generated using a contiki PERL tool, from any directory with web content.
+ * The default content is in /apps/webserver/httpd-fs/...
+ * If a change is made in that directory, and you are building from /examples/webserver directory, 
+ * $ ../../tools/makefsdata -d ../../apps/webserver/httpd-fs -o ../../apps/webserver/httpd-fsdata.c
+ * will update the web content on the next build.
+ */
 #include "httpd-fsdata.c"
 
 #if HTTPD_FS_STATISTICS
