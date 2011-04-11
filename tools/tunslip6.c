@@ -718,6 +718,9 @@ exit(1);
   case 115200:
     b_rate = B115200;
     break;
+  case 460800:
+    b_rate = B460800;
+    break;
   default:
     err(1, "unknown baudrate %d", baudrate);
     break;

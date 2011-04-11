@@ -21,21 +21,9 @@
 #if UART_ZERO_ENABLE
 /*---------------------------------------------------------------------------*/
 void
-uart0_init(uint32_t speed, uint8_t rx_int)
+uart0_init()
 {
-  if(speed == 115200) {
-    U0BAUD=216; /*115200*/
-    U0GCR =11;  /*LSB first and 115200*/
-  }
-  else if(speed == 38400) {
-    U0BAUD=59;  /*38400*/
-    U0GCR =10;  /*LSB first and 38400*/
-  }
-  else if(speed == 9600) {
-    U0BAUD= 59; /* 9600 */
-    U0GCR = 8;  /*LSB first and 9600*/
-  }
-  else { return; }
+  UART_SET_SPEED(0, UART_115_M, UART_115_E);
 
 #ifdef UART0_ALTERNATIVE_2
   PERCFG |= U0CFG;  /*alternative port 2 = P1.5-2*/
@@ -88,7 +76,7 @@ uart0_writeb(uint8_t byte)
 /*---------------------------------------------------------------------------*/
 /* UART1 initialization */
 void
-uart1_init(uint32_t speed)
+uart1_init()
 {
 #ifdef UART1_ALTERNATIVE_1
   PERCFG &= ~U1CFG; /*alternative port 1 = P0.5-2*/
@@ -112,20 +100,7 @@ uart1_init(uint32_t speed)
   P1DIR &= ~0x90;   /*CTS, RX in*/
 #endif
 
-  if(speed == 115200) {
-    U1BAUD=216; /*115200*/
-    U1GCR =11;  /*LSB first and 115200*/
-  }
-
-  if(speed == 38400) {
-    U1BAUD=59;  /*38400*/
-    U1GCR =10;  /*LSB first and 38400*/
-  }
-
-  if(speed == 9600) {
-    U1BAUD= 59; /* 9600 */
-    U1GCR = 8;  /*LSB first and 9600*/
-  }
+  UART_SET_SPEED(1, UART_460_M, UART_460_E);
 
 #ifdef UART1_RTSCTS
   U1UCR = 0x42; /*defaults: 8N1, RTS/CTS, high stop bit*/

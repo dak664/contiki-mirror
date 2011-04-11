@@ -166,11 +166,11 @@ main(void)
   /* initialize process manager. */
   process_init();
 
-  /* Init UART1 without acknowledging the RX interrupt */
-  uart1_init(115200);
+  /* Init UART1 */
+  uart1_init();
 
 #if SLIP_ARCH_CONF_ENABLE
-  /* On cc2430, the argument is not used. We always use 115200 */
+  /* On cc2430, the argument is not used */
   slip_arch_init(0);
 #else
   uart1_set_input(serial_line_input_byte);
