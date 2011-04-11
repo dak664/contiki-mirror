@@ -86,7 +86,7 @@
 #include "dev/watchdog.h"
 #include "lib/random.h"
 
-#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
+#if CONTIKI_TARGET_SENSINODE
 #include "dev/sensinode-sensors.h"
 #else
 #include "lib/sensors.h"
@@ -124,7 +124,7 @@ extern const struct sensors_sensor button_1_sensor, button_2_sensor;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(sensors_test_process, "Sensor Test Process");
-#if BUTTON_SENSOR_ON
+#if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
 PROCESS(buttons_test_process, "Button Test Process");
 AUTOSTART_PROCESSES(&sensors_test_process, &buttons_test_process);
 #else
