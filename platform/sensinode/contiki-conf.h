@@ -130,19 +130,18 @@ typedef unsigned short clock_time_t;
 /* Network Stack */
 #if UIP_CONF_IPV6
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     sicslowmac_driver
-#endif
 #else
 #define NETSTACK_CONF_NETWORK rime_driver
-#ifndef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     sicslowmac_driver
-#endif
 #endif
 
 #ifndef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC     csma_driver
 #endif
+
+#ifndef NETSTACK_CONF_RDC
+#define NETSTACK_CONF_RDC     nullrdc_driver
+#endif
+#define NETSTACK_CONF_FRAMER  framer_802154
 #define NETSTACK_CONF_RADIO   cc2430_rf_driver
 #define RF_DEFAULT_CHANNEL    25
 

@@ -80,8 +80,6 @@ static uint16_t mac_dst_pan_id = IEEE802154_PANID;
  */
 static uint16_t mac_src_pan_id = IEEE802154_PANID;
 
-static frame802154_t params;
-static uint8_t len;
 /*---------------------------------------------------------------------------*/
 static int
 is_broadcast_addr(uint8_t mode, uint8_t *addr)
@@ -98,6 +96,8 @@ is_broadcast_addr(uint8_t mode, uint8_t *addr)
 static void
 send_packet(mac_callback_t sent, void *ptr)
 {
+  frame802154_t params;
+  uint8_t len;
 
   /* init to zeros */
   memset(&params, 0, sizeof(params));
@@ -178,21 +178,22 @@ send_packet(mac_callback_t sent, void *ptr)
 static void
 input_packet(void)
 {
+  frame802154_t frame;
   int len;
 
   len = packetbuf_datalen();
 
-  if(frame802154_parse(packetbuf_dataptr(), len, &params) &&
-     packetbuf_hdrreduce(len - params.payload_len)) {
-    if(params.fcf.dest_addr_mode) {
-      if(params.dest_pid != mac_src_pan_id &&
-          params.dest_pid != FRAME802154_BROADCASTPANDID) {
+  if(frame802154_parse(packetbuf_dataptr(), len, &frame) &&
+     packetbuf_hdrreduce(len - frame.payload_len)) {
+    if(frame.fcf.dest_addr_mode) {
+      if(frame.dest_pid != mac_src_pan_id &&
+         frame.dest_pid != FRAME802154_BROADCASTPANDID) {
         /* Not broadcast or for our PAN */
         PRINTF("6MAC: for another pan %u\n", frame.dest_pid);
         return;
       }
-      if(!is_broadcast_addr(params.fcf.dest_addr_mode, params.dest_addr)) {
-        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, (rimeaddr_t *)&params.dest_addr);
+      if(!is_broadcast_addr(frame.fcf.dest_addr_mode, frame.dest_addr)) {
+        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, (rimeaddr_t *)&frame.dest_addr);
         if(!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                          &rimeaddr_node_addr)) {
           /* Not for this node */
@@ -201,9 +202,9 @@ input_packet(void)
         }
       }
     }
-    packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (rimeaddr_t *)&params.src_addr);
+    packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (rimeaddr_t *)&frame.src_addr);
 
-    PRINTF("6MAC-IN: %2X", params.fcf.frame_type);
+    PRINTF("6MAC-IN: %2X", frame.fcf.frame_type);
     PRINTADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     PRINTADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     PRINTF("%u\n", packetbuf_datalen());
