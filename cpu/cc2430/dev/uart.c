@@ -7,8 +7,6 @@
  * 
  *   Anthony "Asterisk" Ambuehl
  *
- *   non-interrupt routines which may be called from ISR's and therefore should be in HOME bank.
- *
  */
 #include <stdlib.h>
 #include <string.h>

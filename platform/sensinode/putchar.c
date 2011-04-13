@@ -2,8 +2,6 @@
  * \file
  *         hardware-specific putchar() routine for sensinode motes
  *
- *         Keep this in HOME
- *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */

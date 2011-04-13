@@ -35,10 +35,6 @@
  *
  *         It respects configuration in contiki-conf.h
  *
- *         This file calls functions via pointers and functions in sensors.c.
- *         Keep sensors.c in HOME and this file can go in any bank. Or you can
- *         keep this file in HOME.
- *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */

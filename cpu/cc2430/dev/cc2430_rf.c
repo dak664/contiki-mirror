@@ -2,7 +2,10 @@
  * \file
  *         CC2430 RF driver
  * \author
- *         Zach Shelby <zach@sensinode.com>
+ *         Zach Shelby <zach@sensinode.com> (Original)
+ *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         (port to the netstack API, hexdump output, RX FIFO overflow fixes
+ *          code cleanup, ...)
  *
  *  bankable code for cc2430 rf driver.  this code can be placed in any bank.
  *

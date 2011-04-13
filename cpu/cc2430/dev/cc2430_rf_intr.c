@@ -2,11 +2,12 @@
  * \file
  *         CC2430 RF driver
  * \author
- *         Zach Shelby <zach@sensinode.com>
+ *         Zach Shelby <zach@sensinode.com> (Original)
+ *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *           (recent updates for the contiki cc2430 port)
  *
  *  Non-bankable code for cc2430 rf driver.  
- *  Interrupt routine and code called through function pointers
- *  must be placed into the HOME bank.
+ *  Interrupt routines must be placed into the HOME bank.
  *
  */
 

@@ -3,11 +3,7 @@
  *
  *   Definition of some debugging functions for the sensinode port.
  *
- *   This file is bankable, however, if placed outside HOME, putbank()
- *   becomes useless
- *
- *   putchar() uses uart1_writeb() which is in uart.c. uart.c is not bankable
- *   and should stay in HOME.
+ *   This file is bankable.
  *
  *   putstring() and puthex() are from msp430/watchdog.c
  *

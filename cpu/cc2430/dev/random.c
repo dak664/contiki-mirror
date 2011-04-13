@@ -36,9 +36,6 @@
  *
  *         This file overrides core/lib/random.c.
  *
- *         Prototypes in core/lib/random.h thus we can't bank. Keep this file
- *         in HOME.
- *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */

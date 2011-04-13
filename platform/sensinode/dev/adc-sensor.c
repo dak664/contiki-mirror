@@ -37,8 +37,6 @@
  *         off features which are not present in the model that we are
  *         building for.
  *
- *         Functions called via FPs in here. Keep this in the HOME bank.
- *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */

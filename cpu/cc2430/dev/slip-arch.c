@@ -31,8 +31,6 @@
 
 /*
  * Machine dependent cc2430 SLIP routines for UART1.
- *
- * Keep this in HOME (safe) or BANK1 (careful).
  */
 
 #include "dev/slip.h"
