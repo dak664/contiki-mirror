@@ -580,7 +580,7 @@ read(void *buf, unsigned short bufsize)
   /* Check for validity */
   if(len > CC2430_MAX_PACKET_LEN) {
     /* Oops, we must be out of sync. */
-  PRINTF("error: bad sync\n");
+    PRINTF("error: bad sync\n");
 
     RIMESTATS_ADD(badsynch);
     flush_rx();

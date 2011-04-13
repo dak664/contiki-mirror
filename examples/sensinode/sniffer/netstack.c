@@ -35,18 +35,16 @@
  *         here is call netstack_init from main without initialising the RDC,
  *         MAC and Network layers. It will just turn on the radio instead.
  *
- *         Keep in HOME or BANK1
- *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "cc2430_rf.h"
+#include "netstack.h"
 /*---------------------------------------------------------------------------*/
 void
 netstack_init(void)
 {
-  cc2430_rf_init();
+  NETSTACK_RADIO.init();
 }
 /*---------------------------------------------------------------------------*/
 
