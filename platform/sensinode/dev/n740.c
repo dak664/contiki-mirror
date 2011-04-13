@@ -147,7 +147,7 @@ n740_analog_switch(uint8_t state)
 
   /* If P0_3 now points to the USB and nothing is flowing down P1_7,
    * enable the interrupt again */
-  if(P1_7 == 1 && P0_3 == 0) {
+  if(P1_7 == 1 && P0_3 == N740_ANALOG_SWITCH_USB) {
     UART1_RX_INT(1);
   }
   ENABLE_INTERRUPTS();

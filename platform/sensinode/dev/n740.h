@@ -55,6 +55,9 @@
 #define N740_SER_PAR_LED_GREEN   0x40 /* Led 1 */
 #define N740_SER_PAR_LED_RED     0x80 /* Led 2 */
 
+#define N740_ANALOG_SWITCH_USB      0
+#define N740_ANALOG_SWITCH_SERIAL   1
+
 void n740_ser_par_init(void);
 void n740_ser_par_set(uint8_t data) ;
 uint8_t n740_ser_par_get(void);
