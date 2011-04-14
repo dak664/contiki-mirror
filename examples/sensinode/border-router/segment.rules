@@ -5,6 +5,6 @@
 # Use this to specify rules for the project files or to override rules in
 # the files above
 
-HOME slip-bridge.c
+BANK3 slip-bridge.c
 
 # segment.rules - project - end

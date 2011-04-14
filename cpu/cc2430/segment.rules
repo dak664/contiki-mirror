@@ -6,31 +6,32 @@
 # comments starting with "#" are supported
 # perl regular expression matching can be used on the file name specification
 # 
-# general rules -- 
-#  some code must be placed in all banks (or SDCC/aslink will complain at link time)
-#  code called from function pointers must be in HOME/CSEG/BANK0
-#  interrupt code must also be in HOME/CSEG/BANK0
-#  code not marked with __banked can only be called from code in the same bank  
+# general rules --
+#  This file is only used when the Makefile defines HAVE_BANKING=1
+#  Some code must be placed in all banks (or SDCC/aslink will complain at link time)
+#  Interrupt code must be in HOME/CSEG/BANK0
 #
-HOME intr.c  # All interrupt code must live in HOME/BANK0
-HOME clock.c  # cannot bank clock.c code because header file is part of core.
-HOME uart.c
-HOME random.c # header in core/lib. Can not bank this
+
+# Files with ISRs must be in HOME
+HOME intr.c   # Match all files ending in intr.c (e.g. uart_intr.c)
+HOME rtimer-arch.c
+HOME watchdog-cc2430.c
+HOME clock.c
 
 # Some cc2430 which need special treatment
-HOME rtimer-arch.c        # Contains ISRs. Keep it in HOME
-HOME watchdog-cc2430.c    # Prototypes in core thus we can't __banked them. Keep this in HOME
+HOME bus.c    # bus.c::flash_read() must be run from HOME (if compiled in)
 
-# Other Port files (cpu/cc2430 stuff)
-BANK3 uart_init.c
-HOME cc2430/dev/bus.c
-BANK2 cc2430_rf.c     # The radio driver is bankable
-BANK1 cc2430/         # cc2430 port in BANK1 if unspecified
+# Put the rest of cpu/cc2430 in BANK3
+BANK3 cpu/cc2430
+
+BANK1 tcpip.c
+BANK1 uip6.c
+BANK1 sicslowpan.c
 
 # Wildcard rules for anything that hasn't matched so far
-BANK1 core/net/mac
-BANK1 core/net/rime
+#BANK1 core/net/mac
+BANK3 core/net/rime
 BANK3 core/net/rpl
 BANK2 core/net
-HOME core/            # Crucial and frequently called core functions in HOME
-BANK1 .               # Everything else in BANK1
+BANK1 core/            # Crucial and frequently called core functions in HOME
+HOME .               # Everything else in BANK1
