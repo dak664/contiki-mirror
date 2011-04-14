@@ -10,7 +10,7 @@ CONVERTER_DIR = $(CONTIKI)/cpu/cc2430/converter
 CONVERTER = $(CONVERTER_DIR)/converter
 
 CFLAGS  += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430
-CFLAGS  += --std-c99 
+CFLAGS  += --std-c99 -DAUTOSTART_ENABLE
 
 LDFLAGS += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430
 LDFLAGS +=  --out-fmt-ihx --xram-loc 57344 --xram-size 7936 
@@ -31,7 +31,8 @@ LDFLAGS += -Wl-bBANK3=0x038000
 LDFLAGS += -Wl-r
 CFLAGS += -DHAVE_SDCC_BANKING
 #use this in $(call code_segment,$<) to get segment for a source file.
-code_segment = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | perl ${CONTIKI_CPU}/segment.rules.pl $1 ) CSEG )
+code_segment = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | \
+	perl ${CONTIKI_CPU}/segment.rules.pl $1 ) CSEG )
 
 #bank switching file conversion 
 %.hex: %.ihx $(CONVERTER)
@@ -49,7 +50,8 @@ code_segment =
 endif 
 
 # When building with banking we need the converter
-# for ihx -> hex conversion. Make sure it's built so make doesn't bail out with an error
+# for ihx -> hex conversion. Make sure it's built so make doesn't bail out
+# with an error
 converter: $(CONVERTER)
 
 converter-clean:
@@ -73,7 +75,8 @@ CONTIKI_ASMFILES +=
 
 CONTIKI_ASMOBJECTFILES = ${addprefix $(OBJECTDIR)/,$(CONTIKI_ASMFILES:.S=.rel)}
 
-CONTIKI_CASMOBJECTFILES = ${addprefix $(OBJECTDIR)/,$(CONTIKI_CASMFILES:.cS=.rel)}
+CONTIKI_CASMOBJECTFILES = ${addprefix $(OBJECTDIR)/, \
+	$(CONTIKI_CASMFILES:.cS=.rel)}
 
 CONTIKI_PLATFORM_DIRS = $(PLATFORM_APPDIRS) \
 	 ${addprefix $(CONTIKI)/platform/$(TARGET)/, $(CONTIKI_TARGET_DIRS)}
@@ -83,13 +86,16 @@ CONTIKI_CPU_DIRS_LIST    = ${addprefix $(CONTIKI_CPU)/, \
 
 oname = ${patsubst %.c,%.rel,${patsubst %.S,%.rel,$(1)}}
 
-CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
+CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/, \
+	${call oname, $(CONTIKI_SOURCEFILES)}}
 
-PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
+PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/, \
+	${call oname, $(PROJECT_SOURCEFILES)}}
 
 ### Compilation rules
 
-SEGMENT_RULE_FILES = ${foreach dir, . ${CONTIKI_PLATFORM_DIRS} ${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} } 
+SEGMENT_RULE_FILES = ${foreach dir, . ${CONTIKI_PLATFORM_DIRS} \
+	${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} }
 ${OBJECTDIR}/segment.rules: ${SEGMENT_RULE_FILES}
 	echo ${SEGMENT_RULE_FILES}
 	cat ${SEGMENT_RULE_FILES} > $@
@@ -135,18 +141,20 @@ $(OBJECTDIR)/%.rel: %.cS
 endif
 
 #CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
-contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) $(CONTIKI_ASMOBJECTFILES) $(CONTIKI_CASMOBJECTFILES)
+contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
+	$(CONTIKI_ASMOBJECTFILES) $(CONTIKI_CASMOBJECTFILES)
 	rm -f $@
 	for target in $^; do echo $$target >> $@; done
 
 .PRECIOUS: %.$(TARGET)
-.PRECIOUS: %.ihx %.rel %.hex
+.PRECIOUS: %.ihx %.hex $(OBJECTDIR)/%.rel
 
 #build app/example local object files 
-%.rel: %.c
-	$(CC) $(CFLAGS) -DAUTOSTART_ENABLE -c $< -o $@
+#%.rel: %.c
+#	$(CC) $(call code_segment,$<) $(CFLAGS) -DAUTOSTART_ENABLE -c $< -o $@
 
 # .ihx is the sdcc binary output file
-%.ihx: %.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib
-	$(CC) $(LDFLAGS) -o $@ $(CONTIKI_TARGET_MAIN) $*.rel -llibsdcc.lib -lcontiki-$(TARGET).lib
+%.ihx: $(OBJECTDIR)/%.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib
+	$(CC) $(LDFLAGS) -o $@ $(CONTIKI_TARGET_MAIN) $(OBJECTDIR)/$*.rel \
+		-llibsdcc.lib -lcontiki-$(TARGET).lib
 
