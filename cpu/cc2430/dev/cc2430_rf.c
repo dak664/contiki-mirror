@@ -693,7 +693,7 @@ receiving_packet(void)
   return (RFSTATUS & (TX_ACTIVE | SFD) == SFD);
 }
 /*---------------------------------------------------------------------------*/
-int
+static int
 pending_packet(void)
 {
   return (RFSTATUS & FIFOP);
