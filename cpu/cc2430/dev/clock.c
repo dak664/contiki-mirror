@@ -118,7 +118,7 @@ clock_init(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-cc2430_clock_ISR( void ) __interrupt (ST_VECTOR)
+clock_ISR( void ) __interrupt (ST_VECTOR)
 {
   IEN0_EA = 0;	/*interrupt disable*/
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
