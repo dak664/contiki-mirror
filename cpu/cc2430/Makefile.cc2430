@@ -109,23 +109,23 @@ ifeq ($(HAVE_BANKING),1)
 $(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
 	@echo "Compile:"$<" to segment " $(call code_segment,$<)
 	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
-	echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
+	@echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
 	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
 	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 		-e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
-	echo rm -f $(@:.rel=.$$$$)
+	rm -f $(@:.rel=.$$$$)
 	$(CC) $(call code_segment,$<) $(CFLAGS) -c $< -o $@
 else
 $(OBJECTDIR)/%.rel: %.c
 	@echo "Compile:"$<" to segment " $(call code_segment,$<)
 	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
-	echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
+	@echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
 	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
 	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 		-e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
-	echo rm -f $(@:.rel=.$$$$)
+	rm -f $(@:.rel=.$$$$)
 	$(CC) $(CFLAGS) -c $< -o $@
 endif
 endif
@@ -146,12 +146,7 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
 	rm -f $@
 	for target in $^; do echo $$target >> $@; done
 
-.PRECIOUS: %.$(TARGET)
-.PRECIOUS: %.ihx %.hex $(OBJECTDIR)/%.rel
-
-#build app/example local object files 
-#%.rel: %.c
-#	$(CC) $(call code_segment,$<) $(CFLAGS) -DAUTOSTART_ENABLE -c $< -o $@
+.PRECIOUS: %.$(TARGET) %.ihx %.hex $(OBJECTDIR)/%.rel
 
 # .ihx is the sdcc binary output file
 %.ihx: $(OBJECTDIR)/%.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib

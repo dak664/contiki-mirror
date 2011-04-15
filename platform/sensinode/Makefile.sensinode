@@ -43,8 +43,14 @@ CONTIKI_TARGET_SOURCEFILES += n740.c models.c putchar.c sensinode-debug.c
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
-# Print out stats regarding CODE and RAM footprints
-%.stats: %.hex
+FORCE:
+
+# .sensinode target so we can behave similar to other targets
+# Lastly, it will create a %-$(MODEL).ihx file
+%.$(TARGET): %.hex FORCE
+	cp $< $(<:.hex=.$(TARGET))
+	if [ -f $(<:.hex=.ihx) ] ; then \
+	cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi
 	@echo 'Code footprint:'
 	@echo    'Area                               Addr    Size   Decimal'
 	@echo    '-------------------------------    -----   ----   -------'
@@ -54,15 +60,6 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 	@echo '. bytes (REL,CON,CODE)'
 	@egrep '(^BANK.[^=])' ${<:.hex=.map} | uniq | sort
 	@egrep -A 5 'Other memory' ${<:.hex=.mem}
-
-.SUFFIXES:
-
-# .sensinode target so we can behave similar to other targets
-# Lastly, it will create a %-$(MODEL).ihx file
-%.$(TARGET): %.hex %.stats
-	cp $< $@
-	if [ -f $(<:.hex=.ihx) ] ; then \
-	cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi
 
 %.upload: %.hex
 	$(PROG) -P $<
