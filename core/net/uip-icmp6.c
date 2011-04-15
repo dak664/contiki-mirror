@@ -144,7 +144,7 @@ uip_icmp6_error_output(u8_t type, u8_t code, u32_t param) {
     uip_len = UIP_LINK_MTU; 
 
   memmove((uint8_t *)UIP_ICMP6_ERROR_BUF + UIP_ICMP6_ERROR_LEN,
-          (uint8_t *)UIP_IP_BUF, uip_len - UIP_IPICMPH_LEN - UIP_ICMP6_ERROR_LEN);
+          (void *)UIP_IP_BUF, uip_len - UIP_IPICMPH_LEN - UIP_ICMP6_ERROR_LEN);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
