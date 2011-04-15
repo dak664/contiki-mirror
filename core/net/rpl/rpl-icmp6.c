@@ -348,7 +348,7 @@ void
 dio_output(rpl_dag_t *dag, uip_ipaddr_t *uc_addr)
 {
   unsigned char *buffer;
-  int pos;
+  static int pos;
 
   /* DAG Information Object */
   pos = 0;

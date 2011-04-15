@@ -204,11 +204,8 @@ static void
 packet_sent(void *ptr, int status, int num_transmissions)
 #endif
 {
-  struct queued_packet *q = ptr;
+  static struct queued_packet *q = ptr;
   clock_time_t time = 0;
-  mac_callback_t sent;
-  void *cptr;
-  int num_tx;
   int backoff_transmissions;
 
   rdc_is_transmitting = 0;
@@ -226,10 +223,6 @@ packet_sent(void *ptr, int status, int num_transmissions)
     break;
   }
 
-  sent = q->sent;
-  cptr = q->cptr;
-  num_tx = q->transmissions;
-  
   if(status == MAC_TX_COLLISION ||
      status == MAC_TX_NOACK) {
 
@@ -274,11 +267,11 @@ packet_sent(void *ptr, int status, int num_transmissions)
       /*      queuebuf_to_packetbuf(q->buf);*/
       free_queued_packet();
 #if SHORTCUTS_CONF_NETSTACK
-      if(sent) {
-        sent(cptr, status, num_tx);
+      if(q->sent) {
+        q->sent(q->cptr, status, (int) q->transmissions);
       }
 #else
-      mac_call_sent_callback(sent, cptr, status, num_tx);
+      mac_call_sent_callback(q->sent, q->cptr, status, (int) q->transmissions);
 #endif
     }
   } else {
@@ -290,11 +283,11 @@ packet_sent(void *ptr, int status, int num_transmissions)
     /*    queuebuf_to_packetbuf(q->buf);*/
     free_queued_packet();
 #if SHORTCUTS_CONF_NETSTACK
-      if(sent) {
-        sent(cptr, status, num_tx);
+      if(q->sent) {
+        q->sent(q->cptr, status, (int) q->transmissions);
       }
 #else
-    mac_call_sent_callback(sent, cptr, status, num_tx);
+    mac_call_sent_callback(q->sent, q->cptr, status, (int) q->transmissions);
 #endif
   }
 }

@@ -1293,7 +1293,7 @@ static uint8_t
 output(uip_lladdr_t *localdest)
 {
   /* The MAC address of the destination of the packet */
-  rimeaddr_t dest;
+  static rimeaddr_t dest;
   
 
   /* init */
