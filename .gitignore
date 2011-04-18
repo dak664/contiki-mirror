@@ -17,39 +17,25 @@ tools/tunslip6
 .cproject
 .settings
 
-# CVS stuff
-CVS
-.#*
-
-# SVN stuff
-.svn
-
 # sdcc build stuff
 contiki-sensinode.lib
 *.asm
 *.ihx
 *.hex
 *.mem
-*.map
 *.lnk
 *.lst
 *.rel
 *.rst
 *.sym
 *.sensinode
-obj_sensinode
 
 # other platform build stuff
-obj_sky
-obj_native
-obj_cooja
-symbols.c
-symbols.h
 *.native
+*.minimal-net
 
-# untracked contiki dirs
+# cc2430 converter objects
 cpu/cc2430/converter/converter
 cpu/cc2430/converter/converter.exe
 cpu/cc2430/converter/converter.o
 cpu/cc2430/converter/ihex.o
-
