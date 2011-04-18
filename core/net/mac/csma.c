@@ -204,10 +204,11 @@ static void
 packet_sent(void *ptr, int status, int num_transmissions)
 #endif
 {
-  static struct queued_packet *q = ptr;
+  static struct queued_packet *q;
   clock_time_t time = 0;
   int backoff_transmissions;
 
+  q = ptr;
   rdc_is_transmitting = 0;
   
   switch(status) {
