@@ -18,10 +18,6 @@ To build an application:
 make [app_name]
 make hello_world
 
-To include the device model in the image filename:
-make [app_name].model
-e.g. make hello_world.model
-
 To build and upload an application using the Sensinode nano_programmer 
 included under /tools (default /dev/ttyUSB0):
 
@@ -41,11 +37,12 @@ These make options are defined in /platform/sensinode/Makefile.sensinode
 
 Descriptions of applications:
 
-hello_world		A simple hello world app.
-clock_test		Test and example of sys/clock.h related features.
-rf_test_tx		Test for transmitting packets
-rf_test_rc		Test for receiving packets
- Recent Additions:
+hello_world     A simple hello world app.
+clock_test      Test and example of sys/clock.h related features.
+rf_test_tx      Test for transmitting packets
+rf_test_rc      Test for receiving packets
+
+Recent Additions:
 udp-ipv6        UDP client-server example over uIPv6. Uses link-local and global
                 addresses. Button 1 on the client will send an echo request.
 broadcast-rime  Just a broadcast rime example, slightly modified
