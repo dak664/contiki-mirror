@@ -54,6 +54,10 @@
 
 #include <err.h>
 
+#ifdef __APPLE__
+#define B460800 460800
+#endif
+
 int verbose = 1;
 const char *ipaddr;
 const char *netmask;
@@ -589,6 +593,23 @@ ifconf(const char *tundev, const char *ipaddr)
   ssystem("ifconfig %s inet `hostname` up", tundev);
   if (timestamp) stamptime();
   ssystem("ifconfig %s add %s", tundev, ipaddr);
+#elif defined __APPLE__
+  char address[INET6_ADDRSTRLEN];
+  if (timestamp) stamptime();
+  ssystem("ifconfig %s inet6 %s up", tundev, ipaddr);
+  if (timestamp) stamptime();
+  ssystem("sysctl -w net.inet.ip.forwarding=1");
+  if(strlen(ipaddr) <= INET6_ADDRSTRLEN) {
+    memcpy(address, ipaddr, strlen(ipaddr));
+  }
+  char *s = strchr(address, '/');
+  if(s != NULL) {
+    *s = '\0';
+    s++;
+  }
+
+  if (timestamp) stamptime();
+  ssystem("route add -inet6 %s -prefixlen %s -interface %s", address, s, tundev);
 #else
   if (timestamp) stamptime();
   ssystem("ifconfig %s inet `hostname` %s up", tundev, ipaddr);
