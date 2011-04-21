@@ -61,7 +61,7 @@ $(CONVERTER):
 	$(MAKE) --directory=$(CONVERTER_DIR) converter
 
 ### CPU-dependent cleanup files
-CLEAN += *.lnk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex *.sensinode
+CLEAN += *.lnk *.lk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex *.sensinode
 CLEAN += symbols.c symbols.h
 
 ### CPU-dependent directories
