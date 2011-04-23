@@ -52,11 +52,13 @@ FORCE:
 	if [ -f $(<:.hex=.ihx) ] ; then \
 	cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi
 	@echo 'Code footprint:'
-	@echo    'Area                               Addr    Size   Decimal'
-	@echo    '-------------------------------    -----   ----   -------'
-	@echo -n 'HOME,CSEG,CONST,XINIT,GS*          00000   '
+	@echo    'Area                                Addr        Size' \
+	         '         Decimal'
+	@echo    '----------------------------------  --------    --------' \
+	         '     --------'
+	@echo -n 'HOME,CSEG,CONST,XINIT,GS*           00000000    '
 	@egrep ',CODE\)' ${<:.hex=.map} | egrep -v '(^BANK.[^=])' | uniq | \
-	awk '{ SUM += $$5 } END { printf "%X = %6d", SUM, SUM }'
+	awk '{ SUM += $$5 } END { printf "%08X =    %8d", SUM, SUM }'
 	@echo '. bytes (REL,CON,CODE)'
 	@egrep '(^BANK.[^=])' ${<:.hex=.map} | uniq | sort
 	@egrep -A 5 'Other memory' ${<:.hex=.mem}
