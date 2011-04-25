@@ -6,7 +6,7 @@
  * \author
  *	 Takahide Matsutsuka <markn@markn.org> (Original)
  *	 George Oikonomou - <oikonomou@users.sourceforge.net>
- *	   (recent updates for the contiki cc2430 port)
+ *	   (recent updates for the sensinode/cc2430 port)
  */
 
 #ifndef __8051_DEF_H__
@@ -18,7 +18,6 @@
 #define CC_CONF_UNSIGNED_CHAR_BUGS	0
 #define CC_CONF_REGISTER_ARGS		0
 #define CC_CONF_FUNCTION_POINTER_KEYWORD __reentrant
-#define CC_CONF_CODE_BANKING 1
 
 /* Generic types. */
 typedef   signed char    int8_t;
@@ -66,20 +65,9 @@ typedef unsigned int size_t;
 	__endasm; 		\
 }
 
-/*
- * Enable architecture-depend checksum calculation
- * for uIP configuration.
- * @see uip_arch.h
- * @see uip_arch-asm.S
- */
-/*
- * DO NOT USE UIP_ARCH flags!
- * uip_arch code was copied from z80 directory but NOT ported
- */
-
+/* We don't provide architecture-specific checksum calculations */
 #define UIP_ARCH_ADD32		0
 #define UIP_ARCH_CHKSUM	0
-/* #define UIP_ARCH_IPCHKSUM */
 
 #define CC_CONF_ASSIGN_AGGREGATE(dest, src)	\
     memcpy(dest, src, sizeof(*dest))
