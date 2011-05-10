@@ -10,6 +10,7 @@
 #include "dev/models.h"
 #include "dev/cc2430_rf.h"
 #include "dev/watchdog.h"
+#include "dev/lpm.h"
 #include "net/rime.h"
 #include "net/netstack.h"
 #include "sensinode-debug.h"
@@ -283,6 +284,67 @@ main(void)
       }
     }
 #endif
+
+#if LPM_MODE
+#if (LPM_MODE==LPM_MODE_PM2)
+    SLEEP &= ~OSC_PD;            /* Make sure both HS OSCs are on */
+    while(!(SLEEP & HFRC_STB));  /* Wait for RCOSC to be stable */
+    CLKCON |= OSC;               /* Switch to the RCOSC */
+    while(!(CLKCON & OSC));      /* Wait till it's happened */
+    SLEEP |= OSC_PD;             /* Turn the other one off */
+#endif /* LPM_MODE==LPM_MODE_PM2 */
+
+    /*
+     * Set MCU IDLE or Drop to PM1. Any interrupt will take us out of LPM
+     * Sleep Timer will wake us up in no more than 7.8ms (max idle interval)
+     */
+    SLEEP = (SLEEP & 0xFC) | (LPM_MODE - 1);
+
+#if (LPM_MODE==LPM_MODE_PM2)
+    /*
+     * Wait 3 NOPs. Either an interrupt occurred and SLEEP.MODE was cleared or
+     * no interrupt occurred and we can safely power down
+     */
+    __asm
+    nop
+    nop
+    nop
+    __endasm;
+
+    if (SLEEP & SLEEP_MODE0) {
+#endif /* LPM_MODE==LPM_MODE_PM2 */
+
+      ENERGEST_OFF(ENERGEST_TYPE_CPU);
+      ENERGEST_ON(ENERGEST_TYPE_LPM);
+
+      /* Go IDLE or Enter PM1 */
+      PCON |= IDLE;
+
+      /* First instruction upon exiting PM1 must be a NOP */
+      __asm
+        nop
+      __endasm;
+
+      ENERGEST_ON(ENERGEST_TYPE_CPU);
+      ENERGEST_OFF(ENERGEST_TYPE_LPM);
+
+      /* Pat the dog */
+      watchdog_periodic();
+
+#if (LPM_MODE==LPM_MODE_PM2)
+      SLEEP &= ~OSC_PD;            /* Make sure both HS OSCs are on */
+      while(!(SLEEP & XOSC_STB));  /* Wait for XOSC to be stable */
+      CLKCON &= ~OSC;              /* Switch to the XOSC */
+      /*
+       * On occasion the XOSC is reported stable when in reality it's not.
+       * We need to wait for a safeguard of 64us or more before selecting it
+       */
+      clock_delay(10);
+      while(CLKCON & OSC);         /* Wait till it's happened */
+    }
+#endif /* LPM_MODE==LPM_MODE_PM2 */
+
+#endif /* LPM_MODE */
   }
 }
 /*---------------------------------------------------------------------------*/

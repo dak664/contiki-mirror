@@ -124,6 +124,11 @@ typedef unsigned short clock_time_t;
 #define WDT_CONF_INTERVAL     0
 #define WDT_CONF_TIMER_MODE   0 /* 0 or undefined for watchdog mode */
 
+/* Low Power Modes - We only support PM0/Idle and PM1 */
+#ifndef LPM_CONF_MODE
+#define LPM_CONF_MODE         0 /* 0: no LPM, 1: MCU IDLE, 2: Drop to PM1 */
+#endif
+
 /* XXX argh, ugly hack to make stuff compile! */
 #define snprintf(BUF, SIZE, ...) sprintf(BUF, __VA_ARGS__)
 

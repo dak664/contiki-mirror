@@ -31,20 +31,27 @@
 
 /**
  * \file
- *         Project specific configuration defines for the UDP client/server
- *         example.
- *
- *         We just make sure that buttons and ADS are on
+ *         Header file for the cc2430 Low Power Modes (LPM)
+ *         We currently support the following:
+ *           - Set MCU IDLE while in PM0. This is working as intended
+ *           - Drop to PM1. This results in incoming radio packet losses.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
+#ifndef __LPM_H__
+#define __LPM_H__
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#include "contiki-conf.h"
 
-#define BUTTON_SENSOR_CONF_ON   1
-#define ADC_SENSOR_CONF_ON      1
-#define LPM_CONF_MODE           1
+#define LPM_MODE_NONE 0 /* No LPM - Always on */
+#define LPM_MODE_IDLE 1 /* Set MCU Idle as part of the main loop */
+#define LPM_MODE_PM2  2 /* Drop to PM1 - causes radio packet losses for now */
 
-#endif /* PROJECT_CONF_H_ */
+#ifdef LPM_CONF_MODE
+#define LPM_MODE LPM_CONF_MODE
+#else
+#define LPM_MODE LPM_MODE_IDLE
+#endif /* LPM_CONF_MODE */
+
+#endif /* __LPM_H__ */

@@ -123,6 +123,13 @@ clock_ISR( void ) __interrupt (ST_VECTOR)
   IEN0_EA = 0;	/*interrupt disable*/
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
 
+  /*
+   * If the Sleep timer throws an interrupt while we are powering down to
+   * PM1, we need to abort the power down. Clear SLEEP.MODE, this will signal
+   * main() to abort the PM1 transition
+   */
+  SLEEP &= 0xFC;
+
   /* When using the cooperative scheduler the timer 2 ISR is only
      required to increment the RTOS tick count. */
   
