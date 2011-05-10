@@ -33,5 +33,5 @@ BANK1 sicslowpan.c
 BANK3 core/net/rime
 BANK3 core/net/rpl
 BANK2 core/net
-BANK1 core/            # Crucial and frequently called core functions in HOME
-HOME .               # Everything else in BANK1
+BANK1 core/          # Crucial and frequently called core functions in HOME
+HOME .               # Everything else in HOME
