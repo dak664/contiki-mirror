@@ -34,7 +34,8 @@
  *         Project specific configuration defines for the UDP client/server
  *         example.
  *
- *         We just make sure that buttons and ADS are on
+ *         We make sure that buttons and ADC are on. We also demonstrate the
+ *         new LPM functionality
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
