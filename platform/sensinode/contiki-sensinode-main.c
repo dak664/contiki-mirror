@@ -328,9 +328,6 @@ main(void)
       ENERGEST_ON(ENERGEST_TYPE_CPU);
       ENERGEST_OFF(ENERGEST_TYPE_LPM);
 
-      /* Pat the dog */
-      watchdog_periodic();
-
 #if (LPM_MODE==LPM_MODE_PM2)
       SLEEP &= ~OSC_PD;            /* Make sure both HS OSCs are on */
       while(!(SLEEP & XOSC_STB));  /* Wait for XOSC to be stable */
