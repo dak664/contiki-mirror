@@ -7,6 +7,7 @@
 #include "dev/bus.h"
 #include "dev/leds.h"
 #include "dev/uart1.h"
+#include "dev/dma.h"
 #include "dev/models.h"
 #include "dev/cc2430_rf.h"
 #include "dev/watchdog.h"
@@ -172,16 +173,16 @@ main(void)
   /* Init UART1 */
   uart1_init();
 
+#if DMA_ON
+  dma_init();
+#endif
+
 #if SLIP_ARCH_CONF_ENABLE
   /* On cc2430, the argument is not used */
   slip_arch_init(0);
 #else
   uart1_set_input(serial_line_input_byte);
   serial_line_init();
-#endif
-
-#ifdef HAVE_DMA
-  dma_init();
 #endif
 
   PUTSTRING("##########################################\n");

@@ -129,6 +129,11 @@ typedef unsigned short clock_time_t;
 #define LPM_CONF_MODE         1 /* 0: no LPM, 1: MCU IDLE, 2: Drop to PM1 */
 #endif
 
+/* DMA Configuration */
+#ifndef DMA_CONF_ON
+#define DMA_CONF_ON 0
+#endif
+
 /* XXX argh, ugly hack to make stuff compile! */
 #define snprintf(BUF, SIZE, ...) sprintf(BUF, __VA_ARGS__)
 
