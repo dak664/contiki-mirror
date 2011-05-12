@@ -51,16 +51,25 @@
 #define N740_SER_PAR_LIGHT       0x04 /* Light Sensor */
 #define N740_SER_PAR_ACC         0x08 /* Acceleration Sensor */
 #define N740_SER_PAR_RF_IN_GAIN  0x10 /* Receiver Amplifier, best not set */
-#define N740_SER_PAR_SPI_ENABLE  0x20 /* U5 analog switch enable */
+#define N740_SER_PAR_U5_ENABLE   0x20 /* U5 analog switch enable */
 #define N740_SER_PAR_LED_GREEN   0x40 /* Led 1 */
 #define N740_SER_PAR_LED_RED     0x80 /* Led 2 */
 
 #define N740_ANALOG_SWITCH_USB      0
 #define N740_ANALOG_SWITCH_SERIAL   1
 
+#define N740_PINS 0xE0
+#define N740_PINS_GPIO()   {P1SEL &= ~N740_PINS;}
+#define N740_PINS_PER_IO() {P1SEL |= N740_PINS;}
+
+/* Serial/Parallel Shift Register (74HC595D) Functions */
 void n740_ser_par_init(void);
 void n740_ser_par_set(uint8_t data) ;
 uint8_t n740_ser_par_get(void);
+
+/* Analog Switch (U5 - 74HC4053D) Functions */
 void n740_analog_switch(uint8_t state);
+void n740_analog_activate();
+void n740_analog_deactivate();
 
 #endif /* N740SERPAR_H_ */

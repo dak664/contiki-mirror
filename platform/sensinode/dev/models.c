@@ -41,12 +41,11 @@
 
 #include "dev/models.h"
 #include "dev/uart.h"
-
+#include "dev/m25p16.h"
 /*---------------------------------------------------------------------------*/
 void
 model_init()
 {
-
 #ifdef MODEL_N740
   /*
    * We want to prevent the dongle from controlling the state of the
@@ -60,6 +59,11 @@ model_init()
   /* Init the serial-parallel chip for N740s. This will also 'init' LEDs */
   n740_ser_par_init();
 
+  /* Put the Serial Flash in Deep Power mode */
+  n740_analog_deactivate();
+  m25p16_dp();
+  n740_ser_par_set(0);
+//  n740_analog_activate();
 #endif
 }
 /*---------------------------------------------------------------------------*/

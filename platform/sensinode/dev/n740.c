@@ -31,7 +31,7 @@
 
 /**
  * \file
- *   This files provides functions to control various chips on the
+ *   This file provides functions to control various chips on the
  *   Sensinode N740s:
  *
  *   - The 74HC595D is an 8-bit serial in-parallel out shift register.
@@ -83,7 +83,6 @@ n740_ser_par_init()
   P1DIR |= 0x0A;
   P0DIR |= 0x04;
 }
-
 /*---------------------------------------------------------------------------*/
 /*
  * Send a command to the N740 serial-parallel chip. Each command is a single
@@ -152,3 +151,36 @@ n740_analog_switch(uint8_t state)
   }
   ENABLE_INTERRUPTS();
 }
+/*---------------------------------------------------------------------------*/
+/*
+ * Activate the the 74HC4053D analog switch U5 on the N740 and at the same
+ * time set relevant pins to Peripheral I/O mode. This stops communications
+ * with the serial flash and enables UART1 I/O
+ */
+void
+n740_analog_activate()
+{
+  uint8_t ser_par = n740_ser_par_get();
+  ser_par &= ~N740_SER_PAR_U5_ENABLE; /* Turn on */
+
+  N740_PINS_PER_IO();
+
+  n740_ser_par_set(ser_par);
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * De-Activate the the 74HC4053D analog switch U5 on the N740 and at the same
+ * time set relevant pins to GP I/O mode. This effectively prepares us to
+ * start talking with the serial flash chip
+ */
+void
+n740_analog_deactivate()
+{
+  uint8_t ser_par = n740_ser_par_get();
+  ser_par |= N740_SER_PAR_U5_ENABLE; /* Turn off */
+
+  n740_ser_par_set(ser_par);
+
+  N740_PINS_GPIO();
+}
+/*---------------------------------------------------------------------------*/
