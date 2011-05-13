@@ -65,6 +65,9 @@ typedef unsigned int size_t;
 	__endasm; 		\
 }
 
+/* Macro for a soft reset. In many respects better than H/W reboot via W/D */
+#define SOFT_RESET() {((void (__code *) (void)) 0x0000) ();}
+
 /* We don't provide architecture-specific checksum calculations */
 #define UIP_ARCH_ADD32		0
 #define UIP_ARCH_CHKSUM	0
