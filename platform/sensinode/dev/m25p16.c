@@ -33,17 +33,17 @@
  * \file
  *   This file provides functions to control the M25P16 on sensinode N740s.
  *     This is a Numonyx Forte Serial Flash Memory (16Mbit)
- *     Turning it on/off is controlled via 0x02 on the 74HC595D
+ *     The S signal (Chip Select) is controlled via 0x02 on the 74HC595D
  *     The other instructions and timing are performed with bit bang
  *
  *     We can enable, disable, read/write data, erase pages, hold, enter/exit
  *     deep sleep etc.
  *
- *     Clock  (C) => P1_5
- *     Ser. I (D) => P1_6
- *     Ser. O (Q) => P1_7
- *     Hold       => Pull Up
- *     Write Prot => Pull Up
+ *     Clock  (C) => P1_5,
+ *     Ser. I (D) => P1_6,
+ *     Ser. O (Q) => P1_7,
+ *     Hold       => Pull Up,
+ *     Write Prot => Pull Up,
  *     Chip Sel   => 74HC595D (0x02)
  *
  *   This file can be placed in any bank.
@@ -126,11 +126,6 @@ deselect()
   n740_ser_par_set(ser_par);
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Sends a "Write Enable" instruction. Completing a WRDI, PP, SE, BE and WRSR
- * resets the write enable latch bit, so this instruction should be used every
- * time before trying to write
- */
 void
 m25p16_wren()
 {
@@ -139,7 +134,6 @@ m25p16_wren()
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/* Sends a "Write Disable" instruction */
 void
 m25p16_wrdi()
 {
@@ -148,10 +142,6 @@ m25p16_wrdi()
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Reads the Identifier from the Flash Chip and stores the information in the
- * fields of the RDID argument
- */
 void
 m25p16_rdid(struct m25p16_rdid * rdid)
 {
@@ -170,7 +160,6 @@ m25p16_rdid(struct m25p16_rdid * rdid)
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/* Reads and returns the value of the status register on the Flash Chip */
 uint8_t
 m25p16_rdsr()
 {
@@ -184,7 +173,6 @@ m25p16_rdsr()
   return rv;
 }
 /*---------------------------------------------------------------------------*/
-/* Writes value VAL to the Status Register on the Chip */
 void
 m25p16_wrsr(uint8_t val)
 {
@@ -196,11 +184,6 @@ m25p16_wrsr(uint8_t val)
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Read BUFF_LEN bytes from the flash, starting from address ADDR and store
- * them in BUFF. ADDR should point to a 3 byte array, with the address MSB
- * stored in position 0 and LSB in position 2
- */
 void
 m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
 {
@@ -215,16 +198,11 @@ m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   }
 
   for(i=0; i<buff_len; i++) {
-    buff[i] = bit_bang_read();
+    buff[i] = ~bit_bang_read();
   }
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Read BUFF_LEN bytes from the flash, starting from address ADDR and store
- * them in BUFF. ADDR should point to a 3 byte array, with the address MSB
- * stored in position 0 and LSB in position 2
- */
 void
 m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
 {
@@ -242,16 +220,11 @@ m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   bit_bang_write(M25P16_DUMMY_BYTE);
 
   for(i=0; i<buff_len; i++) {
-    buff[i] = bit_bang_read();
+    buff[i] = ~bit_bang_read();
   }
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Write BUFF_LEN bytes stored in BUFF to flash, starting from location
- * ADDR. BUFF_LEN may not exceed 256. ADDR should point to a 3 byte array,
- * with the address MSB stored in position 0 and LSB in position 2
- */
 void
 m25p16_pp(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
 {
@@ -269,14 +242,11 @@ m25p16_pp(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
 
   /* Write the bytes */
   for(i=0; i<buff_len; i++) {
-    bit_bang_write(buff[i]);
+    bit_bang_write(~buff[i]);
   }
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Erase sector S.
- */
 void
 m25p16_se(uint8_t s)
 {
@@ -290,9 +260,6 @@ m25p16_se(uint8_t s)
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Bulk Erase. Erases all sectors.
- */
 void
 m25p16_be()
 {
@@ -303,9 +270,6 @@ m25p16_be()
   deselect();
 }
 /*---------------------------------------------------------------------------*/
-/*
- * Deep Power Down.
- */
 void
 m25p16_dp()
 {
@@ -326,9 +290,11 @@ m25p16_res() {
   clock_delay(6);
 }
 /*---------------------------------------------------------------------------*/
-/*
+/**
  * Release Deep Power Down. Read and return the Electronic Signature
  * must return 0x14
+ *
+ * \return The old style Electronic Signature. This must be 0x14
  */
 uint8_t
 m25p16_res_res() {
@@ -348,3 +314,4 @@ m25p16_res_res() {
   clock_delay(6);
   return rv;
 }
+/*---------------------------------------------------------------------------*/

@@ -69,36 +69,224 @@
 #define M25P16_SR_BP0      0x04 /* Block Protect 0 */
 #define M25P16_SR_WEL      0x02 /* Write Enable Latch */
 #define M25P16_SR_WIP      0x01 /* Write in Progress */
-
-/* Device Identifier */
+/*---------------------------------------------------------------------------*/
+/** \brief Device Identifier
+ *
+ * Holds the value of the device identifier, returned by the RDID instruction.
+ *
+ * After a correct RDID, this structure should hold the following values:
+ * man_id = 0x20, mem_type = 0x20, mem_size = 0x15, uid_len = 0x10.
+ *
+ * UID holds optional Customized Factory Data (CFD) content. The CFD bytes are
+ * read-only and can be programmed with customers data upon their request.
+ * If the customers do not make requests, the devices are shipped with all the
+ * CFD bytes programmed to 0x00.
+ */
 struct m25p16_rdid {
-  uint8_t  man_id;
-  uint8_t  mem_type;
-  uint8_t  mem_size;
-  uint8_t  uid_len;
-  uint8_t  uid[16];
+  uint8_t  man_id;   /** Manufacturer ID */
+  uint8_t  mem_type; /** Memory Type */
+  uint8_t  mem_size; /** Memory Size */
+  uint8_t  uid_len;  /** Unique ID length */
+  uint8_t  uid[16];  /** Unique ID */
 };
-
-/* Check for Write in Progress (1: In progress) */
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Check for Write in Progress
+ * \retval 1 Write in progress
+ * \retval 0 Write not in progress
+ *
+ * This macro checks if the device is currently in the middle of a write cycle
+ * by reading the value of the WIP bit (bit 0) in the Status Register
+ */
 #define M25P16_WIP() (m25p16_rdsr() & M25P16_SR_WIP)
-/* Check for Write Enable (1: Enabled) */
+/**
+ * \brief Check for Write-Enable
+ * \retval 1 Write enabled
+ * \retval 0 Write disabled
+ *
+ * This macro checks if the device is ready to accept a write instruction
+ * by reading the value of the WEL bit (bit 1) in the Status Register
+ */
 #define M25P16_WEL() (m25p16_rdsr() & M25P16_SR_WEL)
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Write Enable (WREN) instruction.
+ *
+ * Completing a WRDI, PP, SE, BE and WRSR
+ * resets the write enable latch bit, so this instruction should be used every
+ * time before trying to write.
+ */
+void m25p16_wren();
 
-/* Functions */
-void m25p16_wren();                            /* Write Enable Instruction */
-void m25p16_wrdi();                            /* Write Disable Instruction */
-void m25p16_rdid(struct m25p16_rdid * rdid);   /* Read Identification */
-uint8_t m25p16_rdsr();                         /* Read Status Register */
-void m25p16_wrsr(uint8_t val);                 /* Write Status Reg. */
-/* Read and Fast Read from Flash */
+/**
+ * \brief Write Disable (WRDI) instruction
+ */
+void m25p16_wrdi();
+
+/**
+ * \brief Read Identifier (RDID)instruction
+ *
+ * \param rdid Pointer to a struct which will hold the information returned
+ *             by the RDID instruction
+ */
+void m25p16_rdid(struct m25p16_rdid * rdid);
+
+/**
+ * \brief Read Status Register (RDSR) instruction
+ *
+ * \return Value of the status register
+ *
+ * Reads and returns the value of the status register on the Flash Chip
+ */
+uint8_t m25p16_rdsr();
+
+/**
+ * \brief Write Status Register (WRSR) instruction
+ * \param val Value to be written to the status register
+ *
+ * This instruction does not afect bits 6, 5, 1 and 0 of the SR.
+ */
+void m25p16_wrsr(uint8_t val);
+
+/**
+ * \brief Read Data Bytes (READ) instruction
+ * \param addr 3 byte array holding the read start address. MSB stored in
+ *        addr[0] and LSB in addr[2]
+ * \param buff Pointer to a buffer to hold the read bytes.
+ * \param buff_len Number of bytes to read. buff must be long enough to hold
+ *        buff_len bytes
+ *
+ * The bytes will be inverted after being read, so that a value of 0xFF (empty)
+ * in the flash will read as 0x00
+ */
 void m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len);
+
+/**
+ * \brief Read Data Bytes at Higher Speed (FAST_READ) instruction
+
+ * \param addr 3 byte array holding the read start address. MSB stored in
+ *        addr[0] and LSB in addr[2]
+ * \param buff Pointer to a buffer to hold the read bytes.
+ * \param buff_len Number of bytes to read. buff must be long enough to hold
+ *        buff_len bytes
+
+ * The bytes will be inverted after being read, so that a value of 0xFF (empty)
+ * in the flash will read as 0x00
+ */
 void m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len);
-/* Program Page */
+
+/**
+ * \brief Program Page (PP) instruction
+ * \param addr 3 byte array holding the write start address. MSB stored in
+ *        addr[0] and LSB in addr[2]
+ * \param buff Pointer to a buffer with the data to be written
+ * \param buff_len Number of bytes to write, Maximum 256 bytes.
+ *
+ * Write BUFF_LEN bytes stored in BUFF to flash, starting from location
+ * ADDR. BUFF_LEN may not exceed 256. ADDR should point to a 3 byte array,
+ * with the address MSB stored in position 0 and LSB in position 2
+ *
+ * If the start address + buff_len exceed page boundaries, the write will
+ * wrap to the start of the same page (the page at addr[2:1]).
+ *
+ * The bytes will be inverted before being written, so that a value of 0xFF
+ * will be written as 0x00 (and subsequently correctly read as 0xFF by READ)
+ *
+ * This function will set the WEL bit on the SR before attempting to write,
+ * so the calling function doesn't need to worry about this.
+ *
+ * This call is asynchronous. It will return before the write cycle has
+ * completed. Thus, user software must check the WIP bit Write In Progress)
+ * before sending further instructions. This can take up to 5 msecs (typical
+ * duration for a 256 byte write is 640 usec)
+ */
 void m25p16_pp(uint8_t * addr, uint8_t * buff, uint8_t buff_len);
+
+/**
+ * \brief Sector Erase (SE) instruction
+ * \param s The number of the sector to be erased
+ *
+ * Delete the entire sector number s, by setting it's contents to all 0xFF
+ * (which will read as 0x00 by READ). The flash is broken down into 32 sectors,
+ * 64 KBytes each.
+ *
+ * This function will set the WEL bit on the SR before attempting to write,
+ * so the calling function doesn't need to worry about this.
+ *
+ * This call is asynchronous. It will return before the write cycle has
+ * completed. Thus, user software must check the WIP bit Write In Progress)
+ * before sending further instructions. This can take up to 3 secs (typical
+ * duration 600 msec)
+ */
 void m25p16_se(uint8_t s); /* Sector Erase */
-void m25p16_be();          /* Bulk Erase */
+
+
+/**
+ * \brief Bulk Erase (SE) instruction
+ *
+ * Delete the entire memory, by setting it's contents to all 0xFF
+ * (which will read as 0x00 by READ).
+ *
+ * This function will set the WEL bit on the SR before attempting to write,
+ * so the calling function doesn't need to worry about this.
+ *
+ * This call is asynchronous. It will return before the write cycle has
+ * completed. Thus, user software must check the WIP bit Write In Progress)
+ * before sending further instructions.
+ *
+ * This instructions takes a very long time to complete and must be used with
+ * care. It can take up to 40 secs (yes, secs). A typical duration is 13 secs
+ */
+void m25p16_be();
+
+/**
+ * \brief Deep Power Down (DP) instruction
+ *
+ * Puts the device into its lowers power consumption mode (This is not the same
+ * as the stand-by mode caused by de-selecting the device). While the device
+ * is in DP, it will accept no instruction except a RES (Release from DP).
+ *
+ * This call is asynchronous and will return as soon as the instruction
+ * sequence has been written but before the device has actually entered DP
+ *
+ * Dropping to DP takes 3usec and Resuming from DP takes at least 1.8usec, so
+ * this sequence should not be used when the sleep interval is estimated to be
+ * short (read as: don't DP then RES then DP repeatedly)
+ */
 void m25p16_dp();          /* Deep Power down */
-void m25p16_res();         /* Release from Deep Power Down */
-uint8_t m25p16_res_res();  /* Release from Deep Power Down and Read ES */
+
+/**
+ * \brief Release from Deep Power Down (RES) instruction
+ *
+ * Take the device out of the Deep Power Down mode and bring it to standby.
+ * Does not read the electronic signature.
+ *
+ * This call is synchronous. When it returns the device will be in standby
+ * mode.
+ *
+ * Dropping to DP takes 3usec and Resuming from DP takes at least 1.8usec, so
+ * this sequence should not be used when the sleep interval is estimated to be
+ * short (read as: don't DP then RES then DP repeatedly)
+ */
+void m25p16_res();
+
+/**
+ * \brief Release from Deep Power Down (RES) and Read Electronic
+ * Signature instruction
+ *
+ * \return The value of the electronic signature. This is provided for backward
+ * compatibility and must always be 0x14
+ *
+ * Take the device out of the Deep Power Down mode and bring it to standby.
+ * Does not read the electronic signature.
+ *
+ * This call is synchronous. When it returns the device will be in standby
+ * mode.
+ *
+ * Dropping to DP takes 3usec and Resuming from DP takes at least 1.8usec, so
+ * this sequence should not be used when the sleep interval is estimated to be
+ * short (read as: don't DP then RES then DP repeatedly)
+ */
+uint8_t m25p16_res_res();
 
 #endif /* M25P16_H_ */
