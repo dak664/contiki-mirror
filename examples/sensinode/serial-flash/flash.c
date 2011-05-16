@@ -113,6 +113,8 @@ PROCESS_THREAD(serial_flash_process, ev, data)
 
   PRINTF("Start\n");
 
+  PROCESS_EXIT();
+
   memset(r_addr, 0, 3);
   r_addr[0] = USE_SECTOR;
 
