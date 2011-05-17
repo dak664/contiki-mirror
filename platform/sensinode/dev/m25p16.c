@@ -197,7 +197,7 @@ m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
     bit_bang_write(addr[i]);
   }
 
-  for(i=0; i<buff_len; i++) {
+  for(i = 0; i < buff_len; i++) {
     buff[i] = ~bit_bang_read();
   }
   deselect();
@@ -219,7 +219,7 @@ m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   /* Write the dummy byte */
   bit_bang_write(M25P16_DUMMY_BYTE);
 
-  for(i=0; i<buff_len; i++) {
+  for(i = 0; i < buff_len; i++) {
     buff[i] = ~bit_bang_read();
   }
   deselect();
@@ -286,8 +286,8 @@ m25p16_res() {
   select();
   bit_bang_write(M25P16_I_RES);
   deselect();
-  /* 30us between RES and standby */
-  clock_delay(6);
+  /* a few usec between RES and standby */
+  while(M25P16_WIP());
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -310,8 +310,8 @@ m25p16_res_res() {
 
   deselect();
 
-  /* 30us between RES and standby */
-  clock_delay(6);
+  /* a few usec between RES and standby */
+  while(M25P16_WIP());
   return rv;
 }
 /*---------------------------------------------------------------------------*/
