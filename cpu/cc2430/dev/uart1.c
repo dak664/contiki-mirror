@@ -50,7 +50,7 @@ uart1_init()
   U1UCR = 0x02; /*defaults: 8N1, no flow control, high stop bit*/
 #endif
 
-  U1CSR = U_MODE | U_RE | U_TXB;  /*UART mode, receiver enable, TX done*/
+  U1CSR = U_MODE | U_RE;  /* UART mode, receiver enable */
 
   /*set priority group of group 3 to highest, so the UART won't miss bytes*/
   IP1 |= IP1_3;
