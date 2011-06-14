@@ -13,6 +13,7 @@
 #include "dev/lpm.h"
 #include "net/rime.h"
 #include "net/netstack.h"
+#include "net/mac/frame802154.h"
 #include "sensinode-debug.h"
 #include "dev/watchdog-cc2430.h"
 #include "dev/sensinode-sensors.h"
@@ -142,11 +143,12 @@ set_rime_addr(void)
 
   /* Set the cc2430 RF addresses */
 #if (RIMEADDR_SIZE==8)
-    addr_long = (uint8_t *) &rimeaddr_node_addr;
+  addr_short = (rimeaddr_node_addr.u8[6] * 256) + rimeaddr_node_addr.u8[7];
+  addr_long = (uint8_t *) &rimeaddr_node_addr;
 #else
-    addr_short = (rimeaddr_node_addr.u8[0] * 256) + rimeaddr_node_addr.u8[1];
+  addr_short = (rimeaddr_node_addr.u8[0] * 256) + rimeaddr_node_addr.u8[1];
 #endif
-  cc2430_rf_set_addr(0xffff, addr_short, addr_long);
+  cc2430_rf_set_addr(IEEE802154_PANID, addr_short, addr_long);
 }
 /*---------------------------------------------------------------------------*/
 int

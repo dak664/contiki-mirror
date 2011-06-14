@@ -149,6 +149,7 @@ typedef unsigned short clock_time_t;
 #define NETSTACK_CONF_FRAMER  framer_802154
 #define NETSTACK_CONF_RADIO   cc2430_rf_driver
 #define RF_DEFAULT_CHANNEL    25
+#define IEEE802154_CONF_PANID 0x4C55 /* LU */
 
 /* #define CC2420_CONF_AUTOACK                  1  // this is useful. check for similar in cc2430 */
 /* MDMCTRL0L.AUTOACK p165 in datasheet */

@@ -145,43 +145,6 @@ flush_rx()
 }
 /*---------------------------------------------------------------------------*/
 /**
- * Set address decoder on/off.
- *
- * \param param 1=on 0=off.
- * \return pdTRUE operation successful
- */
-static int8_t
-address_decoder_mode(rf_address_mode_t mode)
-{
-
-  /* set oscillator on*/
-  switch(mode) {
-  case RF_SOFTACK_MONITOR:
-  case RF_MONITOR:
-    MDMCTRL0H |= 0x10;   /*Address-decode off , coordinator*/
-    MDMCTRL0L &= ~0x10;  /*no automatic ACK */
-    break;
-
-  case RF_DECODER_COORDINATOR:
-    MDMCTRL0H |= 0x18;   /*Address-decode on , coordinator*/
-    MDMCTRL0L |= 0x10;   /*automatic ACK */
-    break;
-
-  case RF_DECODER_ON:
-    MDMCTRL0H |= 0x08;   /*Address-decode on */
-    MDMCTRL0L &= ~0x10;  /* no automatic ACK */
-    break;
-
-  default:
-    MDMCTRL0H &= ~0x18;  /* Generic client */
-    MDMCTRL0L &= ~0x10;  /* no automatic ACK */
-    break;
-  }
-
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-/**
  * Select RF channel.
  *
  * \param channel channel number to select
@@ -292,10 +255,10 @@ cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr)
 	SHORTADDRL = addr & 0xff;
 
 	if(ieee_addr != NULL) {
-		ptr = &IEEE_ADDR0;
+		ptr = &IEEE_ADDR7;
 	    /* LSB first, MSB last for 802.15.4 addresses in CC2420 */
 		for (f = 0; f < 8; f++) {
-			*ptr++ = ieee_addr[f];
+			*ptr-- = ieee_addr[f];
 		}
 	}
 }
@@ -405,8 +368,8 @@ init(void)
 
   FSMTC1 = 1; /*don't abort reception, if enable called, accept ack, auto rx after tx*/
 
-  MDMCTRL0H = 0x02;  /* Generic client, standard hysteresis, decoder on 0x0a */
-  MDMCTRL0L = 0xE2;  /* automatic ACK and CRC, standard CCA and preamble 0xf2 */
+  MDMCTRL0H = 0x0A;  /* Generic client, standard hysteresis, decoder on 0x0a */
+  MDMCTRL0L = 0xF2;  /* automatic ACK and CRC, standard CCA and preamble 0xf2 */
 
   MDMCTRL1H = 0x30;     /* Defaults */
   MDMCTRL1L = 0x0;
@@ -418,8 +381,8 @@ init(void)
   cc2430_rf_command(ISFLUSHTX);
   cc2430_rf_command(ISFLUSHRX);
 
+  /* Temporary values, main() will sort this out later on */
   cc2430_rf_set_addr(0xffff, 0x0000, NULL);
-  address_decoder_mode(RF_DECODER_NONE);
 
   RFIM = IRQ_FIFOP;
   RFIF &= ~(IRQ_FIFOP);
