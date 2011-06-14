@@ -248,8 +248,8 @@ main(void)
     uip_ipaddr_t ipaddr;
 
     uip_ip6addr(&ipaddr, 0x2001, 0x630, 0x301, 0x6453, 0, 0, 0, 0);
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
+    uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+    uip_ds6_addr_add(&ipaddr, 0, ADDR_TENTATIVE);
   }
 #endif /* UIP_CONF_IPV6_RPL */
 #endif /* UIP_CONF_IPV6 */
