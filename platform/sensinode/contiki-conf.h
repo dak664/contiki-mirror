@@ -150,6 +150,8 @@ typedef unsigned short clock_time_t;
 #define NETSTACK_CONF_RADIO   cc2430_rf_driver
 
 /* RF Config */
+#define IEEE802154_CONF_PANID 0x4C55 /* LU */
+
 #ifndef CC2430_RF_CONF_CHANNEL
 #define CC2430_RF_CONF_CHANNEL    25
 #endif /* CC2430_RF_CONF_CHANNEL */
