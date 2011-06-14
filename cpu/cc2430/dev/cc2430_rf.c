@@ -27,11 +27,19 @@
 #define RF_DEFAULT_POWER 100
 #endif
 
-#ifndef RF_DEFAULT_CHANNEL
-#define RF_DEFAULT_CHANNEL 18
-#endif
+#ifdef CC2430_RF_CONF_CHANNEL
+#define CC2430_RF_CHANNEL CC2430_RF_CONF_CHANNEL
+#else
+#define CC2430_RF_CHANNEL 18
+#endif /* CC2430_RF_CONF_CHANNEL */
 #define CC2430_CHANNEL_MIN 11
 #define CC2430_CHANNEL_MAX 26
+
+#ifdef CC2430_RF_CONF_AUTOACK
+#define CC2430_RF_AUTOACK CC2430_RF_CONF_AUTOACK
+#else
+#define CC2430_RF_AUTOACK 1
+#endif
 
 #ifndef CC2430_CONF_CHECKSUM
 #define CC2430_CONF_CHECKSUM 0
@@ -369,7 +377,10 @@ init(void)
   FSMTC1 = 1; /*don't abort reception, if enable called, accept ack, auto rx after tx*/
 
   MDMCTRL0H = 0x0A;  /* Generic client, standard hysteresis, decoder on 0x0a */
-  MDMCTRL0L = 0xF2;  /* automatic ACK and CRC, standard CCA and preamble 0xf2 */
+  MDMCTRL0L = 0xE2;  /* automatic CRC, standard CCA and preamble 0xE2 */
+#if CC2430_RF_AUTOACK
+  MDMCTRL0L |= 0x10;
+#endif
 
   MDMCTRL1H = 0x30;     /* Defaults */
   MDMCTRL1L = 0x0;
@@ -377,7 +388,7 @@ init(void)
   RXCTRL0H = 0x32;      /* RX tuning optimized */
   RXCTRL0L = 0xf5;
 
-  cc2430_rf_channel_set(RF_DEFAULT_CHANNEL);
+  cc2430_rf_channel_set(CC2430_RF_CHANNEL);
   cc2430_rf_command(ISFLUSHTX);
   cc2430_rf_command(ISFLUSHRX);
 

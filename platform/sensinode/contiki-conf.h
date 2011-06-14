@@ -148,11 +148,16 @@ typedef unsigned short clock_time_t;
 #endif
 #define NETSTACK_CONF_FRAMER  framer_802154
 #define NETSTACK_CONF_RADIO   cc2430_rf_driver
-#define RF_DEFAULT_CHANNEL    25
-#define IEEE802154_CONF_PANID 0x4C55 /* LU */
 
-/* #define CC2420_CONF_AUTOACK                  1  // this is useful. check for similar in cc2430 */
-/* MDMCTRL0L.AUTOACK p165 in datasheet */
+/* RF Config */
+#ifndef CC2430_RF_CONF_CHANNEL
+#define CC2430_RF_CONF_CHANNEL    25
+#endif /* CC2430_RF_CONF_CHANNEL */
+
+#ifndef CC2430_RF_CONF_AUTOACK
+#define CC2430_RF_CONF_AUTOACK 1
+#endif /* CC2420_CONF_AUTOACK */
+
 #if UIP_CONF_IPV6
 /* Addresses, Sizes and Interfaces */
 #define RIMEADDR_CONF_SIZE                   8  /* 8-byte addresses here, 2 otherwise */
