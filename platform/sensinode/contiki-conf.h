@@ -126,7 +126,7 @@ typedef unsigned short clock_time_t;
 
 /* Low Power Modes - We only support PM0/Idle and PM1 */
 #ifndef LPM_CONF_MODE
-#define LPM_CONF_MODE         0 /* 0: no LPM, 1: MCU IDLE, 2: Drop to PM1 */
+#define LPM_CONF_MODE         1 /* 0: no LPM, 1: MCU IDLE, 2: Drop to PM1 */
 #endif
 
 /* XXX argh, ugly hack to make stuff compile! */
