@@ -28,6 +28,7 @@
  */
 
 #include "contiki.h"
+#include "cc2430_sfr.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
@@ -42,6 +43,9 @@ PROCESS_THREAD(sniffer_process, ev, data)
   PROCESS_BEGIN();
 
   PRINTF("Sniffer started\n");
+
+  /* Turn off cc2430 Address Recognition - We need to accept all frames */
+  MDMCTRL0H &= ~0x08;
 
   PROCESS_EXIT();
 
