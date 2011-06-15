@@ -21,7 +21,7 @@ AROPTS   = -a
 ifeq ($(HAVE_BANKING),1)
 #banking
 MEMORY_MODEL=huge
-LDFLAGS += --code-size 0x20000 
+LDFLAGS += --code-size 0x1F800
 LDFLAGS += -Wl-bCSEG=0x000000 
 LDFLAGS += -Wl-bBANK1=0x018000
 LDFLAGS += -Wl-bBANK2=0x028000 
