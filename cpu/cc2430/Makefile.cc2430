@@ -107,7 +107,6 @@ CUSTOM_RULE_ALLOBJS_TO_TARGETLIB=1
 ifdef CUSTOM_RULE_C_TO_OBJECTDIR_O
 ifeq ($(HAVE_BANKING),1)
 $(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
-	@echo "Compile:"$<" to segment " $(call code_segment,$<)
 	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
 	@echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
 	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
@@ -118,7 +117,6 @@ $(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
 	$(CC) $(call code_segment,$<) $(CFLAGS) -c $< -o $@
 else
 $(OBJECTDIR)/%.rel: %.c
-	@echo "Compile:"$<" to segment " $(call code_segment,$<)
 	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
 	@echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
 	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
