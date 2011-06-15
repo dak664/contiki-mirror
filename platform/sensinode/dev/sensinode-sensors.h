@@ -114,10 +114,12 @@ extern const struct sensors_sensor adc_sensor;
 
 #define BUTTON_1_SENSOR "Button 1"
 #define BUTTON_2_SENSOR "Button 2"
+#define BUTTON_SENSOR   BUTTON_1_SENSOR
 
 #if BUTTON_SENSOR_ON
 extern const struct sensors_sensor button_1_sensor;
 extern const struct sensors_sensor button_2_sensor;
+#define button_sensor button_1_sensor
 
 /* Port 0 ISR needed for both models */
 void port_0_ISR(void) __interrupt (P0INT_VECTOR);
