@@ -47,5 +47,6 @@
 #define CC2430_RF_CONF_AUTOACK 0
 #define NETSTACK_CONF_RDC      stub_rdc_driver
 #define ADC_SENSOR_CONF_ON     0
+#define LPM_CONF_MODE          0
 
 #endif /* PROJECT_CONF_H_ */

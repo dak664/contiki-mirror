@@ -81,7 +81,8 @@
 #define LQI_BIT_MASK 0x7F
 
 #if CC2430_RF_CONF_HEXDUMP
-#include "sensinode-debug.h"
+#include "uart1.h"
+static const uint8_t magic[] = { 0x53, 0x6E, 0x69, 0x66 }; /* Snif */
 #endif
 
 #ifdef HAVE_RF_ERROR
@@ -439,10 +440,6 @@ prepare(const void *payload, unsigned short payload_len)
 
   PRINTF("cc2430_rf: sending %u byte payload\n", payload_len);
 
-#if CC2430_RF_CONF_HEXDUMP
-  putstring("000000 ");
-#endif
-
   cc2430_rf_command(ISFLUSHTX);
   PRINTF("cc2430_rf: data = ");
   /* Send the phy length byte first */
@@ -450,18 +447,9 @@ prepare(const void *payload, unsigned short payload_len)
   PRINTF("(%d)", payload_len+CHECKSUM_LEN);
   for(i = 0; i < payload_len; i++) {
     RFD = ((unsigned char*) (payload))[i];
-#if CC2430_RF_CONF_HEXDUMP
-    puthex(((unsigned char*) (payload))[i]);
-    putchar(' ');
-#endif
     PRINTF("%02X", ((unsigned char*)(payload))[i]);
   }
   PRINTF("\n");
-
-  /* Dummy CRC OK, RSSI and LQI */
-#if CC2430_RF_CONF_HEXDUMP
-  putstring("ff ff\n");
-#endif
 
   /* Leave space for the FCS */
   RFD = 0;
@@ -550,10 +538,6 @@ read(void *buf, unsigned short bufsize)
   /* Check the length */
   len = RFD;
 
-#if CC2430_RF_CONF_HEXDUMP
-  putstring("000000 ");
-#endif
-
   /* Check for validity */
   if(len > CC2430_MAX_PACKET_LEN) {
     /* Oops, we must be out of sync. */
@@ -580,14 +564,22 @@ read(void *buf, unsigned short bufsize)
     return 0;
   }
 
+#if CC2430_RF_CONF_HEXDUMP
+  /* If we reach here, chances are the FIFO is holding a valid frame */
+  uart1_writeb(magic[0]);
+  uart1_writeb(magic[1]);
+  uart1_writeb(magic[2]);
+  uart1_writeb(magic[3]);
+  uart1_writeb(len);
+#endif
+
   PRINTF("cc2430_rf: read = ");
   PRINTF("(%d)", len);
   len -= CHECKSUM_LEN;
   for(i = 0; i < len; ++i) {
       ((unsigned char*)(buf))[i] = RFD;
 #if CC2430_RF_CONF_HEXDUMP
-    puthex(((unsigned char*)(buf))[i]);
-    putchar(' ');
+      uart1_writeb(((unsigned char*)(buf))[i]);
 #endif
       PRINTF("%02X", ((unsigned char*)(buf))[i]);
   }
@@ -604,10 +596,8 @@ read(void *buf, unsigned short bufsize)
   crc_corr = RFD;
 
 #if CC2430_RF_CONF_HEXDUMP
-  puthex(rssi);
-  putchar(' ');
-  puthex(crc_corr);
-  putchar('\n');
+  uart1_writeb(rssi);
+  uart1_writeb(crc_corr);
 #endif
 
   /* MS bit CRC OK/Not OK, 7 LS Bits, Correlation value */
