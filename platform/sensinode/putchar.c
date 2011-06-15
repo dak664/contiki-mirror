@@ -7,7 +7,7 @@
  */
 
 #include "contiki-conf.h"
-#include "dev/uart.h"
+#include "dev/uart1.h"
 
 /*---------------------------------------------------------------------------*/
 void

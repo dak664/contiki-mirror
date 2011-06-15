@@ -34,7 +34,7 @@
  */
 
 #include "dev/slip.h"
-#include "dev/uart.h"
+#include "dev/uart1.h"
 /*---------------------------------------------------------------------------*/
 void
 slip_arch_writeb(unsigned char c)

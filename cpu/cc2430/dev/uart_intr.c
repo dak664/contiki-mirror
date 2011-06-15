@@ -16,7 +16,8 @@
 #include "cc2430_sfr.h"
 
 #include "dev/leds.h"
-#include "dev/uart.h"
+#include "dev/uart0.h"
+#include "dev/uart1.h"
 #include "sys/energest.h"
 
 #if UART_ZERO_ENABLE

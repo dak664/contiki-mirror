@@ -64,7 +64,7 @@
  */
 
 #include "dev/n740.h"
-#include "dev/uart.h"
+#include "dev/uart1.h"
 
 /*
  * This variable stores the most recent instruction sent to the ser-par chip.

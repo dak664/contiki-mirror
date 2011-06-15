@@ -44,7 +44,7 @@
 #define SENSINODE_DEBUG_H_
 
 #include "8051def.h"
-#include "dev/uart.h"
+#include "dev/uart1.h"
 
 void putchar(char c);
 void putstring(char *s);

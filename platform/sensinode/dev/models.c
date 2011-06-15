@@ -40,7 +40,7 @@
  */
 
 #include "dev/models.h"
-#include "dev/uart.h"
+#include "dev/uart1.h"
 #include "dev/m25p16.h"
 /*---------------------------------------------------------------------------*/
 void

@@ -6,7 +6,7 @@
 #include "dev/slip.h"
 #include "dev/bus.h"
 #include "dev/leds.h"
-#include "dev/uart.h"
+#include "dev/uart1.h"
 #include "dev/models.h"
 #include "dev/cc2430_rf.h"
 #include "dev/watchdog.h"
