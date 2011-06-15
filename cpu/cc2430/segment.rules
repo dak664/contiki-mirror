@@ -27,6 +27,7 @@ BANK3 cpu/cc2430
 BANK1 tcpip.c
 BANK1 uip6.c
 BANK1 sicslowpan.c
+BANK1  nullrdc.c
 
 # Wildcard rules for anything that hasn't matched so far
 #BANK1 core/net/mac

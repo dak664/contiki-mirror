@@ -72,8 +72,8 @@
 #include "sys/rtimer.h"
 #include "dev/watchdog.h"
 
-#define ACK_WAIT_TIME                      RTIMER_SECOND / 2500
-#define AFTER_ACK_DETECTED_WAIT_TIME       RTIMER_SECOND / 1500
+#define ACK_WAIT_TIME                      RTIMER_SECOND / 1500
+#define AFTER_ACK_DETECTED_WAIT_TIME       1
 #define ACK_LEN 3
 #endif /* NULLRDC_802154_AUTOACK */
 
