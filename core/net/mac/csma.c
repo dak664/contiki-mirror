@@ -265,12 +265,9 @@ packet_sent(void *ptr, int status, int num_transmissions)
 
       /* This is needed to correctly attribute energy that we spent
          transmitting this packet. */
-#if !CONTIKI_TARGET_SENSINODE
-      /* These lines break retransmissions when no-ack for whatever reason */
       q = list_head(queued_packet_list);
       queuebuf_free(q->buf);
       q->buf = queuebuf_new_from_packetbuf();
-#endif
 
     } else {
       PRINTF("csma: drop with status %d after %d transmissions, %d collisions\n",
