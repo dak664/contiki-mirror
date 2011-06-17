@@ -63,7 +63,6 @@ model_init()
   n740_analog_deactivate();
   m25p16_dp();
   n740_ser_par_set(0);
-//  n740_analog_activate();
 #endif
 }
 /*---------------------------------------------------------------------------*/
