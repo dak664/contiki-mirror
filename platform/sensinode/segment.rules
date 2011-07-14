@@ -10,6 +10,10 @@ HOME contiki-sensinode-main.c
 # Files with ISRs must be in HOME
 HOME platform/sensinode/dev/button-sensor.c
 
+# All apps in HOME
+# make sure this rule catches platform/sensinode/apps before some other rule
+HOME apps
+
 # Put the rest of platform/sensinode in BANK3
 BANK3 platform/sensinode
 
