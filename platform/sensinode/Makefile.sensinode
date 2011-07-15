@@ -46,6 +46,12 @@ CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 FORCE:
 
+ifeq ($(OFFSET_FIRMWARE),1)
+  HOME_START = 00001000
+else
+  HOME_START = 00000000
+endif
+
 # .sensinode target so we can behave similar to other targets
 # Lastly, it will create a %-$(MODEL).ihx file
 %.$(TARGET): %.hex FORCE
@@ -57,7 +63,7 @@ FORCE:
 	         '         Decimal'
 	@echo    '----------------------------------  --------    --------' \
 	         '     --------'
-	@echo -n 'HOME,CSEG,CONST,XINIT,GS*           00000000    '
+	@echo -n 'HOME,CSEG,CONST,XINIT,GS*           ${HOME_START}    '
 	@egrep ',CODE\)' ${<:.hex=.map} | egrep -v '(^BANK.[^=])' | uniq | \
 	awk '{ SUM += $$5 } END { printf "%08X =    %8d", SUM, SUM }'
 	@echo '. bytes (REL,CON,CODE)'
