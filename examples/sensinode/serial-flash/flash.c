@@ -113,10 +113,9 @@ PROCESS_THREAD(serial_flash_process, ev, data)
 
   PRINTF("Start\n");
 
-  PROCESS_EXIT();
-
   memset(r_addr, 0, 3);
   r_addr[0] = USE_SECTOR;
+  counter = 1;
 
   while(1) {
 
@@ -126,29 +125,33 @@ PROCESS_THREAD(serial_flash_process, ev, data)
 
     leds_on(LEDS_GREEN);
 
-    /*
-     * Take us out of Deep Power Down - On first power-on, the device will
-     * go to stand by mode (which is not DP). However, we drop to DP at the
-     * end of every loop. RES must be 0x14. This is the old style signature
-     * and is only still there for backward compatibility.
-     *
-     * If we are in bulk-erase mode, this will not influence the operation and
-     * will return 0xFF
-     */
-    n740_analog_deactivate();
-    rv = m25p16_res_res();
-    n740_analog_activate();
+    if(counter == 0) {
+      n740_analog_deactivate();
+      rv = m25p16_rdsr();
+      n740_analog_activate();
+      /* If counter==0, we started Bulk Erasing earlier. Check if we still are */
+      if(rv & M25P16_SR_WIP) {
+        PRINTF("Yield [%02x]\n", rv);
+      } else {
+        counter = 1;
+      }
+    }
+    if(counter) {
+      /*
+       * Take us out of Deep Power Down - On first power-on, the device will
+       * go to stand by mode (which is not DP). However, we drop to DP at the
+       * end of every loop. RES must be 0x14. This is the old style signature
+       * and is only still there for backward compatibility.
+       */
+      n740_analog_deactivate();
+      rv = m25p16_res_res();
+      n740_analog_activate();
 
-    PRINTF(" RES: 0x%02x\n", rv);
+      PRINTF(" RES: 0x%02x\n", rv);
 
-    n740_analog_deactivate();
-    rv = M25P16_WIP();
-    n740_analog_activate();
-
-    /* Only proceed if no write cycle is in progress */
-    if(rv) {
-      PRINTF("Yield\n");
-    } else {
+      n740_analog_deactivate();
+      rv = M25P16_WIP();
+      n740_analog_activate();
 
       PRINTF("========\n");
       memset(d_buf, 0, MAX_READ_CHUNK);
@@ -249,7 +252,6 @@ PROCESS_THREAD(serial_flash_process, ev, data)
       n740_analog_deactivate();
 
       /* Bulk erase every 4 loops, sector erase otherwise */
-      counter ++;
 
       /* Bulk Erase: This takes a few seconds so we can't really block on it.
        * It'd be a bad thing to do and the watchdog would bark anyway.
@@ -258,11 +260,13 @@ PROCESS_THREAD(serial_flash_process, ev, data)
         m25p16_wrsr(0);
         while(M25P16_WIP());
         m25p16_be();
+        counter = 0;
       } else {
         m25p16_se(USE_SECTOR);
         while(M25P16_WIP());
         /* Drop to Deep Power Down */
         m25p16_dp();
+        counter ++;
       }
       n740_analog_activate();
     }
