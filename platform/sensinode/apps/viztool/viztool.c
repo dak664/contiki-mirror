@@ -114,7 +114,7 @@ process_request()
     uint32_t flip = 0;
     PRINTF("Routing table\n");
     for(i = buf[1]; i < UIP_DS6_ROUTE_NB; i++) {
-      if(uip_ds6_defrt_list[i].isused) {
+      if(uip_ds6_routing_table[i].isused) {
         entry_size = sizeof(i) + sizeof(uip_ds6_routing_table[i].ipaddr)
             + sizeof(uip_ds6_routing_table[i].length)
             + sizeof(uip_ds6_routing_table[i].metric)
