@@ -18,6 +18,7 @@
 #include "sensinode-debug.h"
 #include "dev/watchdog-cc2430.h"
 #include "dev/sensinode-sensors.h"
+#include "disco.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
 
@@ -243,6 +244,10 @@ main(void)
   memcpy(&uip_lladdr.addr, &rimeaddr_node_addr, sizeof(uip_lladdr.addr));
   queuebuf_init();
   process_start(&tcpip_process, NULL);
+
+#if DISCO_ENABLED
+  process_start(&disco_process, NULL);
+#endif /* DISCO_ENABLED */
 
 #if (!UIP_CONF_IPV6_RPL)
   {
