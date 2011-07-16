@@ -55,7 +55,7 @@ static struct uip_udp_conn *server_conn;
 static char buf[MAX_PAYLOAD_LEN];
 static int8_t len;
 
-#define SERVER_PORT       60001
+#define VIZTOOL_UDP_PORT   60001
 
 /* Request Bits */
 #define REQUEST_TYPE_ND    1
@@ -212,7 +212,7 @@ tcpip_handler(void)
     memcpy(buf, uip_appdata, uip_datalen());
 
     len = process_request();
-    if( len ) {
+    if(len) {
       server_conn->rport = UIP_UDP_BUF->srcport;
       uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
       uip_udp_packet_send(server_conn, buf, len);
@@ -232,7 +232,7 @@ PROCESS_THREAD(viztool_process, ev, data)
   PROCESS_BEGIN();
 
   server_conn = udp_new(NULL, UIP_HTONS(0), NULL);
-  udp_bind(server_conn, UIP_HTONS(SERVER_PORT));
+  udp_bind(server_conn, UIP_HTONS(VIZTOOL_UDP_PORT));
 
   while(1) {
     PROCESS_YIELD();
