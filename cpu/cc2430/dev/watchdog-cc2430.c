@@ -62,7 +62,7 @@ cc4230_watchdog_ISR(void) __interrupt (WDT_VECTOR)
 void
 watchdog_init(void)
 {
-  WDCTL |= WDT_TIMER_MODE | WDT_INTERVAL;
+  WDCTL = WDT_TIMER_MODE | WDT_INTERVAL;
 
 #if WDT_TIMER_MODE
   /* Enable the watchdog interrupts in timer mode */
