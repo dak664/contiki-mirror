@@ -57,6 +57,7 @@
 #define DISCO_STATE_LISTENING  0x00 /* Waiting for a transaction to start */
 #define DISCO_STATE_PREPARING  0x01 /* Erasing Sectors */
 #define DISCO_STATE_READY      0x02
+#define DISCO_STATE_REBOOTING  0x03 /* Reboot to BooTTY and copy new image */
 
 /* Instructions */
 #define DISCO_CMD_INIT      0x00 /* Prepare flash area for writes */

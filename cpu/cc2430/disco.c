@@ -61,8 +61,19 @@
 
 #include "disco.h"
 /*---------------------------------------------------------------------------*/
-#define DEBUG DEBUG_NONE
+#define DEBUG DEBUG_PRINT
 #include "net/uip-debug.h"
+/*---------------------------------------------------------------------------*/
+#define BATMON_ENABLED 1
+#if BATMON_ENABLED
+void batmon_log(uint8_t trigger);
+
+#define LOG_TRIGGER_OAP_DISCO_START  0x01
+#define LOG_TRIGGER_OAP_DISCO_DONE   0x02
+#define LOG_TRIGGER_OAP_DISCO_ABORT  0x03
+#else
+#define batmon_log(t) do { } while(0);
+#endif
 /*---------------------------------------------------------------------------*/
 static struct uip_udp_conn *server_conn;
 static struct disco_request_pdu * req;
@@ -93,6 +104,7 @@ abort()
   state = DISCO_STATE_LISTENING;
   memset(&seed, 0, sizeof(seed));
   ctimer_stop(&disco_timer);
+  batmon_log(LOG_TRIGGER_OAP_DISCO_ABORT);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -100,18 +112,18 @@ restart_timer(uint16_t t)
 {
   interval = t;
   ctimer_stop(&disco_timer);
-  ctimer_set(&disco_timer, interval, timer_handler, &interval);
+  ctimer_set(&disco_timer, interval, timer_handler, &state);
 }
 /*---------------------------------------------------------------------------*/
 static void
 timer_handler(void * p)
 {
-  uint16_t * interval = p;
+  uint8_t * s = p;
   uint8_t wip;
 
-  if(*interval == DISCO_TIMEOUT_PREPARE) {
-    PRINTF("Prepare @ %lu\n", clock_seconds());
+  PRINTF("@ %lu, s: %u\n", clock_seconds(), *s);
 
+  if(*s == DISCO_STATE_PREPARING) {
     n740_analog_deactivate();
     wip = M25P16_WIP();
     n740_analog_activate();
@@ -129,7 +141,7 @@ timer_handler(void * p)
         restart_timer(DISCO_TIMEOUT_PREPARE);
       } else {
         PRINTF("Ready\n");
-        state = DISCO_STATE_READY;
+        *s = DISCO_STATE_READY;
         resp.status = DISCO_CMD_INIT;
         restart_timer(DISCO_TIMEOUT_ABORT);
         server_conn->rport = seed.port;
@@ -141,9 +153,9 @@ timer_handler(void * p)
         server_conn->rport = 0;
       }
     }
-  } else if(*interval == DISCO_TIMEOUT_ABORT) {
+  } else if(*s == DISCO_STATE_READY) {
     abort();
-  } else if(*interval == DISCO_TIMEOUT_REBOOT) {
+  } else if(*s == DISCO_STATE_REBOOTING) {
     watchdog_reboot();
   }
 }
@@ -169,6 +181,9 @@ cmd_init()
   seed.port = UIP_UDP_BUF->srcport;
   uip_ipaddr_copy(&seed.addr, &UIP_IP_BUF->srcipaddr);
   PRINTF("OK\n");
+
+  batmon_log(LOG_TRIGGER_OAP_DISCO_START);
+
   return DISCO_RESPONSE_NONE;
 }
 /*---------------------------------------------------------------------------*/
@@ -211,6 +226,7 @@ cmd_switch()
   resp.addr[0] = req->addr[0];
 
   restart_timer(DISCO_TIMEOUT_REBOOT);
+  state = DISCO_STATE_REBOOTING;
 
   return DISCO_RESP_LEN_SWITCH;
 }
@@ -224,6 +240,8 @@ cmd_done()
     return DISCO_RESP_LEN_ERR;
   }
   resp.status = DISCO_CMD_DONE;
+
+  batmon_log(LOG_TRIGGER_OAP_DISCO_DONE);
 
   return DISCO_RESP_LEN_DONE;
 }
