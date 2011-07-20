@@ -15,6 +15,7 @@ HOME platform/sensinode/dev/button-sensor.c
 HOME apps
 
 # Put the rest of platform/sensinode in BANK3
+BANK1 m25p16.c
 BANK3 platform/sensinode
 
 # segment.rules - platform/sensinode - end

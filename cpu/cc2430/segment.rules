@@ -31,7 +31,6 @@ HOME sicslowpan.c
 BANK1 tcpip.c
 BANK1 uip6.c
 BANK1 nullrdc.c
-BANK2 m25p16.c
 
 # Wildcard rules for anything that hasn't matched so far
 #BANK1 core/net/mac
