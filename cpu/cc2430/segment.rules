@@ -27,15 +27,15 @@ BANK2 disco.c
 # Put the rest of cpu/cc2430 in BANK3
 BANK3 cpu/cc2430
 
+HOME sicslowpan.c
 BANK1 tcpip.c
 BANK1 uip6.c
-BANK1 sicslowpan.c
 BANK1 nullrdc.c
 BANK2 m25p16.c
 
 # Wildcard rules for anything that hasn't matched so far
 #BANK1 core/net/mac
-BANK3 core/net/rime
+BANK1 core/net/rime
 BANK3 core/net/rpl
 BANK2 core/net
 BANK1 core/          # Crucial and frequently called core functions in HOME

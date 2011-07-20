@@ -31,7 +31,7 @@ typedef unsigned short clock_time_t;
 
 /* Energest Module */
 #ifndef ENERGEST_CONF_ON
-#define ENERGEST_CONF_ON      0
+#define ENERGEST_CONF_ON      1
 #endif
 
 /* Verbose Startup? Turning this off saves 700+ bytes of CODE in HOME */

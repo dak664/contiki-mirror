@@ -48,6 +48,16 @@ static __data int len;
 
 extern rimeaddr_t rimeaddr_node_addr;
 static __data int r;
+#if ENERGEST_CONF_ON
+static unsigned long irq_energest = 0;
+#define ENERGEST_IRQ_SAVE(a) do { \
+    a = energest_type_time(ENERGEST_TYPE_IRQ); } while(0)
+#define ENERGEST_IRQ_RESTORE(a) do { \
+    energest_type_set(ENERGEST_TYPE_IRQ, a); } while(0)
+#else
+#define ENERGEST_IRQ_SAVE(a) do {} while(0)
+#define ENERGEST_IRQ_RESTORE(a) do {} while(0)
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 fade(int l)
@@ -325,6 +335,9 @@ main(void)
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       ENERGEST_ON(ENERGEST_TYPE_LPM);
 
+      /* We are only interested in IRQ energest while idle or in LPM */
+      ENERGEST_IRQ_RESTORE(irq_energest);
+
       /* Go IDLE or Enter PM1 */
       PCON |= IDLE;
 
@@ -332,6 +345,9 @@ main(void)
       __asm
         nop
       __endasm;
+
+      /* Remember energest IRQ for next pass */
+      ENERGEST_IRQ_SAVE(irq_energest);
 
       ENERGEST_ON(ENERGEST_TYPE_CPU);
       ENERGEST_OFF(ENERGEST_TYPE_LPM);
