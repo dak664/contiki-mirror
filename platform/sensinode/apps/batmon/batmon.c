@@ -42,7 +42,7 @@
 
 #include "contiki.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -119,7 +119,7 @@ find_gap()
     m25p16_read_fast((uint8_t *)&f, seq, sizeof(magic));
     n740_analog_activate();
     if(memcmp(seq, magic, sizeof(magic)) != 0) {
-      PRINTF("Resume write @ 0x%02x%02x%02x\n", f.s, f.p, f.a);
+      PRINTF("BatMon: Resume write @ 0x%02x%02x%02x\n", f.s, f.p, f.a);
       return 1;
     }
   }
@@ -131,7 +131,7 @@ find_gap()
 static void
 abort()
 {
-  PRINTF("Abort\n");
+  PRINTF("BatMon: Abort\n");
   etimer_stop(&et);
 
   n740_analog_deactivate();
@@ -179,8 +179,8 @@ batmon_log(uint8_t trigger)
   m25p16_pp((uint8_t *)&f, (uint8_t *)&r, sizeof(r));
   n740_analog_activate();
 
-  PRINTF("@%lu [%u] ", r.c, r.trigger);
-  PRINTF("0x%02x%02x%02x\n", f.s, f.p, f.a);
+  PRINTF("BatMon: @%lu [%u] ", r.c, r.trigger);
+  PRINTF("BatMon: 0x%02x%02x%02x\n", f.s, f.p, f.a);
 
   next += RECORD_SIZE;
 
@@ -207,7 +207,7 @@ PROCESS_THREAD(batmon_process, ev, data)
 
   s = sensors_find(ADC_SENSOR);
   if (!s) {
-    PRINTF("ADC not found\n");
+    PRINTF("BatMon: ADC not found\n");
     PROCESS_EXIT();
   }
 
@@ -217,7 +217,7 @@ PROCESS_THREAD(batmon_process, ev, data)
 
   /* Find last written location */
   if(find_gap() == -1) {
-    PRINTF("Flash storage full\n");
+    PRINTF("BatMon: Flash storage full\n");
     PROCESS_EXIT();
   }
 

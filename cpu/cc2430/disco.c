@@ -61,7 +61,7 @@
 
 #include "disco.h"
 /*---------------------------------------------------------------------------*/
-#define DEBUG DEBUG_PRINT
+#define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
 /*---------------------------------------------------------------------------*/
 #define BATMON_ENABLED 1
@@ -97,7 +97,7 @@ static void timer_handler(void * p);
 static void
 abort()
 {
-  PRINTF("Abort @ %lu\n", clock_seconds());
+  PRINTF("Disco: Abort @ %lu\n", clock_seconds());
   n740_analog_deactivate();
   m25p16_dp();
   n740_analog_activate();
@@ -121,7 +121,7 @@ timer_handler(void * p)
   uint8_t * s = p;
   uint8_t wip;
 
-  PRINTF("@ %lu, s: %u\n", clock_seconds(), *s);
+  PRINTF("Disco: @ %lu, s: %u\n", clock_seconds(), *s);
 
   if(*s == DISCO_STATE_PREPARING) {
     n740_analog_deactivate();
@@ -131,16 +131,16 @@ timer_handler(void * p)
     if(wip) {
       restart_timer(DISCO_TIMEOUT_PREPARE);
     } else {
-      PRINTF("Erased %u\n", sector);
+      PRINTF("Disco: Erased %u\n", sector);
       if((sector & 1) == 0) {
         sector++;
-        PRINTF("Next %u\n", sector);
+        PRINTF("Disco: Next %u\n", sector);
         n740_analog_deactivate();
         m25p16_se(sector);
         n740_analog_activate();
         restart_timer(DISCO_TIMEOUT_PREPARE);
       } else {
-        PRINTF("Ready\n");
+        PRINTF("Disco: Ready\n");
         *s = DISCO_STATE_READY;
         resp.status = DISCO_CMD_INIT;
         restart_timer(DISCO_TIMEOUT_ABORT);
@@ -163,9 +163,9 @@ timer_handler(void * p)
 static uint8_t
 cmd_init()
 {
-  PRINTF("Init 0x%02x\n", req->addr[0]);
+  PRINTF("Disco: Init 0x%02x\n", req->addr[0]);
   if(uip_datalen() != DISCO_LEN_INIT) {
-    PRINTF("Bad len (%u)\n", uip_datalen());
+    PRINTF("Disco: Bad len (%u)\n", uip_datalen());
     resp.status = DISCO_ERR_BAD_LEN;
     return DISCO_RESP_LEN_ERR;
   }
@@ -180,7 +180,7 @@ cmd_init()
   /* Store the sender's address/port so we can reply when ready */
   seed.port = UIP_UDP_BUF->srcport;
   uip_ipaddr_copy(&seed.addr, &UIP_IP_BUF->srcipaddr);
-  PRINTF("OK\n");
+  PRINTF("Disco: OK\n");
 
   batmon_log(LOG_TRIGGER_OAP_DISCO_START);
 
@@ -190,7 +190,7 @@ cmd_init()
 static uint8_t
 cmd_write()
 {
-  PRINTF("Write 0x%02x%02x%02x\n", req->addr[0], req->addr[1], req->addr[2]);
+  PRINTF("Disco: Write 0x%02x%02x%02x\n", req->addr[0], req->addr[1], req->addr[2]);
   if(uip_datalen() != DISCO_LEN_WRITE) {
     resp.status = DISCO_ERR_BAD_LEN;
     return DISCO_RESP_LEN_ERR;
@@ -209,7 +209,7 @@ cmd_write()
 static uint8_t
 cmd_switch()
 {
-  PRINTF("Switch 0x%02x\n", req->addr[0]);
+  PRINTF("Disco: Switch 0x%02x\n", req->addr[0]);
   if(uip_datalen() != DISCO_LEN_SWITCH) {
     resp.status = DISCO_ERR_BAD_LEN;
     return DISCO_RESP_LEN_ERR;
@@ -234,7 +234,7 @@ cmd_switch()
 static uint8_t
 cmd_done()
 {
-  PRINTF("Done\n");
+  PRINTF("Disco: Done\n");
   if(uip_datalen() != DISCO_LEN_DONE) {
     resp.status = DISCO_ERR_BAD_LEN;
     return DISCO_RESP_LEN_ERR;
@@ -273,7 +273,7 @@ event_handler(process_event_t ev)
     }
     break;
   case DISCO_STATE_PREPARING:
-    PRINTF("Not Ready\n");
+    PRINTF("Disco: Not Ready\n");
     resp.status = DISCO_ERR_NOT_READY;
     rv = DISCO_RESP_LEN_ERR;
     break;
