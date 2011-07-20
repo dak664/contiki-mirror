@@ -41,8 +41,8 @@ typedef unsigned int size_t;
 #define CLIF
 
 /* Critical section management */
-#define DISABLE_INTERRUPTS()	EA = 0;
-#define ENABLE_INTERRUPTS()		EA = 1;
+#define DISABLE_INTERRUPTS()  do {EA = 0;} while(0)
+#define ENABLE_INTERRUPTS()   do {EA = 1;} while(0)
 
 #define ENTER_CRITICAL()	\
 {	\

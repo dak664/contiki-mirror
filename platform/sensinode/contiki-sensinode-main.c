@@ -40,10 +40,10 @@ static __data int len;
 #define PUTBIN(...) putbin(__VA_ARGS__)
 #define PUTCHAR(...) putchar(__VA_ARGS__)
 #else
-#define PUTSTRING(...)
-#define PUTHEX(...)
-#define PUTBIN(...)
-#define PUTCHAR(...)
+#define PUTSTRING(...) do {} while(0)
+#define PUTHEX(...) do {} while(0)
+#define PUTBIN(...) do {} while(0)
+#define PUTCHAR(...) do {} while(0)
 #endif
 
 extern rimeaddr_t rimeaddr_node_addr;
@@ -88,42 +88,42 @@ set_rime_addr(void)
   if(node_id == 0) {
     PUTSTRING("Reading MAC from flash\n");
 #if SHORTCUTS_CONF_FLASH_READ
-  /*
-   * The MAC is always stored in 0x1FFF8 of our flash. This maps to address
-   * 0xFFF8 of our CODE segment, when BANK3 is selected.
-   * Switch to BANK3, read 8 bytes starting at 0xFFF8 and restore last BANK
-   * Since we are called from main(), this MUST be BANK1 or something is very
-   * wrong. This code can be used even without banking
-   */
+    /*
+     * The MAC is always stored in 0x1FFF8 of our flash. This maps to address
+     * 0xFFF8 of our CODE segment, when BANK3 is selected.
+     * Switch to BANK3, read 8 bytes starting at 0xFFF8 and restore last BANK
+     * Since we are called from main(), this MUST be BANK1 or something is very
+     * wrong. This code can be used even without banking
+     */
 
-  /* Don't interrupt us to make sure no BANK switching happens while working */
-  DISABLE_INTERRUPTS();
+    /* Don't interrupt us to make sure no BANK switching happens while working */
+    DISABLE_INTERRUPTS();
 
-  /* Switch to BANK3, map CODE: 0x8000 – 0xFFFF to FLASH: 0x18000 – 0x1FFFF */
-  FMAP = 3;
+    /* Switch to BANK3, map CODE: 0x8000 – 0xFFFF to FLASH: 0x18000 – 0x1FFFF */
+    FMAP = 3;
 
-  /* Set our pointer to the correct address and fetch 8 bytes of MAC */
-  macp = (__code unsigned char *) 0xFFF8;
+    /* Set our pointer to the correct address and fetch 8 bytes of MAC */
+    macp = (__code unsigned char *) 0xFFF8;
 
-  for(i = (RIMEADDR_SIZE - 1); i >= 0; --i){
-    rimeaddr_node_addr.u8[i] = *macp;
-    macp++;
-  }
+    for(i = (RIMEADDR_SIZE - 1); i >= 0; --i) {
+      rimeaddr_node_addr.u8[i] = *macp;
+      macp++;
+    }
 
-  /* Remap 0x8000 – 0xFFFF to BANK1 */
-  FMAP = 1;
-  ENABLE_INTERRUPTS();
+    /* Remap 0x8000 – 0xFFFF to BANK1 */
+    FMAP = 1;
+    ENABLE_INTERRUPTS();
 #else
-  /*
-   * Or use the more generic flash_read() routine which can read from any
-   * address of our flash
-   */
-  flash_read(ft_buffer, 0x1FFF8, 8);
+    /*
+     * Or use the more generic flash_read() routine which can read from any
+     * address of our flash
+     */
+    flash_read(ft_buffer, 0x1FFF8, 8);
 
-  /* Flip the byte order and store MSB first */
-  for(i = (RIMEADDR_SIZE - 1); i >= 0; --i){
-    rimeaddr_node_addr.u8[RIMEADDR_SIZE - 1 - i] = ft_buffer[i];
-  }
+    /* Flip the byte order and store MSB first */
+    for(i = (RIMEADDR_SIZE - 1); i >= 0; --i) {
+      rimeaddr_node_addr.u8[RIMEADDR_SIZE - 1 - i] = ft_buffer[i];
+    }
 #endif
 
   } else {
@@ -314,9 +314,9 @@ main(void)
      * no interrupt occurred and we can safely power down
      */
     __asm
-    nop
-    nop
-    nop
+      nop
+      nop
+      nop
     __endasm;
 
     if (SLEEP & SLEEP_MODE0) {
@@ -348,7 +348,6 @@ main(void)
       while(CLKCON & OSC);         /* Wait till it's happened */
     }
 #endif /* LPM_MODE==LPM_MODE_PM2 */
-
 #endif /* LPM_MODE */
   }
 }
