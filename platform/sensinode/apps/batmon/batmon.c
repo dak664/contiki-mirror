@@ -55,6 +55,8 @@
 #include "dev/sensinode-sensors.h"
 #include "dev/n740.h"
 #include "dev/m25p16.h"
+
+#define BATMON_LOG_PERIOD 60 /* in seconds */
 /*---------------------------------------------------------------------------*/
 const uint8_t magic[3] = { 0x0B, 0xEE, 0xF0 };
 /*---------------------------------------------------------------------------*/
@@ -221,7 +223,7 @@ PROCESS_THREAD(batmon_process, ev, data)
     PROCESS_EXIT();
   }
 
-  etimer_set(&et, 60 * CLOCK_SECOND);
+  etimer_set(&et, BATMON_LOG_PERIOD * CLOCK_SECOND);
 
   while(1) {
     PROCESS_YIELD();
