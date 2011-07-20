@@ -55,6 +55,7 @@
 #include "dev/n740.h"
 #include "dev/m25p16.h"
 #include "sys/clock.h"
+#include "sys/energest.h"
 #include "cc2430_sfr.h"
 
 #define CLOCK_RISING()  {M25P16_PIN_CLOCK = 1; M25P16_PIN_CLOCK = 0;}
@@ -181,8 +182,10 @@ m25p16_wrsr(uint8_t val)
   m25p16_wren(); /* Write Enable */
 
   select();
+  ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
   bit_bang_write(M25P16_I_WRSR);
   bit_bang_write(val);
+  ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
   deselect();
 }
 /*---------------------------------------------------------------------------*/
@@ -192,6 +195,7 @@ m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   uint8_t i;
 
   select();
+  ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
   bit_bang_write(M25P16_I_READ);
 
   /* Write the address, MSB in addr[0], bits [7:5] of the MSB: 'don't care' */
@@ -202,6 +206,7 @@ m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   for(i = 0; i < buff_len; i++) {
     buff[i] = ~bit_bang_read();
   }
+  ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
   deselect();
 }
 /*---------------------------------------------------------------------------*/
@@ -211,6 +216,7 @@ m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   uint8_t i;
 
   select();
+  ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
   bit_bang_write(M25P16_I_FAST_READ);
 
   /* Write the address, MSB in addr[0], bits [7:5] of the MSB: 'don't care' */
@@ -224,6 +230,7 @@ m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   for(i = 0; i < buff_len; i++) {
     buff[i] = ~bit_bang_read();
   }
+  ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
   deselect();
 }
 /*---------------------------------------------------------------------------*/
@@ -235,6 +242,7 @@ m25p16_pp(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   m25p16_wren(); /* Write Enable */
 
   select();
+  ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
   bit_bang_write(M25P16_I_PP);
 
   /* Write the address, MSB in addr[0] */
@@ -246,6 +254,7 @@ m25p16_pp(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
   for(i=0; i<buff_len; i++) {
     bit_bang_write(~buff[i]);
   }
+  ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
   deselect();
 }
 /*---------------------------------------------------------------------------*/
@@ -255,11 +264,13 @@ m25p16_se(uint8_t s)
   m25p16_wren(); /* Write Enable */
 
   select();
+  ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
   bit_bang_write(M25P16_I_SE);
   bit_bang_write(s);
   bit_bang_write(0x00);
   bit_bang_write(0x00);
   deselect();
+  ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
 }
 /*---------------------------------------------------------------------------*/
 void
