@@ -95,8 +95,8 @@
 
 /* Tell BooTTy! what to do after we jump:
  * BOOTY_CMD
- * [7:6]: Command
- * [ 5 ]: Reserved
+ * [7:5]: Command
+ * [5:4]: Reserved
  * [4:0]: Image number
  */
 #define BOOTTY_CMD_LOCATION    0xFEFF
