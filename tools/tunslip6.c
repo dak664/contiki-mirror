@@ -600,6 +600,7 @@ ifconf(const char *tundev, const char *ipaddr)
   ssystem("ifconfig %s inet `hostname` up", tundev);
   if (timestamp) stamptime();
   ssystem("ifconfig %s add %s", tundev, ipaddr);
+  ssystem("sysctl -w net.ipv6.conf.all.forwarding=1");
 #elif defined __APPLE__
   char address[INET6_ADDRSTRLEN];
   if (timestamp) stamptime();
