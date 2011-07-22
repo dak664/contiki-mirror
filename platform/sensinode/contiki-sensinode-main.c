@@ -237,13 +237,13 @@ main(void)
   /* Initialise the cc2430 RNG engine. */
   random_init(0);
 
-  /* initialize the netstack */
-  netstack_init();
-  set_rime_addr();
-
   /* start services */
   process_start(&etimer_process, NULL);
   ctimer_init();
+
+  /* initialize the netstack */
+  netstack_init();
+  set_rime_addr();
 
 #if BUTTON_SENSOR_ON || ADC_SENSOR_ON
   process_start(&sensors_process, NULL);
