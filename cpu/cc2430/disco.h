@@ -70,7 +70,8 @@
 #define DISCO_ERR_BAD_LEN     0xFE /* Incorrect Length */
 #define DISCO_ERR_NOT_READY   0xFD /* Not Initialised */
 #define DISCO_ERR_BAD_OFFSET  0xFC /* Bad Offset */
-#define DISCO_ERR_INIT_DONE   0xFB /* Already Initialized */
+#define DISCO_ERR_PROTECTED   0xFB /* Target sector is protected */
+#define DISCO_ERR_INIT_DONE   0xFA /* Already Initialized */
 
 /* Message Sizes */
 #define DISCO_FLEN_CMD   1
@@ -102,6 +103,9 @@
 
 #define BOOTTY_CMD_JUMP_TO_APP   0x80
 #define BOOTTY_CMD_COPY_IMAGE    0x40
+
+#define SECTOR_UNPROTECTED 0
+#define SECTOR_PROTECTED   1
 /*---------------------------------------------------------------------------*/
 PROCESS_NAME(disco_process);
 /*---------------------------------------------------------------------------*/

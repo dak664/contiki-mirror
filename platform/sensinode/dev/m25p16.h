@@ -67,6 +67,7 @@
 #define M25P16_SR_BP2      0x10 /* Block Protect 2 */
 #define M25P16_SR_BP1      0x08 /* Block Protect 1 */
 #define M25P16_SR_BP0      0x04 /* Block Protect 0 */
+#define M25P16_SR_BP       0x1C /* All Block Protect Bits */
 #define M25P16_SR_WEL      0x02 /* Write Enable Latch */
 #define M25P16_SR_WIP      0x01 /* Write in Progress */
 /*---------------------------------------------------------------------------*/
@@ -90,6 +91,13 @@ struct m25p16_rdid {
   uint8_t  uid[16];  /** Unique ID */
 };
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Retrieve Block Protect Bits from the status register
+ *
+ * This macro returns the software block protect status on the device
+ * by reading the value of the BP bits ([5:3]) in the Status Register
+ */
+#define M25P16_BP() (m25p16_rdsr() & M25P16_SR_BP)
 /**
  * \brief Check for Write in Progress
  * \retval 1 Write in progress

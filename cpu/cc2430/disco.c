@@ -160,6 +160,21 @@ timer_handler(void * p)
   }
 }
 /*---------------------------------------------------------------------------*/
+static uint8_t is_protected(uint8_t a) {
+  uint8_t bp = M25P16_BP() >> 2;
+
+  if(bp > 5) {
+    return SECTOR_PROTECTED;
+  }
+
+  bp -= 1;
+
+  if(a >= (32 - (1 << bp))) {
+    return SECTOR_PROTECTED;
+  }
+  return SECTOR_UNPROTECTED;
+}
+/*---------------------------------------------------------------------------*/
 static uint8_t
 cmd_init()
 {
@@ -172,6 +187,12 @@ cmd_init()
   n740_analog_deactivate();
   m25p16_res();
   sector = 2 * req->addr[0];
+  if(is_protected(sector) == SECTOR_PROTECTED
+      || is_protected(sector + 1) == SECTOR_PROTECTED) {
+    resp.status = DISCO_ERR_PROTECTED;
+    n740_analog_activate();
+    return DISCO_RESP_LEN_ERR;
+  }
   m25p16_se(sector);
   n740_analog_activate();
   state = DISCO_STATE_PREPARING;
