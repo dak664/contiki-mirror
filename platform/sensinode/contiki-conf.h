@@ -168,6 +168,10 @@ typedef unsigned short clock_time_t;
 #define CC2430_RF_CONF_CHANNEL    25
 #endif /* CC2430_RF_CONF_CHANNEL */
 
+#ifndef CC2430_RF_CONF_TX_POWER
+#define CC2430_RF_CONF_TX_POWER 0x5F /* Datasheet recommended value */
+#endif
+
 #ifndef CC2430_RF_CONF_AUTOACK
 #define CC2430_RF_CONF_AUTOACK 1
 #endif /* CC2420_CONF_AUTOACK */

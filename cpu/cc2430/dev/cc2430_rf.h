@@ -74,7 +74,7 @@ extern const struct radio_driver cc2430_rf_driver;
 
 void cc2430_rf_command(uint8_t command);
 int8_t cc2430_rf_channel_set(uint8_t channel);
-int8_t cc2430_rf_power_set(uint8_t new_power);
+uint8_t cc2430_rf_power_set(uint8_t new_power);
 void cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr);
 
 #if !SHORTCUTS_CONF_NETSTACK

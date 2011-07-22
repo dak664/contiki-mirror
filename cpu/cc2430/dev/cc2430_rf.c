@@ -24,8 +24,11 @@
 #include "net/rime/rimestats.h"
 #include "net/netstack.h"
 
-#ifndef RF_DEFAULT_POWER
-#define RF_DEFAULT_POWER 100
+#define CC2430_RF_TX_POWER_RECOMMENDED 0x5F
+#ifdef CC2430_RF_CONF_TX_POWER
+#define CC2430_RF_TX_POWER CC2430_RF_CONF_TX_POWER
+#else
+#define CC2430_RF_TX_POWER CC2430_RF_TX_POWER_RECOMMENDED
 #endif
 
 #ifdef CC2430_RF_CONF_CHANNEL
@@ -100,7 +103,6 @@ PROCESS(cc2430_rf_process, "CC2430 RF driver");
 #endif
 /*---------------------------------------------------------------------------*/
 static uint8_t rf_initialized = 0;
-static uint8_t rf_tx_power;
 static uint8_t __data rf_flags;
 
 static int on(void); /* prepare() needs our prototype */
@@ -195,43 +197,20 @@ cc2430_rf_channel_set(uint8_t channel)
   return (int8_t) channel;
 }
 /*---------------------------------------------------------------------------*/
-/*PA_LEVEL TXCTRL register Output Power [dBm] Current Consumption [mA]
-	31 0xA0FF 0 17.4
-	27 0xA0FB -1 16.5
-	23 0xA0F7 -3 15.2
-	19 0xA0F3 -5 13.9
-	15 0xA0EF -7 12.5
-	11 0xA0EB -10 11.2
-	 7 0xA0E7 -15 9.9
-	 3 0xA0E3 -25 8.5*/
-
 /**
  * Select RF transmit power.
  *
- * \param new_power new power level (in per cent)
+ * \param new_power new power level
  *
- * \return new level or negative (value out of range)
+ * \return new level
  */
-
-int8_t
+uint8_t
 cc2430_rf_power_set(uint8_t new_power)
 {
-  uint16_t power;
-
-  if(new_power > 100) {
-    return -1;
-  }
-
-  power = 31 * new_power;
-  power /= 100;
-  power += 0xA160;
-
   /* Set transmitter power */
-  TXCTRLH = (power >> 8);
-  TXCTRLL = (uint8_t)power;
+  TXCTRLL = new_power;
 
-  rf_tx_power = (int8_t) new_power;
-  return rf_tx_power;
+  return TXCTRLL;
 }
 /*---------------------------------------------------------------------------*/
 #if 0 /* unused */
@@ -324,7 +303,7 @@ init(void)
     return 0;
   }
 
-  PRINTF("cc2430_rf_init called\n");
+    PRINTF("cc2430_rf_init called\n");
 
   RFPWR &= ~RREG_RADIO_PD;  /*make sure it's powered*/
   while((RFPWR & ADI_RADIO_PD) == 1);
@@ -375,6 +354,8 @@ init(void)
 #if !SHORTCUTS_CONF_NETSTACK
   process_start(&cc2430_rf_process, NULL);
 #endif
+
+  cc2430_rf_power_set(CC2430_RF_TX_POWER);
 
   return 1;
 }
