@@ -197,6 +197,7 @@ typedef unsigned short clock_time_t;
 #define UIP_CONF_IP_FORWARD                  0
 #define RPL_CONF_STATS                       0
 #define RPL_CONF_MAX_DAG_ENTRIES             1
+#define RPL_CONF_OF rpl_of0
 
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER       10000
