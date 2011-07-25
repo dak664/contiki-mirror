@@ -18,6 +18,7 @@
 #include "dev/cc2430_rf.h"
 #include "cc2430_sfr.h"
 #include "sys/clock.h"
+#include "sys/rtimer.h"
 
 #include "net/packetbuf.h"
 #include "net/rime/rimestats.h"
@@ -75,10 +76,14 @@
 #define RX_ACTIVE 0x80
 #define TX_ACK 0x40
 #define TX_ON_AIR 0x20
+#define WAS_OFF 0x10
 #define RX_NO_DMA
 /* Bits of the last byte in the RX FIFO */
 #define CRC_BIT_MASK 0x80
 #define LQI_BIT_MASK 0x7F
+
+/* 192 ms, radio off -> on interval */
+#define ONOFF_TIME                    RTIMER_ARCH_SECOND / 3125
 
 #if CC2430_RF_CONF_HEXDUMP
 #include "uart1.h"
@@ -99,6 +104,8 @@ static uint8_t rf_tx_power;
 static uint8_t __data rf_flags;
 
 static int on(void); /* prepare() needs our prototype */
+static int off(void); /* transmit() needs our prototype */
+static int channel_clear(void); /* transmit() needs our prototype */
 /*---------------------------------------------------------------------------*/
 /**
  * Execute a single CSP command.
@@ -294,54 +301,6 @@ cc2430_rf_analyze_rssi(void)
 #endif /* currently unused */
 /*---------------------------------------------------------------------------*/
 /**
- * Clear channel assessment check.
- *
- * \return 1	CCA clear
- * \return 0	CCA reserved
- */
-static int
-cca_check(uint8_t backoff_count, uint8_t slotted)
-{
-  uint8_t counter, cca = 1;
-  int8_t retval = CC2430_CCA_CLEAR;
-  backoff_count;
-  cc2430_rf_command(ISRXON);
-
-  clock_delay(64);
-  switch (slotted) {
-  case 1:
-
-    if(RFSTATUS & CCA) {
-      counter = 0;
-      cca = 1;
-      while(cca != 0) {
-        if(counter > 1) {
-          cca = 0;
-        }
-        clock_delay(256);
-        if(!(RFSTATUS & CCA)) {
-          cca = 0;
-          retval = CC2430_CCA_BUSY;
-        }
-        counter++;
-      }
-    } else {
-      retval = CC2430_CCA_BUSY;
-    }
-    break;
-
-  case 0:
-    if(!(RFSTATUS & CCA)) {
-      retval = -1;
-    } else {
-
-    }
-    break;
-  }
-  return retval;
-}
-/*---------------------------------------------------------------------------*/
-/**
  * Send ACK.
  *
  *\param pending set up pending flag if pending > 0.
@@ -463,8 +422,16 @@ transmit(unsigned short transmit_len)
 {
   uint8_t counter;
   int ret = RADIO_TX_ERR;
+  rtimer_clock_t t0;
 
-  if(cca_check(0,0) == CC2430_CCA_BUSY) {
+  if(!(rf_flags & RX_ACTIVE)) {
+    t0 = RTIMER_NOW();
+    on();
+    rf_flags |= WAS_OFF;
+    while (RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + ONOFF_TIME));
+  }
+
+  if(channel_clear() == CC2430_CCA_BUSY) {
     RIMESTATS_ADD(contentiondrop);
     return RADIO_TX_COLLISION;
   }
@@ -502,6 +469,10 @@ transmit(unsigned short transmit_len)
   }
   ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+
+  if(rf_flags & WAS_OFF){
+	  off();
+  }
 
   RIMESTATS_ADD(lltx);
   /* OK, sent. We are now ready to send more */
@@ -642,7 +613,10 @@ read(void *buf, unsigned short bufsize)
 static int
 channel_clear(void)
 {
-  return cca_check(0, 0);
+  if(!(RFSTATUS & CCA)) {
+    return CC2430_CCA_BUSY;
+  }
+  return CC2430_CCA_CLEAR;
 }
 /*---------------------------------------------------------------------------*/
 static int
