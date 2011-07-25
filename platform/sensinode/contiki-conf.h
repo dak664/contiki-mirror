@@ -153,6 +153,11 @@ typedef unsigned short clock_time_t;
 #define NULLRDC_802154_AUTOACK 1
 #define NULLRDC_802154_AUTOACK_HW 1
 #endif
+
+#ifndef NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE
+#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
+#endif
+
 #define NETSTACK_CONF_FRAMER  framer_802154
 #define NETSTACK_CONF_RADIO   cc2430_rf_driver
 
