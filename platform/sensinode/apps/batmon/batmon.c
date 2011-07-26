@@ -65,7 +65,6 @@ struct mac_vassili_stats {
   uint32_t buff_loss;
 };
 static struct mac_vassili_stats packet_loss;
-//extern struct mac_vassili_stats packet_loss;
 
 struct record {
   uint8_t magic[3];
