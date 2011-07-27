@@ -197,8 +197,10 @@ main(void)
 #endif
 
   PUTSTRING("##########################################\n");
-  putstring("Welcome to " CONTIKI_VERSION_STRING ".\n");
-  putstring("Running on: " SENSINODE_MODEL ".\n");
+  putstring(CONTIKI_VERSION_STRING "\n");
+  putstring(SENSINODE_MODEL " (CC24");
+  puthex(((CHIPID >> 3) | 0x20));
+  putstring("-" FLASH_SIZE ")\n");
 
 #if STARTUP_VERBOSE
 #ifdef HAVE_SDCC_BANKING

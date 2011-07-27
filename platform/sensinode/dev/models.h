@@ -3,27 +3,30 @@
 
 /* Define model text */
 #ifdef MODEL_N100
-#define SENSINODE_MODEL "N100 Module (CC2431-F128)"
+#define SENSINODE_MODEL "N100 Module"
 #endif
 #ifdef MODEL_N600
-#define SENSINODE_MODEL "N600 NanoRouter USB (CC2430-F128)"
+#define SENSINODE_MODEL "N600 NanoRouter USB"
 #endif
 #ifdef MODEL_N601
-#define SENSINODE_MODEL "N601 NanoRouter USB (CC2431-F128)"
+#define SENSINODE_MODEL "N601 NanoRouter USB"
 #endif
 #ifdef MODEL_N710
-#define SENSINODE_MODEL "N710 NanoSensor (CC2430-F128)"
+#define SENSINODE_MODEL "N710 NanoSensor"
 #endif
 #ifdef MODEL_N711
-#define SENSINODE_MODEL "N711 NanoSensor (CC2431-F128)"
+#define SENSINODE_MODEL "N711 NanoSensor"
 #endif
 #ifdef MODEL_N740
-#define SENSINODE_MODEL "N740 NanoSensor (CC2431-F128)"
+#define SENSINODE_MODEL "N740 NanoSensor"
 #endif
 
 #ifndef SENSINODE_MODEL
-#define MODEL_N100
-#define SENSINODE_MODEL "N100 Module (CC2431-F128)"
+#define SENSINODE_MODEL "N100 Module"
+#endif
+
+#ifndef FLASH_SIZE
+#define FLASH_SIZE "F128"
 #endif
 
 /* 
