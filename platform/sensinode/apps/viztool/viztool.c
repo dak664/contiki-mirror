@@ -49,7 +49,7 @@
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 
-#define MAX_PAYLOAD_LEN 120
+#define MAX_PAYLOAD_LEN 80
 
 static struct uip_udp_conn *server_conn;
 static char buf[MAX_PAYLOAD_LEN];
