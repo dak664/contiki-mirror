@@ -215,9 +215,6 @@ main(void)
 #ifdef SDCC_STACK_AUTO
   PUTSTRING("  --stack-auto\n");
 #endif /* SDCC_STACK_AUTO */
-#ifdef SDCC_USE_XSTACK
-  PUTSTRING("  --xstack\n");
-#endif /* SDCC_USE_XSTACK */
 
   PUTCHAR('\n');
 
