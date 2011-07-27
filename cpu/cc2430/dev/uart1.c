@@ -42,7 +42,11 @@ uart1_init()
   P1DIR &= ~0x90;   /*CTS, RX in*/
 #endif
 
+#if UART_ONE_CONF_HIGH_SPEED
+  UART_SET_SPEED(1, UART_460_M, UART_460_E);
+#else
   UART_SET_SPEED(1, UART_115_M, UART_115_E);
+#endif
 
 #ifdef UART1_RTSCTS
   U1UCR = 0x42; /*defaults: 8N1, RTS/CTS, high stop bit*/
