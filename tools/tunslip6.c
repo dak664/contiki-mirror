@@ -57,10 +57,6 @@
 
 #include <err.h>
 
-#ifdef __APPLE__
-#define B460800 460800
-#endif
-
 int verbose = 1;
 const char *ipaddr;
 const char *netmask;
@@ -754,9 +750,6 @@ exit(1);
     break;
   case 115200:
     b_rate = B115200;
-    break;
-  case 460800:
-    b_rate = B460800;
     break;
   default:
     err(1, "unknown baudrate %d", baudrate);
