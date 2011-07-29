@@ -121,6 +121,7 @@ PROCESS_THREAD(border_router_process, ev, data)
     rpl_set_prefix(dag, &prefix, 64);
     PRINTF("Created a new RPL dag\n");
   }
+  PRINTF("On Channel %u\n", CC2430_RF_CONF_CHANNEL);
 
   print_local_addresses();
 
