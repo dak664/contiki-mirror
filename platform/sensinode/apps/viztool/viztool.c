@@ -49,10 +49,12 @@
 #define UIP_IP_BUF   ((struct uip_ip_hdr *)&uip_buf[UIP_LLH_LEN])
 #define UIP_UDP_BUF  ((struct uip_udp_hdr *)&uip_buf[uip_l2_l3_hdr_len])
 
-#define MAX_PAYLOAD_LEN 80
+#ifndef VIZTOOL_MAX_PAYLOAD_LEN
+#define VIZTOOL_MAX_PAYLOAD_LEN 60
+#endif
 
 static struct uip_udp_conn *server_conn;
-static char buf[MAX_PAYLOAD_LEN];
+static char buf[VIZTOOL_MAX_PAYLOAD_LEN];
 static int8_t len;
 
 #define VIZTOOL_UDP_PORT   60001
@@ -76,7 +78,7 @@ process_request()
   uint8_t left;
   uint8_t entry_size;
 
-  left = MAX_PAYLOAD_LEN - 1;
+  left = VIZTOOL_MAX_PAYLOAD_LEN - 1;
   len = 2; /* start filling the buffer from position [2] */
   count = 0;
   if(buf[0] == REQUEST_TYPE_ND) {
@@ -203,7 +205,7 @@ static void
 tcpip_handler(void)
 {
   if(uip_newdata()) {
-    memset(buf, 0, MAX_PAYLOAD_LEN);
+    memset(buf, 0, VIZTOOL_MAX_PAYLOAD_LEN);
 
     PRINTF("%u bytes from [", uip_datalen());
     PRINT6ADDR(&UIP_IP_BUF->srcipaddr);

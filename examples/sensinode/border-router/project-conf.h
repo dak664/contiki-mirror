@@ -43,6 +43,7 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
+#define VIZTOOL_MAX_PAYLOAD_LEN 120
 #define SLIP_ARCH_CONF_ENABLE 1
 
 #endif /* PROJECT_CONF_H_ */
