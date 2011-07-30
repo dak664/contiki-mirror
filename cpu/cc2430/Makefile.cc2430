@@ -129,7 +129,7 @@ ifdef CUSTOM_RULE_C_TO_OBJECTDIR_O
 ifeq ($(HAVE_BANKING),1)
 $(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
 	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
-	@echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
+	@echo "${OBJECTDIR}/\c" >  $(@:.rel=.$$$$); \
 	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
 	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
@@ -139,7 +139,7 @@ $(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
 else
 $(OBJECTDIR)/%.rel: %.c
 	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
-	@echo -n ${OBJECTDIR}/ >  $(@:.rel=.$$$$); \
+	@echo "${OBJECTDIR}/\c" >  $(@:.rel=.$$$$); \
 	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
 	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
