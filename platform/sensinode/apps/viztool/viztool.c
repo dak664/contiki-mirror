@@ -54,16 +54,19 @@
 #endif
 
 static struct uip_udp_conn *server_conn;
-static char buf[VIZTOOL_MAX_PAYLOAD_LEN];
+static unsigned char buf[VIZTOOL_MAX_PAYLOAD_LEN];
 static int8_t len;
 
 #define VIZTOOL_UDP_PORT   60001
 
 /* Request Bits */
-#define REQUEST_TYPE_ND    1
-#define REQUEST_TYPE_RT    2
-#define REQUEST_TYPE_DRT   3
+#define REQUEST_TYPE_ND         1
+#define REQUEST_TYPE_RT         2
+#define REQUEST_TYPE_DRT        3
+#define REQUEST_TYPE_ADDR       4
+#define REQUEST_TYPE_TOTALS  0xFF
 
+extern uip_ds6_netif_t uip_ds6_if;
 extern uip_ds6_route_t uip_ds6_routing_table[UIP_DS6_ROUTE_NB];
 extern uip_ds6_nbr_t uip_ds6_nbr_cache[UIP_DS6_NBR_NB];
 extern uip_ds6_defrt_t uip_ds6_defrt_list[UIP_DS6_DEFRT_NB];
@@ -192,6 +195,52 @@ process_request()
         }
       }
     }
+  } else if (buf[0] == REQUEST_TYPE_ADDR) {
+    PRINTF("Unicast Addresses\n");
+    for(i = buf[1]; i < UIP_DS6_ADDR_NB; i++) {
+      if(uip_ds6_if.addr_list[i].isused) {
+        entry_size = sizeof(i) + sizeof(uip_ds6_if.addr_list[i].ipaddr);
+
+        memcpy(buf + len, &i, sizeof(i));
+        len += sizeof(i);
+        memcpy(buf + len, &uip_ds6_if.addr_list[i].ipaddr,
+            sizeof(uip_ds6_if.addr_list[i].ipaddr));
+        len += sizeof(uip_ds6_if.addr_list[i].ipaddr);
+
+        PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+        PRINTF("\n");
+        count++;
+        left -= entry_size;
+
+        if(left < entry_size) {
+          break;
+        }
+      }
+    }
+  } else if (buf[0] == REQUEST_TYPE_TOTALS) {
+    memset(&buf[2], 0, 4);
+    for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+      if(uip_ds6_if.addr_list[i].isused) {
+        buf[2]++;
+      }
+    }
+    for(i = 0; i < UIP_DS6_NBR_NB; i++) {
+      if(uip_ds6_nbr_cache[i].isused) {
+        buf[3]++;
+      }
+    }
+    for(i = 0; i < UIP_DS6_ROUTE_NB; i++) {
+      if(uip_ds6_routing_table[i].isused) {
+        buf[4]++;
+      }
+    }
+    for(i = 0; i < UIP_DS6_DEFRT_NB; i++) {
+      if(uip_ds6_defrt_list[i].isused) {
+        buf[5]++;
+      }
+    }
+    len += 4;
+    count = 4;
   } else {
     return 0;
   }
