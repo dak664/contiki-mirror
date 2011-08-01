@@ -83,6 +83,7 @@ $(CONVERTER):
 
 ### CPU-dependent cleanup files
 CLEAN += *.lnk *.lk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex *.sensinode
+CLEAN += *.omf *.cdb
 CLEAN += symbols.c symbols.h
 
 ### CPU-dependent directories
