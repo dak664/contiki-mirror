@@ -119,7 +119,6 @@ PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/, \
 SEGMENT_RULE_FILES = ${foreach dir, . ${CONTIKI_PLATFORM_DIRS} \
 	${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} }
 ${OBJECTDIR}/segment.rules: ${SEGMENT_RULE_FILES}
-	echo ${SEGMENT_RULE_FILES}
 	cat ${SEGMENT_RULE_FILES} > $@
 
 CUSTOM_RULE_LINK=1
@@ -166,7 +165,7 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
 	rm -f $@
 	for target in $^; do echo $$target >> $@; done
 
-.PRECIOUS: %.$(TARGET) %.ihx %.hex $(OBJECTDIR)/%.rel $(OBJECTDIR)/%.app.rel
+.PRECIOUS: %.$(TARGET) %.ihx %.hex $(OBJECTDIR)/%.app.rel
 
 # build app/example local object files. We need a separate rule so that we can
 # pass -DAUTOSTART_ENABLE for those files only
