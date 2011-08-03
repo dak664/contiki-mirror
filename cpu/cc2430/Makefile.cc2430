@@ -19,6 +19,20 @@ ASFLAGS += -plosgff
 
 AROPTS   = -a
 
+### Our object files are .rel, so we can't use the default finalize dependency
+### generation. Override here.
+define FINALIZE_SDCC_DEPENDENCY
+cp $(@:.rel=.d) $(@:.rel=.$$$$); \
+sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+    -e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
+rm -f $(@:.rel=.$$$$)
+endef
+
+### Load the application example's dependency file
+ifneq ($(MAKECMDGOALS),clean)
+  -include $(MAKECMDGOALS:.rel=.d)
+endif
+
 # Does the project want us to offset the firmware?
 # define start address and max code size accordingly, turn Disco on
 ifeq ($(OFFSET_FIRMWARE),1)
@@ -52,8 +66,8 @@ LDFLAGS += -Wl-bBANK3=0x038000
 #relocated code (for bank switching )
 LDFLAGS += -Wl-r
 CFLAGS += -DHAVE_SDCC_BANKING
-#use this in $(call code_segment,$<) to get segment for a source file.
-code_segment = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | \
+#use this in $(call c_seg,$<) to get segment for a source file.
+c_seg = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | \
 	perl ${CONTIKI_CPU}/segment.rules.pl $1 ) CSEG )
 
 #bank switching file conversion 
@@ -63,7 +77,7 @@ code_segment = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | \
 else
 #no banking
 MEMORY_MODEL=large
-code_segment =
+c_seg =
 
 %.hex: %.ihx
 	$(PACKIHX) $< > $@
@@ -125,41 +139,17 @@ CUSTOM_RULE_LINK=1
 CUSTOM_RULE_C_TO_OBJECTDIR_O=1
 CUSTOM_RULE_ALLOBJS_TO_TARGETLIB=1
 
-ifdef CUSTOM_RULE_C_TO_OBJECTDIR_O
-ifeq ($(HAVE_BANKING),1)
 $(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
-	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
-	@echo "${OBJECTDIR}/\c" >  $(@:.rel=.$$$$); \
-	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
-	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-		-e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
-	rm -f $(@:.rel=.$$$$)
-	$(CC) $(call code_segment,$<) $(CFLAGS) -c $< -o $@
-else
-$(OBJECTDIR)/%.rel: %.c
-	$(CC) $(CFLAGS) -MM -c $< > $(@:.rel=.d)
-	@echo "${OBJECTDIR}/\c" >  $(@:.rel=.$$$$); \
-	cat $(@:.rel=.d) >> $(@:.rel=.$$$$); \
-	cp $(@:.rel=.$$$$) $(@:.rel=.d); \
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-		-e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
-	rm -f $(@:.rel=.$$$$)
-	$(CC) $(CFLAGS) -c $< -o $@
-endif
-endif
+	$(CC) $(call c_seg,$<) $(CFLAGS) -c $< -o $@ -Wp,-MMD,$(@:.rel=.d),-MQ,$@
+	@$(FINALIZE_SDCC_DEPENDENCY)
 
-
-ifdef CUSTOM_RULE_CS_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.rel: %.cS
 	cp $< $(OBJECTDIR)/$*.c
 	$(CC) $(CFLAGS) -E $(OBJECTDIR)/$*.c > $(OBJECTDIR)/tmp
 	perl -pe "s/^#(.*)/;$$1/" $(OBJECTDIR)/tmp > $(OBJECTDIR)/$*.S
 	$(AS) $(ASFLAGS) -o $@ $(OBJECTDIR)/$*.S
 	rm -f $(OBJECTDIR)/tmp
-endif
 
-#CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
 contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
 	$(CONTIKI_ASMOBJECTFILES) $(CONTIKI_CASMOBJECTFILES)
 	rm -f $@
@@ -169,8 +159,9 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
 
 # build app/example local object files. We need a separate rule so that we can
 # pass -DAUTOSTART_ENABLE for those files only
-$(OBJECTDIR)/%.app.rel: %.c
-	$(CC) $(call code_segment,$<) -DAUTOSTART_ENABLE $(CFLAGS) -c $< -o $@
+$(OBJECTDIR)/%.app.rel: %.c ${OBJECTDIR}/segment.rules
+	$(CC) $(call c_seg,$<) -DAUTOSTART_ENABLE $(CFLAGS) -c $< -o $@ -Wp,-MMD,$(@:.rel=.d),-MQ,$@
+	@$(FINALIZE_SDCC_DEPENDENCY)
 
 # .ihx is the sdcc binary output file
 %.ihx: $(OBJECTDIR)/%.app.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib
