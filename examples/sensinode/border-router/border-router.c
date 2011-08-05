@@ -40,10 +40,7 @@
 #include "dev/slip.h"
 #include "dev/leds.h"
 
-static uip_ipaddr_t prefix;
 static uint8_t prefix_set;
-
-uint16_t dag_id[] = {0x1111, 0x1100, 0, 0, 0, 0, 0, 0x0011};
 /*---------------------------------------------------------------------------*/
 PROCESS(border_router_process, "Border Router process");
 #ifdef VIZTOOL_ENABLED
@@ -87,18 +84,26 @@ request_prefix(void) {
 /* Set our prefix when we receive one over SLIP */
 void
 set_prefix_64(uip_ipaddr_t *prefix_64) {
+  rpl_dag_t *dag;
   uip_ipaddr_t ipaddr;
-  memcpy(&prefix, prefix_64, 16);
   memcpy(&ipaddr, prefix_64, 16);
   prefix_set = 1;
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+
+  /* Become root of a new DODAG with ID our global v6 address */
+  dag = rpl_set_root(&ipaddr);
+  if(dag != NULL) {
+    rpl_set_prefix(dag, &ipaddr, 64);
+    PRINTF("Created a new RPL dag with ID: ");
+    PRINT6ADDR(&dag->dag_id);
+    PRINTF("\n");
+  }
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(border_router_process, ev, data)
 {
   static struct etimer et;
-  rpl_dag_t *dag;
 
   PROCESS_BEGIN();
   PRINTF("Border Router started\n");
@@ -116,11 +121,7 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
 
-  dag = rpl_set_root((uip_ip6addr_t *)dag_id);
-  if(dag != NULL) {
-    rpl_set_prefix(dag, &prefix, 64);
-    PRINTF("Created a new RPL dag\n");
-  }
+  /* We have created a new DODAG when we reach here */
   PRINTF("On Channel %u\n", CC2430_RF_CONF_CHANNEL);
 
   print_local_addresses();
