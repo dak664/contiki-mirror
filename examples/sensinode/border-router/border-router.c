@@ -59,7 +59,6 @@ print_local_addresses(void)
       PRINTF("  ");
       PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
       PRINTF("\n");
-      /* Tentative -> Preferred to finialise our address */
       if (state == ADDR_TENTATIVE) {
         uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
       }

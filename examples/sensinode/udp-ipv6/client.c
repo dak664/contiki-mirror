@@ -133,7 +133,6 @@ print_local_addresses(void)
     if(uip_ds6_if.addr_list[i].isused && (state == ADDR_TENTATIVE || state
         == ADDR_PREFERRED)) {
       PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      /* Tentative -> Preferred to finialise our address */
       if (state == ADDR_TENTATIVE) {
         uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
       }
