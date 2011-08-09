@@ -21,6 +21,9 @@ MCU=atmega128
 
 include $(CONTIKIAVR)/Makefile.avr
 
+ifdef UIP_CONF_IPV6
+  CFLAGS += -DWITH_UIP6=1
+endif
 
 %.od: %.$(TARGET)
 	avr-objdump -zhD $< > $@
