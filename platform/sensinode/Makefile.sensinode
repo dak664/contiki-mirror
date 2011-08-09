@@ -45,7 +45,11 @@ CONTIKI_TARGET_SOURCEFILES += putchar.c sensinode-debug.c
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
 ifdef UIP_CONF_IPV6
-CONTIKI_SOURCEFILES += rpl-of0.c viztool.c
+  ifeq ($(OFFSET_FIRMWARE),1)
+    CFLAGS += -DDISCO_ENABLED=1
+    CONTIKI_SOURCEFILES += disco.c
+  endif
+  CONTIKI_SOURCEFILES += rpl-of0.c viztool.c
 endif
 
 FORCE:

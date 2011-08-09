@@ -36,10 +36,6 @@ endif
 # Does the project want us to offset the firmware?
 # define start address and max code size accordingly, turn Disco on
 ifeq ($(OFFSET_FIRMWARE),1)
-  ifdef UIP_CONF_IPV6
-    CFLAGS += -DDISCO_ENABLED=1
-    CONTIKI_SOURCEFILES += disco.c
-  endif
   START_ADDR = 0x01000
   HOME_START = 00001000
   ifeq ($(HAVE_BANKING),1)

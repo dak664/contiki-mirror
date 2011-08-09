@@ -21,9 +21,6 @@ HOME clock.c
 # Some cc2430 which need special treatment
 HOME bus.c    # bus.c::flash_read() must be run from HOME (if compiled in)
 
-# In HOME for bank overflow reasons
-BANK2 disco.c
-
 # Put the rest of cpu/cc2430 in BANK3
 BANK3 cpu/cc2430
 

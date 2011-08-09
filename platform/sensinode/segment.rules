@@ -16,6 +16,7 @@ HOME apps
 
 BANK1 m25p16.c
 BANK1 viztool.c
+BANK2 disco.c
 
 # Put the rest of platform/sensinode in BANK3
 BANK3 platform/sensinode
