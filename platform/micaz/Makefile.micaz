@@ -28,6 +28,9 @@ endif
 %.od: %.$(TARGET)
 	avr-objdump -zhD $< > $@
 
+%.size: %.$(TARGET)
+	@echo
+	@avr-size -C --mcu=${MCU} $<
 
 ifndef WINDIR
   ifdef OS
