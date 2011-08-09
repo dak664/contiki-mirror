@@ -14,8 +14,10 @@ HOME platform/sensinode/dev/button-sensor.c
 # make sure this rule catches platform/sensinode/apps before some other rule
 HOME apps
 
-# Put the rest of platform/sensinode in BANK3
 BANK1 m25p16.c
+BANK1 viztool.c
+
+# Put the rest of platform/sensinode in BANK3
 BANK3 platform/sensinode
 
 # segment.rules - platform/sensinode - end

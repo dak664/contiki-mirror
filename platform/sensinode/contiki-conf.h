@@ -236,6 +236,12 @@ typedef unsigned short clock_time_t;
 
 #define MAC_CONF_CHANNEL_CHECK_RATE          8
 #define QUEUEBUF_CONF_NUM                    8
+
+/* Viztool on by default for IPv6 builds */
+#ifndef VIZTOOL_CONF_ON
+#define VIZTOOL_CONF_ON                      1
+#endif
+
 #else /* UIP_CONF_IPV6 */
 /* Network setup for non-IPv6 (rime). */
 #define UIP_CONF_IP_FORWARD                  1

@@ -24,6 +24,10 @@
 
 unsigned short node_id = 0;			/* Manually sets MAC address when > 0 */
 
+#if VIZTOOL_CONF_ON
+PROCESS_NAME(viztool_process);
+#endif
+
 #if SHORTCUTS_CONF_NETSTACK
 static __data int len;
 #endif
@@ -257,6 +261,10 @@ main(void)
 #if DISCO_ENABLED
   process_start(&disco_process, NULL);
 #endif /* DISCO_ENABLED */
+
+#if VIZTOOL_CONF_ON
+  process_start(&viztool_process, NULL);
+#endif
 
 #if (!UIP_CONF_IPV6_RPL)
   {

@@ -43,12 +43,7 @@
 static uint8_t prefix_set;
 /*---------------------------------------------------------------------------*/
 PROCESS(border_router_process, "Border Router process");
-#ifdef VIZTOOL_ENABLED
-PROCESS_NAME(viztool_process);
-AUTOSTART_PROCESSES(&border_router_process, &viztool_process);
-#else
 AUTOSTART_PROCESSES(&border_router_process);
-#endif
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)
