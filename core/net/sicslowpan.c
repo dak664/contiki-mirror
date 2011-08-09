@@ -1236,6 +1236,7 @@ compress_hdr_ipv6(rimeaddr_t *rime_destaddr)
 
  
 
+#include "sensinode-debug.h"
 /*--------------------------------------------------------------------*/
 /** \name Input/output functions common to all compression schemes
  * @{                                                                 */
@@ -1374,7 +1375,7 @@ output(uip_lladdr_t *localdest)
 /*     RIME_FRAG_BUF->dispatch_size = */
 /*       uip_htons((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len); */
     SET16(RIME_FRAG_PTR, RIME_FRAG_DISPATCH_SIZE,
-          ((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len));
+        ((uint16_t)((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len)));
 /*     RIME_FRAG_BUF->tag = uip_htons(my_tag); */
     SET16(RIME_FRAG_PTR, RIME_FRAG_TAG, my_tag);
 
@@ -1407,7 +1408,7 @@ output(uip_lladdr_t *localdest)
 /*     RIME_FRAG_BUF->dispatch_size = */
 /*       uip_htons((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len); */
     SET16(RIME_FRAG_PTR, RIME_FRAG_DISPATCH_SIZE,
-          ((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len));
+        ((uint16_t)((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len)));
     rime_payload_len = (MAC_MAX_PAYLOAD - rime_hdr_len) & 0xf8;
     while(processed_ip_len < uip_len) {
       PRINTFO("sicslowpan output: fragment ");
@@ -1447,6 +1448,7 @@ output(uip_lladdr_t *localdest)
      * The packet does not need to be fragmented
      * copy "payload" and send
      */
+    putstring("");
     memcpy(rime_ptr + rime_hdr_len, (uint8_t *)UIP_IP_BUF + uncomp_hdr_len,
            uip_len - uncomp_hdr_len);
     packetbuf_set_datalen(uip_len - uncomp_hdr_len + rime_hdr_len);
