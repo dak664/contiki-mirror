@@ -43,7 +43,11 @@ endif
 
 ifeq ($(PORT), )
   ifndef WINDIR
-    PORT = /dev/ttyS0 
+    ifeq ($(PRGBOARD), mib520)
+      PORT = /dev/ttyUSB0
+    else
+      PORT = /dev/ttyS0
+    endif
   else
     PORT = COM1
   endif
