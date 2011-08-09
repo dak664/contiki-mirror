@@ -113,11 +113,11 @@
 #define UIP_CONF_IPV6_RPL               1
 
 /* configure number of neighbors and routes */
-#define UIP_CONF_DS6_NBR_NBU     5
-#define UIP_CONF_DS6_ROUTE_NBU   5
+#define UIP_CONF_DS6_NBR_NBU     2
+#define UIP_CONF_DS6_ROUTE_NBU   2
 
-#define RPL_CONF_MAX_PARENTS         4
-#define NEIGHBOR_CONF_MAX_NEIGHBORS  8
+#define RPL_CONF_MAX_PARENTS         2
+#define NEIGHBOR_CONF_MAX_NEIGHBORS  4
 
 #define UIP_CONF_ND6_SEND_RA		0
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
@@ -132,7 +132,7 @@
 #define UIP_CONF_ND6_MAX_NEIGHBORS      4
 #define UIP_CONF_ND6_MAX_DEFROUTERS     2
 #define UIP_CONF_IP_FORWARD             0
-#define UIP_CONF_BUFFER_SIZE		    240
+#define UIP_CONF_BUFFER_SIZE            140
 
 #define SICSLOWPAN_CONF_COMPRESSION_IPV6        0
 #define SICSLOWPAN_CONF_COMPRESSION_HC1         1
@@ -175,9 +175,9 @@
 #define UIP_CONF_LLH_LEN         0
 #define UIP_CONF_RECEIVE_WINDOW  48
 #define UIP_CONF_TCP_MSS         48
-#define UIP_CONF_MAX_CONNECTIONS 4
-#define UIP_CONF_MAX_LISTENPORTS 8
-#define UIP_CONF_UDP_CONNS       12
+#define UIP_CONF_MAX_CONNECTIONS 1
+#define UIP_CONF_MAX_LISTENPORTS 1
+#define UIP_CONF_UDP_CONNS       4
 #define UIP_CONF_FWCACHE_SIZE    15
 #define UIP_CONF_BROADCAST       1
 //#define UIP_ARCH_IPCHKSUM        1
