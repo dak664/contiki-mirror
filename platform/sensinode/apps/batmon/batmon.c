@@ -134,16 +134,19 @@ abort()
 {
   PRINTF("BatMon: Abort\n");
   etimer_stop(&et);
-
-  n740_analog_deactivate();
-  m25p16_dp();
-  n740_analog_activate();
+  process_exit(&batmon_process);
 }
 /*---------------------------------------------------------------------------*/
 void
 batmon_log(uint8_t trigger)
 {
   uint32_t next;
+
+  /* Only continue if the process (us) is running */
+  if(!process_is_running(&batmon_process)) {
+    return;
+  }
+
   next = f.a;
   next |= (((uint32_t) f.p) << 8);
   next |= (((uint32_t) f.s) << 16);
