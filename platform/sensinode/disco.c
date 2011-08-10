@@ -64,8 +64,7 @@
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
 /*---------------------------------------------------------------------------*/
-#define BATMON_ENABLED 1
-#if BATMON_ENABLED
+#if BATMON_CONF_ENABLED
 void batmon_log(uint8_t trigger);
 
 #define LOG_TRIGGER_OAP_DISCO_START  0x01

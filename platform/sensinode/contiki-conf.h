@@ -141,6 +141,19 @@ typedef unsigned short clock_time_t;
 /* XXX argh, ugly hack to make stuff compile! */
 #define snprintf(BUF, SIZE, ...) sprintf(BUF, __VA_ARGS__)
 
+/* Sensinode-Specific Tools and APPs */
+/* Viztool on by default for IPv6 builds */
+#if UIP_CONF_IPV6
+#ifndef VIZTOOL_CONF_ON
+#define VIZTOOL_CONF_ON        1
+#endif /* VIZTOOL_CONF_ON */
+#endif /* UIP_CONF_IPV6 */
+
+/* BatMon off by default unless we build with APPS += batmon */
+#ifndef BATMON_CONF_ON
+#define BATMON_CONF_ON         0
+#endif
+
 /* Network Stack */
 #if UIP_CONF_IPV6
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
@@ -236,11 +249,6 @@ typedef unsigned short clock_time_t;
 
 #define MAC_CONF_CHANNEL_CHECK_RATE          8
 #define QUEUEBUF_CONF_NUM                    8
-
-/* Viztool on by default for IPv6 builds */
-#ifndef VIZTOOL_CONF_ON
-#define VIZTOOL_CONF_ON                      1
-#endif
 
 #else /* UIP_CONF_IPV6 */
 /* Network setup for non-IPv6 (rime). */

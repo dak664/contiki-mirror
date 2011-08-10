@@ -28,6 +28,10 @@ unsigned short node_id = 0;			/* Manually sets MAC address when > 0 */
 PROCESS_NAME(viztool_process);
 #endif
 
+#if BATMON_CONF_ON
+PROCESS_NAME(batmon_process);
+#endif
+
 #if SHORTCUTS_CONF_NETSTACK
 static __data int len;
 #endif
@@ -276,6 +280,10 @@ main(void)
   }
 #endif /* UIP_CONF_IPV6_RPL */
 #endif /* UIP_CONF_IPV6 */
+
+#if BATMON_CONF_ON
+  process_start(&batmon_process, NULL);
+#endif
 
   /*
    * Acknowledge the UART1 RX interrupt
