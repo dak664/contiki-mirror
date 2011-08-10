@@ -72,10 +72,6 @@ static struct uip_udp_conn *server_conn;
 static char buf[MAX_PAYLOAD_LEN];
 static uint16_t len;
 
-#if UIP_CONF_ROUTER
-static uip_ipaddr_t ipaddr;
-#endif
-
 #define SERVER_PORT       60000
 
 #define SENSOR_OK      0
@@ -115,27 +111,6 @@ tcpip_handler(void)
   return;
 }
 /*---------------------------------------------------------------------------*/
-static void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
-
-  PRINTF("Server IPv6 addresses:\n");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused && (state == ADDR_TENTATIVE || state
-        == ADDR_PREFERRED)) {
-      PRINTF("  ");
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-      if (state == ADDR_TENTATIVE) {
-        uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-      }
-    }
-  }
-}
-/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_server_process, ev, data)
 {
 #if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
@@ -149,14 +124,6 @@ PROCESS_THREAD(udp_server_process, ev, data)
 #if (CONTIKI_TARGET_SENSINODE && BUTTON_SENSOR_ON)
   putstring("Button X: Toggle LED X\n");
 #endif
-
-#if UIP_CONF_ROUTER
-  uip_ip6addr(&ipaddr, 0x2001, 0x630, 0x301, 0x6453, 0, 0, 0, 0);
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-#endif /* UIP_CONF_ROUTER */
-
-  print_local_addresses();
 
   server_conn = udp_new(NULL, UIP_HTONS(0), NULL);
   udp_bind(server_conn, UIP_HTONS(SERVER_PORT));
