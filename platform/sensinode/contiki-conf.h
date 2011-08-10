@@ -232,7 +232,7 @@ typedef unsigned short clock_time_t;
 
 /* 6lowpan */
 #define SICSLOWPAN_CONF_COMPRESSION          SICSLOWPAN_COMPRESSION_HC06
-#define SICSLOWPAN_CONF_FRAG                 1 /* About 2KB of CODE if 1 */
+#define SICSLOWPAN_CONF_FRAG                 0 /* About 2KB of CODE if 1 */
 #define SICSLOWPAN_CONF_MAXAGE               8
 
 /* Define our IPv6 prefixes/contexts here */
