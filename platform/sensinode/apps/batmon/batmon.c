@@ -58,7 +58,7 @@
 
 #define BATMON_LOG_PERIOD 60 /* in seconds */
 /*---------------------------------------------------------------------------*/
-const uint8_t magic[3] = { 0x0B, 0xEE, 0xF0 };
+static const uint8_t magic[3] = { 0x0B, 0xEE, 0xF0 };
 /*---------------------------------------------------------------------------*/
 struct record {
   uint8_t magic[3];
