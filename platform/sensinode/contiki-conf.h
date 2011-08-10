@@ -195,7 +195,8 @@ typedef unsigned short clock_time_t;
 
 #if UIP_CONF_IPV6
 /* Addresses, Sizes and Interfaces */
-#define RIMEADDR_CONF_SIZE                   8  /* 8-byte addresses here, 2 otherwise */
+/* 8-byte addresses here, 2 otherwise */
+#define RIMEADDR_CONF_SIZE                   8
 #define UIP_CONF_LL_802154                   1
 #define UIP_CONF_LLH_LEN                     0
 #define UIP_CONF_NETIF_MAX_ADDRESSES         3
@@ -220,8 +221,8 @@ typedef unsigned short clock_time_t;
 
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER       10000
-#define UIP_CONF_DS6_NBR_NBU                 4 /* Handle 4 Neighbors */
-#define UIP_CONF_DS6_ROUTE_NBU               4 /* Handle 4 Routes */
+#define UIP_CONF_DS6_NBR_NBU                 4 /* Handle n Neighbors */
+#define UIP_CONF_DS6_ROUTE_NBU               4 /* Handle n Routes */
 
 /* uIP */
 #define UIP_CONF_BUFFER_SIZE               240
