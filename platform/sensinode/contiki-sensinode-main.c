@@ -281,10 +281,6 @@ main(void)
 #endif /* UIP_CONF_IPV6_RPL */
 #endif /* UIP_CONF_IPV6 */
 
-#if BATMON_CONF_ON
-  process_start(&batmon_process, NULL);
-#endif
-
   /*
    * Acknowledge the UART1 RX interrupt
    * now that we're sure we are ready to process it
@@ -295,6 +291,10 @@ main(void)
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
   fade(LEDS_RED);
+
+#if BATMON_CONF_ON
+  process_start(&batmon_process, NULL);
+#endif
 
   autostart_start(autostart_processes);
 
