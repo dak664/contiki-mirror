@@ -60,19 +60,12 @@
 /*---------------------------------------------------------------------------*/
 const uint8_t magic[3] = { 0x0B, 0xEE, 0xF0 };
 /*---------------------------------------------------------------------------*/
-struct mac_vassili_stats {
-  uint32_t retran_loss;
-  uint32_t buff_loss;
-};
-static struct mac_vassili_stats packet_loss;
-
 struct record {
   uint8_t magic[3];
   uint8_t trigger;
   unsigned long c; /* uptime */
   int v; /* VDD (reference) */
   int b; /* Voltage ADC */
-  struct mac_vassili_stats mac_stats;
 #if ENERGEST_CONF_ON
   unsigned long mcu;
   unsigned long lpm;
@@ -160,9 +153,6 @@ batmon_log(uint8_t trigger)
 
   /* And then carry on with battery */
   r.b = s->value(ADC_SENSOR_TYPE_BATTERY);
-
-  /* MAC stats */
-  memcpy(&r.mac_stats, &packet_loss, sizeof(packet_loss));
 
 #if ENERGEST_CONF_ON
   /* ENERGEST values */
