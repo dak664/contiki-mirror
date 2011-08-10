@@ -30,51 +30,22 @@
 
 /**
  * \file
- *         Stub project source file to be used for the testbed experiments
- *         The main thing here is to provide a make target and define
- *         AUTOSTART_PROCESSES correctly
+ *         Stub project source file. We just need to build contiki with
+ *         OFFSET_FIRMWARE, Makefile does so.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
 #include "contiki.h"
-#include "contiki-net.h"
 
-#define DEBUG DEBUG_NONE
-#include "net/uip-debug.h"
-
-PROCESS_NAME(viztool_process);
-PROCESS(net_startup_process, "Net Startup process");
 /*---------------------------------------------------------------------------*/
-AUTOSTART_PROCESSES(&viztool_process, &net_startup_process);
+PROCESS(stub_process, "Stub process");
+AUTOSTART_PROCESSES(&stub_process);
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(net_startup_process, ev, data)
+PROCESS_THREAD(stub_process, ev, data)
 {
-  uip_ipaddr_t ipaddr;
-  int i;
-  uint8_t state;
-
   PROCESS_BEGIN();
-
-#if UIP_CONF_ROUTER
-  uip_ip6addr(&ipaddr, 0x2001, 0x630, 0x301, 0x6453, 0, 0, 0, 0);
-  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
-  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-#endif /* UIP_CONF_ROUTER */
-
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused && (state == ADDR_TENTATIVE || state
-        == ADDR_PREFERRED)) {
-      PRINTF("  ");
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-      if (state == ADDR_TENTATIVE) {
-        uip_ds6_if.addr_list[i].state = ADDR_PREFERRED;
-      }
-    }
-  }
 
   PROCESS_END();
 }
