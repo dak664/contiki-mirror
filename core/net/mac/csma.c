@@ -302,10 +302,7 @@ static void
 send_packet(mac_callback_t sent, void *ptr)
 {
   struct queued_packet *q;
-  static uint16_t seqno;
-  
-  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, seqno++);
-  
+
   /* If the packet is a broadcast, do not allocate a queue
      entry. Instead, just send it out.  */
   if(!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
