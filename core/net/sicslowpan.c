@@ -1444,6 +1444,8 @@ output(uip_lladdr_t *localdest)
     return 0;
 #endif /* SICSLOWPAN_CONF_FRAG */
   } else {
+    /* Ugly 8051 stack depth fix */
+    putstring("");
     /*
      * The packet does not need to be fragmented
      * copy "payload" and send
