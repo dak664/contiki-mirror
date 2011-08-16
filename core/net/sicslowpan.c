@@ -292,6 +292,15 @@ const uint8_t llprefix[] = {0xfe, 0x80};
 static const uint8_t ttl_values[] = {0, 1, 64, 255};
 
 /*--------------------------------------------------------------------*/
+#if SICSLOWPAN_CONF_FRAG
+/* UGH - Horrid fix to reduce 8051 stack depth */
+void
+dummy()
+{
+  return;
+}
+#endif
+/*--------------------------------------------------------------------*/
 /** \name HC06 related functions
  * @{                                                                 */
 /*--------------------------------------------------------------------*/
@@ -1233,7 +1242,6 @@ compress_hdr_ipv6(rimeaddr_t *rime_destaddr)
 
  
 
-#include "sensinode-debug.h"
 /*--------------------------------------------------------------------*/
 /** \name Input/output functions common to all compression schemes
  * @{                                                                 */
@@ -1442,7 +1450,7 @@ output(uip_lladdr_t *localdest)
 #endif /* SICSLOWPAN_CONF_FRAG */
   } else {
     /* Ugly 8051 stack depth fix */
-    putstring("");
+    dummy();
     /*
      * The packet does not need to be fragmented
      * copy "payload" and send
