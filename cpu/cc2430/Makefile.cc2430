@@ -2,7 +2,7 @@
 CC       = sdcc
 LD       = sdcc
 AS       = sdcc
-AR	   = sdcclib
+AR       = sdcclib
 OBJCOPY  = objcopy
 STRIP    = strip
 PACKIHX  = packihx
@@ -27,11 +27,6 @@ sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
     -e '/^$$/ d' -e 's/$$/ :/' < $(@:.rel=.$$$$) >> $(@:.rel=.d); \
 rm -f $(@:.rel=.$$$$)
 endef
-
-### Load the application example's dependency file
-ifneq ($(MAKECMDGOALS),clean)
-  -include $(MAKECMDGOALS:.rel=.d)
-endif
 
 # Does the project want us to offset the firmware?
 # define start address and max code size accordingly, turn Disco on
