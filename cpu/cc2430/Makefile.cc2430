@@ -13,7 +13,7 @@ CFLAGS  += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430 --std-c99
 
 LDFLAGS += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430 --out-fmt-ihx
 LDFLAGS += --xram-loc 0xE000 --xram-size 0x1F00
-LDFLAGS += --code-loc ${START_ADDR} --code-size ${CODE_SIZE}
+LDFLAGS += --code-loc $(START_ADDR) --code-size $(CODE_SIZE)
 
 ASFLAGS += -plosgff
 
@@ -63,8 +63,8 @@ LDFLAGS += -Wl-bBANK3=0x038000
 LDFLAGS += -Wl-r
 CFLAGS += -DHAVE_SDCC_BANKING
 #use this in $(call c_seg,$<) to get segment for a source file.
-c_seg = --codeseg $(word 1,$(shell cat ${OBJECTDIR}/segment.rules | \
-	perl ${CONTIKI_CPU}/segment.rules.pl $1 ) CSEG )
+c_seg = --codeseg $(word 1,$(shell cat $(OBJECTDIR)/segment.rules | \
+	perl $(CONTIKI_CPU)/segment.rules.pl $1 ) CSEG )
 
 #bank switching file conversion 
 %.hex: %.ihx $(CONVERTER)
@@ -105,37 +105,37 @@ CONTIKI_SOURCEFILES += uart_intr.c cc2430_rf_intr.c dma_intr.c
 CONTIKI_SOURCEFILES += watchdog-cc2430.c rtimer-arch.c slip-arch.c slip.c
 CONTIKI_ASMFILES +=
 
-CONTIKI_ASMOBJECTFILES = ${addprefix $(OBJECTDIR)/,$(CONTIKI_ASMFILES:.S=.rel)}
+CONTIKI_ASMOBJECTFILES = $(addprefix $(OBJECTDIR)/,$(CONTIKI_ASMFILES:.S=.rel))
 
-CONTIKI_CASMOBJECTFILES = ${addprefix $(OBJECTDIR)/, \
-	$(CONTIKI_CASMFILES:.cS=.rel)}
+CONTIKI_CASMOBJECTFILES = $(addprefix $(OBJECTDIR)/, \
+	$(CONTIKI_CASMFILES:.cS=.rel))
 
 CONTIKI_PLATFORM_DIRS = $(PLATFORM_APPDIRS) \
-	 ${addprefix $(CONTIKI)/platform/$(TARGET)/, $(CONTIKI_TARGET_DIRS)}
+	 $(addprefix $(CONTIKI)/platform/$(TARGET)/, $(CONTIKI_TARGET_DIRS))
 
-CONTIKI_CPU_DIRS_LIST    = ${addprefix $(CONTIKI_CPU)/, \
-                               $(CONTIKI_CPU_DIRS)}
+CONTIKI_CPU_DIRS_LIST    = $(addprefix $(CONTIKI_CPU)/, \
+                               $(CONTIKI_CPU_DIRS))
 
-oname = ${patsubst %.c,%.rel,${patsubst %.S,%.rel,$(1)}}
+oname = $(patsubst %.c,%.rel,$(patsubst %.S,%.rel,$(1)))
 
-CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/, \
-	${call oname, $(CONTIKI_SOURCEFILES)}}
+CONTIKI_OBJECTFILES = $(addprefix $(OBJECTDIR)/, \
+	$(call oname, $(CONTIKI_SOURCEFILES)))
 
-PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/, \
-	${call oname, $(PROJECT_SOURCEFILES)}}
+PROJECT_OBJECTFILES = $(addprefix $(OBJECTDIR)/, \
+	$(call oname, $(PROJECT_SOURCEFILES)))
 
 ### Compilation rules
 
-SEGMENT_RULE_FILES = ${foreach dir, . ${CONTIKI_PLATFORM_DIRS} \
-	${CONTIKI_CPU_DIRS_LIST}, ${wildcard $(dir)/segment.rules} }
-${OBJECTDIR}/segment.rules: ${SEGMENT_RULE_FILES}
-	cat ${SEGMENT_RULE_FILES} > $@
+SEGMENT_RULE_FILES = $(foreach dir, . $(CONTIKI_PLATFORM_DIRS) \
+	$(CONTIKI_CPU_DIRS_LIST), $(wildcard $(dir)/segment.rules) )
+$(OBJECTDIR)/segment.rules: $(SEGMENT_RULE_FILES)
+	cat $(SEGMENT_RULE_FILES) > $@
 
 CUSTOM_RULE_LINK=1
 CUSTOM_RULE_C_TO_OBJECTDIR_O=1
 CUSTOM_RULE_ALLOBJS_TO_TARGETLIB=1
 
-$(OBJECTDIR)/%.rel: %.c ${OBJECTDIR}/segment.rules
+$(OBJECTDIR)/%.rel: %.c $(OBJECTDIR)/segment.rules
 	$(CC) $(call c_seg,$<) $(CFLAGS) -c $< -o $@ -Wp,-MMD,$(@:.rel=.d),-MQ,$@
 	@$(FINALIZE_SDCC_DEPENDENCY)
 
@@ -155,7 +155,7 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
 
 # build app/example local object files. We need a separate rule so that we can
 # pass -DAUTOSTART_ENABLE for those files only
-$(OBJECTDIR)/%.app.rel: %.c ${OBJECTDIR}/segment.rules
+$(OBJECTDIR)/%.app.rel: %.c $(OBJECTDIR)/segment.rules
 	$(CC) $(call c_seg,$<) -DAUTOSTART_ENABLE $(CFLAGS) -c $< -o $@ -Wp,-MMD,$(@:.rel=.d),-MQ,$@
 	@$(FINALIZE_SDCC_DEPENDENCY)
 

@@ -11,7 +11,7 @@
 # make sensinode.upload - Will use nano_programmer to upload file using D2xx Devboard
 # make sensinode.serialdump - Will use the Contiki serialdump tool on the default UART
 # make foo.model - Will copy foo.ihx to foo-XYZ.ihx (e.g. foo-n740.ihx)
-PATH:=${CONTIKI}/platform/${TARGET}/tools/bin:${PATH}
+PATH:=$(CONTIKI)/platform/$(TARGET)/tools/bin:$(PATH)
 export PATH 
 
 ifndef CONTIKI
@@ -24,8 +24,8 @@ endif
 # Defaults to N100 (which is what the contiki code does as well)
 MODEL_SUFFIX=n100
 ifdef DEFINES
-	MODEL_SUFFIX=${patsubst MODEL_N%,n%, \
-		${filter MODEL_%,${subst $(COMMA), ,$(DEFINES)}}}
+	MODEL_SUFFIX=$(patsubst MODEL_N%,n%, \
+		$(filter MODEL_%,$(subst $(COMMA), ,$(DEFINES))))
 endif
 
 # Define the default UART for tools and tool commands
@@ -34,7 +34,7 @@ PROG = $(CONTIKI)/tools/sensinode/nano_programmer/nano_programmer -d $(DEFUART)
 SERIALDUMP = $(CONTIKI)/tools/sky/serialdump-linux -b115200 $(DEFUART)
 
 CONTIKI_TARGET_DIRS = . dev
-CONTIKI_TARGET_MAIN = ${addprefix $(OBJECTDIR)/,contiki-sensinode-main.rel}
+CONTIKI_TARGET_MAIN = $(addprefix $(OBJECTDIR)/,contiki-sensinode-main.rel)
 
 CONTIKI_TARGET_SOURCEFILES = contiki-sensinode-main.c
 CONTIKI_TARGET_SOURCEFILES += leds.c leds-arch.c serial-line.c sensors.c
@@ -66,12 +66,12 @@ FORCE:
 	         '         Decimal'
 	@echo    '----------------------------------  --------    --------' \
 	         '     --------'
-	@echo -n 'HOME,CSEG,CONST,XINIT,GS*           ${HOME_START}    '
-	@egrep ',CODE\)' ${<:.hex=.map} | egrep -v '(^BANK.[^=])' | uniq | \
+	@echo -n 'HOME,CSEG,CONST,XINIT,GS*           $(HOME_START)    '
+	@egrep ',CODE\)' $(<:.hex=.map) | egrep -v '(^BANK.[^=])' | uniq | \
 	awk '{ SUM += $$5 } END { printf "%08X =    %8d", SUM, SUM }'
 	@echo '. bytes (REL,CON,CODE)'
-	@egrep '(^BANK.[^=])' ${<:.hex=.map} | uniq | sort
-	@egrep -A 5 'Other memory' ${<:.hex=.mem}
+	@egrep '(^BANK.[^=])' $(<:.hex=.map) | uniq | sort
+	@egrep -A 5 'Other memory' $(<:.hex=.mem)
 
 %.upload: %.hex
 	$(PROG) -P $<
@@ -83,4 +83,4 @@ sensinode.serialdump:
 CONTIKI_CPU=$(CONTIKI)/cpu/cc2430
 include $(CONTIKI)/cpu/cc2430/Makefile.cc2430
 
-contiki-$(TARGET).a:# ${addprefix $(OBJECTDIR)/,symbols.rel}
+contiki-$(TARGET).a:# $(addprefix $(OBJECTDIR)/,symbols.rel)
