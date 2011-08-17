@@ -56,8 +56,6 @@
 
 static uint8_t mac_dsn;
 static uint8_t initialized = 0;
-static const uint16_t mac_dst_pan_id = IEEE802154_PANID;
-static const uint16_t mac_src_pan_id = IEEE802154_PANID;
 
 static frame802154_t frame;
 static uint8_t len;
@@ -114,13 +112,12 @@ create(void)
      \todo For phase 1 the addresses are all long. We'll need a mechanism
      in the rime attributes to tell the mac to use long or short for phase 2.
   */
-  if(sizeof(rimeaddr_t) == 2) {
-    /* Use short address mode if rimeaddr size is short. */
-    frame.fcf.src_addr_mode = FRAME802154_SHORTADDRMODE;
-  } else {
-    frame.fcf.src_addr_mode = FRAME802154_LONGADDRMODE;
-  }
-  frame.dest_pid = mac_dst_pan_id;
+#if (RIMEADDR_SIZE == 2)
+  frame.fcf.src_addr_mode = FRAME802154_SHORTADDRMODE;
+#else
+  frame.fcf.src_addr_mode = FRAME802154_LONGADDRMODE;
+#endif
+  frame.dest_pid = IEEE802154_PANID;
 
   /*
    *  If the output address is NULL in the Rime buf, then it is broadcast
@@ -134,17 +131,17 @@ create(void)
 
   } else {
     rimeaddr_copy((rimeaddr_t *)&frame.dest_addr,
-                  packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+        packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     /* Use short address mode if rimeaddr size is small */
-    if(sizeof(rimeaddr_t) == 2) {
-      frame.fcf.dest_addr_mode = FRAME802154_SHORTADDRMODE;
-    } else {
-      frame.fcf.dest_addr_mode = FRAME802154_LONGADDRMODE;
-    }
+#if (RIMEADDR_SIZE == 2)
+    frame.fcf.dest_addr_mode = FRAME802154_SHORTADDRMODE;
+#else
+    frame.fcf.dest_addr_mode = FRAME802154_LONGADDRMODE;
+#endif
   }
 
   /* Set the source PAN ID to the global variable. */
-  frame.src_pid = mac_src_pan_id;
+  frame.src_pid = IEEE802154_PANID;
   
   /*
    * Set up the source address using only the long address mode for
@@ -176,7 +173,7 @@ parse(void)
   if(frame802154_parse(packetbuf_dataptr(), len, &frame) &&
      packetbuf_hdrreduce(len - frame.payload_len)) {
     if(frame.fcf.dest_addr_mode) {
-      if(frame.dest_pid != mac_src_pan_id &&
+      if(frame.dest_pid != IEEE802154_PANID &&
          frame.dest_pid != FRAME802154_BROADCASTPANDID) {
         /* Packet to another PAN */
         PRINTF("15.4: for another pan %u\n", frame.dest_pid);
