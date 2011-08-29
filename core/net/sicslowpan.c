@@ -522,11 +522,9 @@ compress_hdr_hc06(rimeaddr_t *rime_destaddr)
   /* Note that the payload length is always compressed */
 
   /* Next header. We compress it if UDP */
-#if UIP_CONF_UDP
   if(UIP_IP_BUF->proto == UIP_PROTO_UDP) {
     iphc0 |= SICSLOWPAN_IPHC_NH_C;
   }
-#endif /*UIP_CONF_UDP*/
 #ifdef SICSLOWPAN_NH_COMPRESSOR 
   if(SICSLOWPAN_NH_COMPRESSOR.is_compressable(UIP_IP_BUF->proto)) {
     iphc0 |= SICSLOWPAN_IPHC_NH_C;
