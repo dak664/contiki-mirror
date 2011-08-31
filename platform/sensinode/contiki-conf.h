@@ -205,8 +205,6 @@ typedef unsigned short clock_time_t;
 #define UIP_CONF_TCP                         0
 #define UIP_CONF_UDP                         1
 #define UIP_CONF_UDP_CHECKSUMS               1
-#define UIP_CONF_ICMP6                       1
-#define UIP_CONF_BROADCAST                   1
 
 /* ND and Routing */
 #define UIP_CONF_ROUTER                      1 
