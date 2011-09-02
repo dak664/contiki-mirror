@@ -46,6 +46,18 @@ else
   endif
 endif
 
+### Banking Guesswork:
+### Examples outside examples/sensinode do not specify banking.
+### We automatically turn it on if its unspecified and if we are building with
+### UIP_CONF_IPV6
+ifndef HAVE_BANKING
+  ifeq ($(UIP_CONF_IPV6),1)
+    HAVE_BANKING=1
+  else
+    HAVE_BANKING=0
+  endif
+endif
+
 ### Are we building with BANKing supoprt?
 ifeq ($(HAVE_BANKING),1)
   ## Yes
@@ -58,7 +70,6 @@ ifeq ($(HAVE_BANKING),1)
   #use this in $(call c_seg,$<) to get segment for a source file.
   c_seg = --codeseg $(word 1,$(shell cat $(OBJECTDIR)/segment.rules | \
     perl $(CONTIKI_CPU)/segment.rules.pl $1 ) CSEG )
-
 else
   ## No banking
   MEMORY_MODEL=large
