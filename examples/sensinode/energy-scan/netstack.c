@@ -31,61 +31,20 @@
 
 /**
  * \file
- *         Definition of a fake RDC driver to be used with passive
- *         examples. The sniffer will never send packets and it will never
- *         push incoming packets up the stack. We do this by defining this
- *         driver as our RDC. We then drop everything
+ *         Stub file overriding core/net/netstack.c. What we want to achieve
+ *         here is call netstack_init from main without initialising the RDC,
+ *         MAC and Network layers. It will just turn on the radio instead.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "net/mac/mac.h"
-#include "net/mac/rdc.h"
+#include "netstack.h"
 /*---------------------------------------------------------------------------*/
-static void
-send(mac_callback_t sent, void *ptr)
+void
+netstack_init(void)
 {
-  if(sent) {
-    sent(ptr, MAC_TX_OK, 1);
-  }
+  NETSTACK_RADIO.init();
 }
 /*---------------------------------------------------------------------------*/
-static void
-input(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-static int
-on(void)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static int
-off(int keep_radio_on)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static unsigned short
-cca(void)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-const struct rdc_driver stub_rdc_driver = {
-    "stub-rdc",
-    init,
-    send,
-    input,
-    on,
-    off,
-    cca,
-};
-/*---------------------------------------------------------------------------*/
+

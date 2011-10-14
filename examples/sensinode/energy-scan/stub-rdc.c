@@ -32,7 +32,7 @@
 /**
  * \file
  *         Definition of a fake RDC driver to be used with passive
- *         examples. The sniffer will never send packets and it will never
+ *         examples. The code will never send packets and it will never
  *         push incoming packets up the stack. We do this by defining this
  *         driver as our RDC. We then drop everything
  *

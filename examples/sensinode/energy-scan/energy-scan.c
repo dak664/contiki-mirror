@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2010, Loughborough University - Computer Science
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,61 +30,77 @@
 
 /**
  * \file
- *         Definition of a fake RDC driver to be used with passive
- *         examples. The sniffer will never send packets and it will never
- *         push incoming packets up the stack. We do this by defining this
- *         driver as our RDC. We then drop everything
+ *         Minimalistic channel energy detection.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "net/mac/mac.h"
-#include "net/mac/rdc.h"
+#include "contiki.h"
+#include "cc2430_sfr.h"
+
+#include "sensinode-debug.h"
+#include "dev/cc2430_rf.h"
+#include <stdio.h>
+
+static uint8_t channel;
+static int8_t j;
+static int8_t cmax;
+static int8_t rssi;
+static struct etimer et;
+static rtimer_clock_t t0;
+
+#define RSSI_BASE    -50
+#define RSSI_SAMPLES  30
+#define SAMPLE_INTERVAL (CLOCK_SECOND)
+#define CHANNEL_MIN 11
+#define CHANNEL_MAX 26
 /*---------------------------------------------------------------------------*/
-static void
-send(mac_callback_t sent, void *ptr)
+PROCESS(energy_scan, "Energy Scanner");
+AUTOSTART_PROCESSES(&energy_scan);
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(energy_scan, ev, data)
 {
-  if(sent) {
-    sent(ptr, MAC_TX_OK, 1);
+
+  PROCESS_BEGIN();
+
+  printf("Energy Scanner\n");
+  printf("CCA Threshold: %d\n", (int8_t)RSSIH);
+  printf("Channel scan range: [%u , %u]\n", CHANNEL_MIN, CHANNEL_MAX);
+  printf("%u samples per channel, interval %u ticks\n",
+      RSSI_SAMPLES, SAMPLE_INTERVAL);
+
+  channel = CHANNEL_MIN;
+  while(1) {
+    cmax = RSSI_BASE;
+    cc2430_rf_channel_set(channel);
+    clock_delay(200);
+
+    for(j = 0; j < RSSI_SAMPLES; j++) {
+      t0 = RTIMER_NOW();
+      rssi = RSSIL;
+      if(rssi > cmax) {
+        cmax = rssi;
+      }
+      while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + 25));
+    }
+    printf("%u [%3d]: ", channel, cmax);
+    for(j = RSSI_BASE; j <= cmax; j++) {
+      printf("#");
+    }
+    printf("\n");
+    if(channel == CHANNEL_MAX) {
+      printf("===============\n");
+      channel = CHANNEL_MIN;
+    } else {
+      channel++;
+    }
+
+    etimer_set(&et, SAMPLE_INTERVAL);
+    PROCESS_YIELD();
+
   }
+
+  PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
-static void
-input(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-static int
-on(void)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static int
-off(int keep_radio_on)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static unsigned short
-cca(void)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-const struct rdc_driver stub_rdc_driver = {
-    "stub-rdc",
-    init,
-    send,
-    input,
-    on,
-    off,
-    cca,
-};
 /*---------------------------------------------------------------------------*/

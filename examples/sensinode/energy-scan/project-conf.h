@@ -31,61 +31,20 @@
 
 /**
  * \file
- *         Definition of a fake RDC driver to be used with passive
- *         examples. The sniffer will never send packets and it will never
- *         push incoming packets up the stack. We do this by defining this
- *         driver as our RDC. We then drop everything
+ *         Project specific configuration defines for the sniffer example.
+ *
+ *         We make sure that the radio driver outputs all packets in hexdump
+ *         format.
  *
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
 
-#include "net/mac/mac.h"
-#include "net/mac/rdc.h"
-/*---------------------------------------------------------------------------*/
-static void
-send(mac_callback_t sent, void *ptr)
-{
-  if(sent) {
-    sent(ptr, MAC_TX_OK, 1);
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
-input(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-static int
-on(void)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static int
-off(int keep_radio_on)
-{
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static unsigned short
-cca(void)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static void
-init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-const struct rdc_driver stub_rdc_driver = {
-    "stub-rdc",
-    init,
-    send,
-    input,
-    on,
-    off,
-    cca,
-};
-/*---------------------------------------------------------------------------*/
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
+
+#define NETSTACK_CONF_RDC      stub_rdc_driver
+#define ADC_SENSOR_CONF_ON     0
+#define LPM_CONF_MODE          0
+
+#endif /* PROJECT_CONF_H_ */
