@@ -110,7 +110,8 @@ static int is_receiver_awake = 0;
 #define CCA_CHECK_TIME                     RTIMER_ARCH_SECOND / 8192
 
 /* CCA_SLEEP_TIME is the time between two successive CCA checks. */
-#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 2000
+//#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 2000
+#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 100
 
 /* CHECK_TIME is the total time it takes to perform CCA_COUNT_MAX
    CCAs. */

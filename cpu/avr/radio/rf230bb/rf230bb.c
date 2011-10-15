@@ -186,7 +186,7 @@ static int num_transmissions;
 #endif
 
 #if defined(__AVR_ATmega128RFA1__)
-volatile uint8_t rf230_interruptwait;
+volatile uint8_t rf230_interruptwait,rf230_cccwait;
 #endif
 
 uint8_t volatile rf230_pending;
@@ -510,8 +510,11 @@ on(void)
 #endif
 	sei();
 	hal_set_slptr_low();
-#if 1
+#if 1  //5 msec
 	while (rf230_interruptwait) {}
+#elif 1 //also 5 msec
+		    delay_us(TIME_SLEEP_TO_TRX_OFF);
+				    delay_us(TIME_SLEEP_TO_TRX_OFF);
 #else
 {int i;for (i=0;i<10000;i++) {
 	if (!rf230_interruptwait) break;
@@ -1591,7 +1594,7 @@ rf230_cca(void)
 
   /* Turn radio on if necessary. If radio is currently busy return busy channel */
   /* This may happen when testing radio duty cycling with RADIOALWAYSON */
-
+#if 0
   if(RF230_receive_on) {
     if (hal_get_slptr()) {  //should not be sleeping!
 	  DEBUGFLOW('<');
@@ -1605,6 +1608,7 @@ rf230_cca(void)
   }
   /* Don't allow interrupts! */
   cli();
+#endif
   /* CCA Mode Mode 1=Energy above threshold  2=Carrier sense only  3=Both 0=Either (RF231 only) */
   /* Use the current mode. Note triggering a manual CCA is not recommended in extended mode */
 //hal_subregister_write(SR_CCA_MODE,1);
@@ -1613,19 +1617,32 @@ rf230_cca(void)
   /* Note reading the TRX_STATUS register clears both CCA_STATUS and CCA_DONE bits */
 #if defined(__AVR_ATmega128RFA1__)
   /* Manual CCA gives no interrupt in extended mode, and testing cca done hangs the MCU */
-#if 0
-	rf230_interruptwait=1;
+#if 1
     sei();
-    hal_subregister_write(SR_CCA_REQUEST,1);
-	while (rf230_interruptwait) {}
-    cca=hal_register_read(RG_TRX_STATUS);
+//rf230_waitidle();
+//disable reception for version bug
+  radio_set_trx_state(RX_ON);
+//  rf230_waitidle();
+	rf230_cccwait=1;
+
+  //  hal_subregister_write(SR_CCA_REQUEST,1);
+	hal_register_write(PHY_ED_LEVEL,0);
+	//  delay_us(TIME_CCA);
+	//  	if (hal_register_read(RG_PHY_ED_LEVEL)<(91-77)) cca=0xff;
+	while (rf230_cccwait) {}
+		  	if (hal_register_read(RG_PHY_ED_LEVEL)<(91-77)) cca=0xff;
+ //   cca=hal_register_read(RG_TRX_STATUS);
+#if RF230_CONF_AUTOACK
+  radio_set_trx_state(RX_AACK_ON);
 #endif
+#else
   /* So just read the current ED register without delay */
   /* CCA energy threshold = -91dB + 2*SR_CCA_ED_THRESH. Reset defaults to -77dB */
 #ifdef RF230_CONF_CCA_THRES
     if (hal_register_read(RG_PHY_ED_LEVEL)<(91+RF230_CONF_CCA_THRES) cca=0xff;
 #else
 	if (hal_register_read(RG_PHY_ED_LEVEL)<(91-77)) cca=0xff;
+#endif
 #endif
 
 
