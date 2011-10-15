@@ -367,11 +367,13 @@ powercycle(struct rtimer *t, void *ptr)
              received (as indicated by the
              NETSTACK_RADIO.pending_packet() function), we stop
              snooping. */
+#if 0		//econotag much better with this out. dont know about 128rfa1
         if(NETSTACK_RADIO.channel_clear()) {
           ++silence_periods;
         } else {
           silence_periods = 0;
         }
+#endif
 
         ++periods;
 
@@ -595,7 +597,8 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
   contikimac_is_on = 1;
 
   if(is_receiver_awake == 0) {
-    /* Check if there are any transmissions by others. */
+#if 0  //seems like unnecessary delay, gives collisions before sending with the econotag, it is sending packets too fast
+
     for(i = 0; i < CCA_COUNT_MAX_TX; ++i) {
       t0 = RTIMER_NOW();
       on();
@@ -609,6 +612,7 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
       t0 = RTIMER_NOW();
       while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + CCA_SLEEP_TIME)) { }
     }
+#endif
   }
 
   if(collisions > 0) {
@@ -619,9 +623,12 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
     return MAC_TX_COLLISION;
   }
 
+#if 0
   if(!is_broadcast) {
-    on();
+  //I suspect this radio on is to receive unicast ack. Not necessary with hardware ack detection
+     on();  //This does a cca on the econotag
   }
+#endif
 
   watchdog_periodic();
   t0 = RTIMER_NOW();
@@ -649,6 +656,23 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
       txtime = RTIMER_NOW();
       ret = NETSTACK_RADIO.transmit(transmit_len);
 
+#if CONTIKIMAC_CONF_HARDWARE_ACKDETECT
+/* For radios that block in the transmit routine and detect the ack in hardware */
+
+      if(ret == RADIO_TX_OK) {
+        if(!is_broadcast) {
+          got_strobe_ack = 1;
+          encounter_time = previous_txtime;
+          break;
+        }
+      } else if (ret == RADIO_TX_NOACK) {
+      } else if (ret == RADIO_TX_COLLISION) {
+          PRINTF("contikimac: collisions while sending\n");
+          collisions++;
+      }
+      wt = RTIMER_NOW();
+      while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + INTER_PACKET_INTERVAL)) { }
+#else
       wt = RTIMER_NOW();
       while(RTIMER_CLOCK_LT(RTIMER_NOW(), wt + INTER_PACKET_INTERVAL)) { }
 
@@ -669,6 +693,7 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
           collisions++;
         }
       }
+#endif /*  CONTIKIMAC_CONF_HARDWARE_ACKDETECT */
       previous_txtime = txtime;
     }
   }

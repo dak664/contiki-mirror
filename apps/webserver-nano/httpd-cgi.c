@@ -584,6 +584,7 @@ generate_sensor_readings(void *arg)
 
 #if ENERGEST_CONF_ON
 {uint8_t p1,p2;
+ uint32_t sl;
 #if 0
 /* Update all the timers to get current values */
   for (p1=1;p1<ENERGEST_TYPE_MAX;p1++) {
@@ -598,17 +599,15 @@ generate_sensor_readings(void *arg)
 
   static const char httpd_cgi_sensor10[] HTTPD_STRING_ATTR = "<em>Radio      (ENERGEST):</em> Tx %02u:%02u:%02u (%u.%02u%%)  ";
   static const char httpd_cgi_sensor11[] HTTPD_STRING_ATTR = "Rx %02u:%02u:%02u (%u.%02u%%)\n";
-  s=energest_total_time[ENERGEST_TYPE_TRANSMIT].current/RTIMER_ARCH_SECOND;
-  h=((10000UL*energest_total_time[ENERGEST_TYPE_TRANSMIT].current)/RTIMER_ARCH_SECOND)/seconds;
-  p1=h/100;p2=h-p1*100;h=s/3600;s=s-h*3600;m=s/60;s=s-m*60;
+  sl=energest_total_time[ENERGEST_TYPE_TRANSMIT].current/RTIMER_ARCH_SECOND;
+  h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor10, h,m,s,p1,p2);
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
   else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
   else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
-  s=energest_total_time[ENERGEST_TYPE_LISTEN].current/RTIMER_ARCH_SECOND;
-  h=((10000UL*energest_total_time[ENERGEST_TYPE_LISTEN].current)/RTIMER_ARCH_SECOND)/seconds;
-  p1=h/100;p2=h-p1*100;h=s/3600;s=s-h*3600;m=s/60;s=s-m*60;
+  sl=energest_total_time[ENERGEST_TYPE_LISTEN].current/RTIMER_ARCH_SECOND;
+  h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor11, h,m,s,p1,p2);
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
@@ -620,21 +619,20 @@ generate_sensor_readings(void *arg)
 #if CONTIKIMAC_CONF_COMPOWER
 #include "sys/compower.h"
 {uint8_t p1,p2;
+ uint32_t sl;
  // extern struct compower_activity current_packet;
   static const char httpd_cgi_sensor31[] HTTPD_STRING_ATTR = "<em>ContikiMAC (COMPOWER):</em> Tx %02u:%02u:%02u (%u.%02u%%)  ";
   static const char httpd_cgi_sensor32[] HTTPD_STRING_ATTR = "Rx %02u:%02u:%02u (%u.%02u%%)\n";
 
-  s=compower_idle_activity.transmit/RTIMER_ARCH_SECOND;
-  h=((10000UL*compower_idle_activity.transmit)/RTIMER_ARCH_SECOND)/seconds;
-  p1=h/100;p2=h-p1*100;h=s/3600;s=s-h*3600;m=s/60;s=s-m*60;
+  sl=compower_idle_activity.transmit/RTIMER_ARCH_SECOND;
+  h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor31, h,m,s,p1,p2);
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
   else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
   else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
-  s=compower_idle_activity.listen/RTIMER_ARCH_SECOND;
-  h=((10000UL*compower_idle_activity.listen)/RTIMER_ARCH_SECOND)/seconds;
-  p1=h/100;p2=h-p1*100;h=s/3600;s=s-h*3600;m=s/60;s=s-m*60;
+  sl=compower_idle_activity.listen/RTIMER_ARCH_SECOND;
+  h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor32, h,m,s,p1,p2);
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}

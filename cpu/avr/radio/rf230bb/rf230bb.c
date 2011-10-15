@@ -355,9 +355,12 @@ rf230_isidle(void)
 static void
 rf230_waitidle(void)
 {
-  while (1) {
+int i;
+  for (i=0;i<10000;i++) {  //to avoid potential hangs
+ // while (1) {
     if (rf230_isidle()) break;
   }
+  if (i>=10000) {DEBUGFLOW('H');DEBUGFLOW('R');}
 }
 
 /*----------------------------------------------------------------------------*/
@@ -503,12 +506,19 @@ on(void)
 	rf230_interruptwait=1;
 	ENERGEST_ON(ENERGEST_TYPE_LED_RED);
 #if RF230BB_CONF_LEDONPORTE1
-//	PORTE|=(1<<PE1); //ledon
+	PORTE|=(1<<PE1); //ledon
 #endif
+	sei();
 	hal_set_slptr_low();
+#if 0
 	while (rf230_interruptwait) {}
-  }
 #else
+{int i;for (i=0;i<10000;i++) {
+	if (!rf230_interruptwait) break;
+}}
+#endif
+}
+#else /* SPI based radios */
     uint8_t sreg = SREG;
     cli();
 //   DEBUGFLOW('0');
@@ -553,7 +563,7 @@ off(void)
   hal_set_slptr_high();
   ENERGEST_OFF(ENERGEST_TYPE_LED_RED);
 #if RF230BB_CONF_LEDONPORTE1
-//  PORTE&=~(1<<PE1); //ledoff
+  PORTE&=~(1<<PE1); //ledoff
 #endif
 // DEBUGFLOW('d');
 #else
@@ -839,11 +849,17 @@ rf230_transmit(unsigned short payload_len)
 //	DEBUGFLOW('j');
 	ENERGEST_ON(ENERGEST_TYPE_LED_RED);
 #if RF230BB_CONF_LEDONPORTE1
-//	PORTE|=(1<<PE1); //ledon
+	PORTE|=(1<<PE1); //ledon
 #endif
 	rf230_interruptwait=1;
 	hal_set_slptr_low();
-	while (rf230_interruptwait) {}	
+//	while (rf230_interruptwait) {}	
+	{
+	int i;
+for (i=0;i<10000;i++) {
+	if (!rf230_interruptwait) break;
+  }
+}
 #else
     hal_set_slptr_low();
 	DEBUGFLOW('j');
@@ -1564,7 +1580,7 @@ rf230_cca(void)
   }
 
   /* Don't allow interrupts! */
-  cli();
+ // cli();
 
   /* Turn radio on if necessary. If radio is currently busy return busy channel */
   /* This may happen when testing radio duty cycling with RADIOALWAYSON */
@@ -1577,11 +1593,10 @@ rf230_cca(void)
       if (!rf230_isidle()) {DEBUGFLOW('2');goto busyexit;}
 	}
   } else {
-    DEBUGFLOW('3');
     radio_was_off = 1;
     rf230_on();
   }
-
+  cli();
   /* CCA Mode Mode 1=Energy above threshold  2=Carrier sense only  3=Both 0=Either (RF231 only) */
   /* Use the current mode. Note triggering a manual CCA is not recommended in extended mode */
 //hal_subregister_write(SR_CCA_MODE,1);

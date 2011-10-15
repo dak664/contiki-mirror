@@ -185,7 +185,7 @@ unsigned long clock_seconds(void);
 #define UIP_CONF_DHCP_LIGHT      1
 
 
-#if 1 /* No radio cycling */
+#if 0 /* No radio cycling */
 
 #define NETSTACK_CONF_MAC         nullmac_driver
 #define NETSTACK_CONF_RDC         sicslowmac_driver
@@ -208,9 +208,15 @@ unsigned long clock_seconds(void);
 #define UIP_CONF_WAIT_TIMEOUT     20
 
 #elif 1  /* Contiki-mac radio cycling */
-#define NETSTACK_CONF_MAC         nullmac_driver
-//#define NETSTACK_CONF_MAC         csma_driver
+//#define NETSTACK_CONF_MAC         nullmac_driver
+/* csma needed for burst mode at present. Webserver won't work without it */
+#define NETSTACK_CONF_MAC         csma_driver
 #define NETSTACK_CONF_RDC         contikimac_driver
+#define CONTIKIMAC_CONF_WITH_CONTIKIMAC_HEADER 0
+#define CONTIKIMAC_CONF_HARDWARE_ACKDETECT     1
+#define CONTIKIMAC_CONF_COMPOWER               1
+#define RIMESTATS_CONF_ON                      1
+#define WITH_PHASE_OPTIMIZATION                0
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
 #define CHANNEL_802_15_4          26

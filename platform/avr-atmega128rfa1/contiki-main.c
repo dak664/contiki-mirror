@@ -45,14 +45,6 @@
 #define PRINTD(...)
 #endif
 
-/* Track interrupt flow through mac, rdc and radio driver */
-#if DEBUGFLOWSIZE
-uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
-#define DEBUGFLOW(c) if (debugflowsize<(DEBUGFLOWSIZE-1)) debugflow[debugflowsize++]=c
-#else
-#define DEBUGFLOW(c)
-#endif
-
 #include <avr/pgmspace.h>
 #include <avr/fuse.h>
 #include <avr/eeprom.h>
@@ -76,6 +68,15 @@ uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
 #include "dev/rs232.h"
 #include "dev/serial-line.h"
 #include "dev/slip.h"
+
+/* Track interrupt flow through mac, rdc and radio driver */
+//define DEBUGFLOWSIZE 128
+#if DEBUGFLOWSIZE
+uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
+#define DEBUGFLOW(c) if (debugflowsize<(DEBUGFLOWSIZE-1)) debugflow[debugflowsize++]=c
+#else
+#define DEBUGFLOW(c)
+#endif
 
 #ifdef RAVEN_LCD_INTERFACE
 #include "raven-lcd.h"
@@ -467,7 +468,7 @@ main(void)
 #if DEBUGFLOWSIZE
   if (debugflowsize) {
     debugflow[debugflowsize]=0;
-    PRINTF("%s",debugflow);
+    PRINTF("%s\n",debugflow);
     debugflowsize=0;
    }
 #endif
