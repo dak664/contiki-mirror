@@ -367,7 +367,7 @@ powercycle(struct rtimer *t, void *ptr)
              received (as indicated by the
              NETSTACK_RADIO.pending_packet() function), we stop
              snooping. */
-#if 0		//econotag much better with this out. dont know about 128rfa1
+#if 1		//econotag much better with this out. dont know about 128rfa1
         if(NETSTACK_RADIO.channel_clear()) {
           ++silence_periods;
         } else {

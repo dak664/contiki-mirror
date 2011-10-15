@@ -510,7 +510,7 @@ on(void)
 #endif
 	sei();
 	hal_set_slptr_low();
-#if 0
+#if 1
 	while (rf230_interruptwait) {}
 #else
 {int i;for (i=0;i<10000;i++) {
@@ -995,8 +995,15 @@ for (i=0;i<10000;i++) {
   }
 
   RELEASE_LOCK();
-  if (tx_result==1) {               //success, data pending from adressee
+  
+  if (tx_result==0) {				//success
+    RIMESTATS_ADD(lltx);
+    if(packetbuf_attr(PACKETBUF_ATTR_RELIABLE))
+		RIMESTATS_ADD(ackrx);		//ack was requested and received
+//  tx_result = RADIO_TX_OK;		//which is also zero
+  } else if (tx_result==1) {        //success, data pending from adressee
     tx_result = RADIO_TX_OK;        //Just show success?
+	RIMESTATS_ADD(tx);
   } else if (tx_result==3) {        //CSMA channel access failure
     DEBUGFLOW('m');
     RIMESTATS_ADD(contentiondrop);
@@ -1005,6 +1012,7 @@ for (i=0;i<10000;i++) {
   } else if (tx_result==5) {        //Expected ACK, none received
     DEBUGFLOW('n');
     tx_result = RADIO_TX_NOACK;
+	RIMESTATS_ADD(badackrx);		//ack was requested but not received
   } else if (tx_result==7) {        //Invalid (Can't happen since waited for idle above?)
     DEBUGFLOW('o');
     tx_result = RADIO_TX_ERR;
@@ -1031,7 +1039,7 @@ rf230_prepare(const void *payload, unsigned short payload_len)
 //  PRINTF("rf230: sending %d bytes\n", payload_len);
 //  PRINTSHORT("s%d ",payload_len);
 
-  RIMESTATS_ADD(lltx);
+  RIMESTATS_ADD(tx);
 
 #if RF230_CONF_CHECKSUM
   checksum = crc16_data(payload, payload_len, 0);
@@ -1259,6 +1267,7 @@ if (RF230_receive_on) {
 #if RADIOSTATS //TODO:This will double count buffered packets
   RF230_receivepackets++;
 #endif
+  RIMESTATS_ADD(llrx);
 
 #if RADIOALWAYSON
 } else {
@@ -1466,7 +1475,7 @@ if (!RF230_receive_on) {
     packetbuf_set_attr(PACKETBUF_ATTR_RSSI, rf230_last_rssi);
     packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, rf230_last_correlation);
 
-    RIMESTATS_ADD(llrx);
+    RIMESTATS_ADD(rx);
 
 #if RF230_CONF_TIMESTAMPS
     rf230_time_of_departure =
@@ -1579,8 +1588,6 @@ rf230_cca(void)
 	    return 0;
   }
 
-  /* Don't allow interrupts! */
- // cli();
 
   /* Turn radio on if necessary. If radio is currently busy return busy channel */
   /* This may happen when testing radio duty cycling with RADIOALWAYSON */
@@ -1596,6 +1603,7 @@ rf230_cca(void)
     radio_was_off = 1;
     rf230_on();
   }
+  /* Don't allow interrupts! */
   cli();
   /* CCA Mode Mode 1=Energy above threshold  2=Carrier sense only  3=Both 0=Either (RF231 only) */
   /* Use the current mode. Note triggering a manual CCA is not recommended in extended mode */

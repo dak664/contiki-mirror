@@ -70,7 +70,17 @@ compower_accumulate(struct compower_activity *e)
   last_listen = listen;
 
   transmit = energest_type_time(ENERGEST_TYPE_TRANSMIT);
+#if 0
+  /*TODO This line never changes e->transmit, why? */
   e->transmit += transmit - last_transmit;
+#else
+ /* Using an intermediate global works */
+{static uint32_t testlong;
+  testlong+=transmit-last_transmit;
+  e->transmit =testlong;
+}
+#endif
+
   last_transmit = transmit;
 }
 /*---------------------------------------------------------------------------*/

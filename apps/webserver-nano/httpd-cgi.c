@@ -127,7 +127,7 @@ static const char *states[] = {
 //  extern unsigned long seconds, sleepseconds;
 #if RADIOSTATS
   extern unsigned long radioontime;
-  static unsigned long savedradioontime;
+  unsigned long savedseconds,savedradioontime;
   extern uint8_t RF230_radio_on, rf230_last_rssi;
   extern uint16_t RF230_sendpackets,RF230_receivepackets,RF230_sendfail,RF230_receivefail;
 #endif
@@ -534,29 +534,53 @@ generate_sensor_readings(void *arg)
   static const char httpd_cgi_sensor3d[] HTTPD_STRING_ATTR = "<em>Uptime    :</em> %u days %02u:%02u:%02u/n";
 // static const char httpd_cgi_sensor4[] HTTPD_STRING_ATTR = "<em>Sleeping time :</em> %02d:%02d:%02d (%d%%)<br>";
 
+/*TODO: Generalize temperature and battery measurement across all platforms */
+#if defined(__AVR_ATmega128RFA1__)
+  static const char httpd_cgi_sensor1_printf[] HTTPD_STRING_ATTR = "%d.%d C";
+  static const char httpd_cgi_sensor2_printf[] HTTPD_STRING_ATTR = "%d mv";
+   BATMON = 16; //give BATMON time to stabilize at highest range and lowest voltage
+/* Measure internal temperature sensor, see atmega128rfa1 datasheet */
+/* This code disabled by default for safety. Selecting an internal reference will short it to
+   anything connected to the AREF pin!
+  */
+#if 0
+  ADCSRB|=1<<MUX5;          //this bit buffered till ADMUX written to!
+  ADMUX =0xc9;              // Select internal 1.6 volt ref, temperature sensor ADC channel
+  ADCSRA=0x85;              //Enable ADC, not free running, interrupt disabled, clock divider 32 (250 KHz@ 8 MHz)
+  ADCSRA|=1<<ADSC;          //Start throwaway conversion
+  while (ADCSRA&(1<<ADSC)); //Wait till done
+  ADCSRA|=1<<ADSC;          //Start another conversion
+  while (ADCSRA&(1<<ADSC)); //Wait till done
+  h=ADC;                    //Read adc
+  h=11*h-2728+(h>>2);       //Convert to celcius*10 (should be 11.3*h, approximate with 11.25*h)
+  ADCSRA=0;                 //disable ADC
+  ADMUX=0;                  //turn off internal vref      
+  m=h/10;s=h-10*m;
+  httpd_snprintf(sensor_temperature,sizeof(sensor_temperature),httpd_cgi_sensor1_printf,m,s);
+#endif
+/* Bandgap can't be measured against supply voltage in this chip. */
+/* Use BATMON register instead */
+  uint8_t i;
+  for ( i=16; i<31; i++) {
+    BATMON = i;
+ // delay_us(100); //delay needed?
+    if ((BATMON&(1<<BATMON_OK))==0) break;
+  }
+  h=2550-75*16-75+75*i; //-75 to take the floor of the 75 mv transition window
+  httpd_snprintf(sensor_extvoltage,sizeof(sensor_extvoltage),httpd_cgi_sensor2_printf,h);
+#endif 
+
   numprinted=0;
   if (last_tempupdate) {
     numprinted =httpd_snprintf((char *)uip_appdata, uip_mss(), httpd_cgi_sensor0,(unsigned int) (seconds-last_tempupdate));
   }
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor1, sensor_temperature);
-
-#if 0
-//Measuring AVcc might be useful to check on battery condition but on ext power it's always 3v3
-  ADMUX =0x1E;              //Select AREF as reference, measure 1.1 volt bandgap reference.
-//ADMUX =0x5E;              //Select AVCC as reference, measure 1.1 volt bandgap reference.
-  ADCSRA=0x07;              //Enable ADC, not free running, interrupt disabled, clock divider  128 (62 KHz@ 8 MHz)
-  ADCSRA|=1<<ADSC;          //Start throwaway conversion
-  while (ADCSRA&(1<<ADSC)); //Wait till done
-  ADCSRA|=1<<ADSC;          //Start another conversion
-  while (ADCSRA&(1<<ADSC)); //Wait till done
-  h=1131632UL/ADC;          //Get supply voltage
-#endif
-
+ 
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor2, sensor_extvoltage);
-//   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensr12, sensor_temperature,sensor_extvoltage);
 
 #if RADIOSTATS
-  /* Remember radioontime for display below - slow connection might make it report longer than cpu ontime! */
+  /* Remember times for display below - slow connection might make radio on longer than uptime */
+  savedseconds = seconds;
   savedradioontime = radioontime;
 #endif
   h=seconds/3600;s=seconds-h*3600;m=s/60;s=s-m*60;
@@ -661,18 +685,11 @@ generate_radio_stats(void *arg)
   uint16_t numprinted;
   uint16_t h,m,s;
   uint8_t p1,p2;
-  unsigned long seconds=clock_seconds();
-  static const char httpd_cgi_sensor10[] HTTPD_STRING_ATTR = "<em>Radio on time  :</em> %02d:%02d:%02d (%d.%02d%%)<br>";
-  static const char httpd_cgi_sensor11[] HTTPD_STRING_ATTR = "<em>Packets:</em> Tx=%5d Rx=%5d  TxL=%5d RxL=%5d RSSI=%2ddBm\n";
+  static const char httpd_cgi_sensor10[] HTTPD_STRING_ATTR = "<pre><em>Radio on (RADIOSTATS):</em> %02u:%02u:%02u (%u.%02u%%)\n";
+  static const char httpd_cgi_sensor11[] HTTPD_STRING_ATTR = "<em>Packets  (RADOISTATS):</em> Tx=%5u  Rx=%5u   TxL=%4u RxL=%4u  RSSI=%2ddBm</pre>";
 
-  s=(10000UL*savedradioontime)/seconds;
-  p1=s/100;
-  p2=s-p1*100;
-  h=savedradioontime/3600;
-  s=savedradioontime-h*3600;
-  m=s/60;
-  s=s-m*60;
-
+  s=(10000UL*savedradioontime)/savedseconds;p1=s/100;p2=s-p1*100;
+  h=savedradioontime/3600;s=savedradioontime-h*3600;m=s/60;s=s-m*60;
   numprinted =httpd_snprintf((char *)uip_appdata             , uip_mss()             , httpd_cgi_sensor10,\
     h,m,s,p1,p2);
 
