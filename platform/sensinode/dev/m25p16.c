@@ -196,36 +196,22 @@ m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
 
   select();
   ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
-  bit_bang_write(M25P16_I_READ);
 
-  /* Write the address, MSB in addr[0], bits [7:5] of the MSB: 'don't care' */
-  for(i = 0; i < 3; i++) {
-    bit_bang_write(addr[i]);
-  }
-
-  for(i = 0; i < buff_len; i++) {
-    buff[i] = ~bit_bang_read();
-  }
-  ENERGEST_OFF(ENERGEST_TYPE_FLASH_READ);
-  deselect();
-}
-/*---------------------------------------------------------------------------*/
-void
-m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len)
-{
-  uint8_t i;
-
-  select();
-  ENERGEST_ON(ENERGEST_TYPE_FLASH_READ);
+#if M25P16_READ_FAST
   bit_bang_write(M25P16_I_FAST_READ);
+#else
+  bit_bang_write(M25P16_I_READ);
+#endif
 
   /* Write the address, MSB in addr[0], bits [7:5] of the MSB: 'don't care' */
   for(i = 0; i < 3; i++) {
     bit_bang_write(addr[i]);
   }
 
-  /* Write the dummy byte */
+  /* For FAST_READ, send the dummy byte */
+#if M25P16_READ_FAST
   bit_bang_write(M25P16_DUMMY_BYTE);
+#endif
 
   for(i = 0; i < buff_len; i++) {
     buff[i] = ~bit_bang_read();

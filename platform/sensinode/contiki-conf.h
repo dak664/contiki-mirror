@@ -138,6 +138,11 @@ typedef unsigned short clock_time_t;
 #define DMA_CONF_ON 0
 #endif
 
+/* N740 Serial Flash */
+#ifndef M25P16_CONF_ON
+#define M25P16_CONF_ON  1
+#endif
+
 /* XXX argh, ugly hack to make stuff compile! */
 #define snprintf(BUF, SIZE, ...) sprintf(BUF, __VA_ARGS__)
 

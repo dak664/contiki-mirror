@@ -70,6 +70,13 @@
 #define M25P16_SR_BP       0x1C /* All Block Protect Bits */
 #define M25P16_SR_WEL      0x02 /* Write Enable Latch */
 #define M25P16_SR_WIP      0x01 /* Write in Progress */
+
+/* Do we use READ or FAST_READ to read? Fast by default */
+#ifdef M25P16_CONF_READ_FAST
+#define M25P16_READ_FAST M25P16_CONF_READ_FAST
+#else
+#define M25P16_READ_FAST 1
+#endif
 /*---------------------------------------------------------------------------*/
 /** \brief Device Identifier
  *
@@ -168,20 +175,6 @@ void m25p16_wrsr(uint8_t val);
  * in the flash will read as 0x00
  */
 void m25p16_read(uint8_t * addr, uint8_t * buff, uint8_t buff_len);
-
-/**
- * \brief Read Data Bytes at Higher Speed (FAST_READ) instruction
-
- * \param addr 3 byte array holding the read start address. MSB stored in
- *        addr[0] and LSB in addr[2]
- * \param buff Pointer to a buffer to hold the read bytes.
- * \param buff_len Number of bytes to read. buff must be long enough to hold
- *        buff_len bytes
-
- * The bytes will be inverted after being read, so that a value of 0xFF (empty)
- * in the flash will read as 0x00
- */
-void m25p16_read_fast(uint8_t * addr, uint8_t * buff, uint8_t buff_len);
 
 /**
  * \brief Program Page (PP) instruction

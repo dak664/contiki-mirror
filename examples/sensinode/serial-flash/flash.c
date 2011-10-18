@@ -238,16 +238,6 @@ PROCESS_THREAD(serial_flash_process, ev, data)
       /* Trash our data buffer */
       memset(d_buf, 0, MAX_READ_CHUNK);
 
-      /* Read the flash contents in fast mode */
-      m25p16_read_fast(r_addr, d_buf, MAX_READ_CHUNK);
-      n740_analog_activate();
-
-      PRINTF("FAST:");
-      for(i = 0; i < MAX_READ_CHUNK; i++) {
-        PRINTF(" %02x", d_buf[i]);
-      }
-      PRINTF("\n");
-
       PRINTF("ERASE\n");
       n740_analog_deactivate();
 

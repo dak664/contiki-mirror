@@ -61,7 +61,11 @@ model_init()
 
   /* Put the Serial Flash in Deep Power mode */
   n740_analog_deactivate();
+
+#if M25P16_CONF_ON
   m25p16_dp();
+#endif /* SERIAL_FLASH_CONF_ON */
+
   n740_ser_par_set(0);
 #endif
 }
