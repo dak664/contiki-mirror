@@ -219,8 +219,13 @@ typedef unsigned short clock_time_t;
 
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER       10000
+
+#ifndef UIP_CONF_DS6_NBR_NBU
 #define UIP_CONF_DS6_NBR_NBU                 4 /* Handle n Neighbors */
+#endif
+#ifndef UIP_CONF_DS6_ROUTE_NBU
 #define UIP_CONF_DS6_ROUTE_NBU               4 /* Handle n Routes */
+#endif
 
 /* uIP */
 #define UIP_CONF_BUFFER_SIZE               240
