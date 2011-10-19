@@ -423,6 +423,23 @@ main(void)
 {
   initialize();
 
+#if 0
+//bug in codesourcery compiler returns an extra count for each inserted zero padding
+//%03x returns 5 when 3 is printed, 4 when 30 is printed, 3 when 300 is printed
+  {uint8_t i,sl;char mystr[32];
+  strcpy(mystr,"aaaaaaaaaa");
+  sl=sprintf(mystr, "%03u", 3);
+printf("numprinted %u, stringlength %u, string %s\n",sl,strlen(mystr),mystr);
+for (i=0;i<10;i++) printf("%u ",mystr[i]);printf("\n");
+  sl=sprintf(mystr, "%03u", 30);
+printf("numprinted %u, stringlength %u, string %s\n",sl,strlen(mystr),mystr);
+  sl=sprintf(mystr, "%03u", 300);
+printf("numprinted %u, stringlength %u, string %s\n",sl,strlen(mystr),mystr);
+  sl=sprintf(mystr, "%03u", 3000);
+printf("numprinted %u, stringlength %u, string %s\n",sl,strlen(mystr),mystr);
+}
+#endif 
+  
   while(1) {
     process_run();
     watchdog_periodic();

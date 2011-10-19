@@ -591,12 +591,14 @@ generate_sensor_readings(void *arg)
   	h=h-days*24;	
 	numprinted+=httpd_snprintf((char *)uip_appdata + numprinted, uip_mss() - numprinted, httpd_cgi_sensor3d, days,h,m,s);
   }
-/* TODO: some gcc's have a bug with %02d format that adds an extra char after the string terminator.
+/* TODO: some implementations s have a bug with %02d format that returns an extra count for each inserted leading zero.
  * Seen with arm-none-eabi-gcc.exe (Sourcery G++ Lite 2008q3-66) 4.3.2
- * Quick cosmetic fix to strip that off: */
+ * With 3 %03u specifiers that could be up to three too much. Back up to before the null */
+#if SPRINTF_LIBRARY_BUG
     if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
     else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
     else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
+#endif
 	
 #if 0
   if (sleepseconds) {
@@ -626,17 +628,21 @@ generate_sensor_readings(void *arg)
   sl=energest_total_time[ENERGEST_TYPE_TRANSMIT].current/RTIMER_ARCH_SECOND;
   h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor10, h,m,s,p1,p2);
+#if SPRINTF_LIBRARY_BUG
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
   else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
   else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
+#endif
   sl=energest_total_time[ENERGEST_TYPE_LISTEN].current/RTIMER_ARCH_SECOND;
   h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor11, h,m,s,p1,p2);
+#if SPRINTF_LIBRARY_BUG
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
   else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
   else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
+#endif
 }
 #endif /* ENERGEST_CONF_ON */
 
@@ -651,17 +657,21 @@ generate_sensor_readings(void *arg)
   sl=compower_idle_activity.transmit/RTIMER_ARCH_SECOND;
   h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor31, h,m,s,p1,p2);
+#if SPRINTF_LIBRARY_BUG
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
   else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
   else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
+#endif
   sl=compower_idle_activity.listen/RTIMER_ARCH_SECOND;
   h=(10000UL*sl)/seconds;p1=h/100;p2=h-p1*100;h=sl/3600;s=sl-h*3600;m=s/60;s=s-m*60;
   numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor32, h,m,s,p1,p2);
+#if SPRINTF_LIBRARY_BUG
   if (*(char *)(uip_appdata + numprinted-4)==0) {numprinted-=4;}
   else if (*(char *)(uip_appdata + numprinted-3)==0) {numprinted-=3;}
   else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
   else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
+#endif
 }
 #endif
 

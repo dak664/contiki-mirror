@@ -110,8 +110,8 @@ static int is_receiver_awake = 0;
 #define CCA_CHECK_TIME                     RTIMER_ARCH_SECOND / 8192
 
 /* CCA_SLEEP_TIME is the time between two successive CCA checks. */
-//#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 2000
-#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 100
+#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 2000
+//#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 100
 
 /* CHECK_TIME is the total time it takes to perform CCA_COUNT_MAX
    CCAs. */
@@ -163,7 +163,8 @@ static int is_receiver_awake = 0;
    allows. Packets have to be a certain size to be able to be detected
    by two consecutive CCA checks, and here is where we define this
    shortest size. */
-#define SHORTEST_PACKET_SIZE               43
+//#define SHORTEST_PACKET_SIZE               43
+#define SHORTEST_PACKET_SIZE               43-18  //multicast RPL DIS length
 
 
 #define ACK_LEN 3
@@ -695,6 +696,10 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
         }
       }
 #endif /*  CONTIKIMAC_CONF_HARDWARE_ACKDETECT */
+#if CONTIKIMAC_CONF_COMPOWER
+/* Assigned energy for repeated multicasts and noack unicasts to the mac layer */
+	  compower_accumulate(&compower_idle_activity);
+#endif
       previous_txtime = txtime;
     }
   }
@@ -706,7 +711,7 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
          got_strobe_ack ? "ack" : "no ack",
          collisions ? "collision" : "no collision");
 
-#if CONTIKIMAC_CONF_COMPOWER
+#if CONTIKIMAC_CONF_COMPOWER&&0
   /* Accumulate the power consumption for the packet transmission. */
   compower_accumulate(&current_packet);
 
@@ -733,6 +738,20 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
     ret = MAC_TX_NOACK;
   } else {
     ret = MAC_TX_OK;
+#if CONTIKIMAC_CONF_COMPOWER
+  /* Accumulate the power consumption for the packet transmission. */
+  compower_accumulate(&current_packet);
+
+  /* Convert the accumulated power consumption for the transmitted
+     packet to packet attributes so that the higher levels can keep
+     track of the amount of energy spent on transmitting the
+     packet. */
+  compower_attrconv(&current_packet);
+
+  /* Clear the accumulated power consumption so that it is ready for
+     the next packet. */
+  compower_clear(&current_packet);
+#endif /* CONTIKIMAC_CONF_COMPOWER */
   }
 
 #if WITH_PHASE_OPTIMIZATION
@@ -871,6 +890,9 @@ input_packet(void)
                           &received_seqnos[i].sender)) {
             /* Drop the packet. */
             /*        printf("Drop duplicate ContikiMAC layer packet\n");*/
+#if CONTIKIMAC_CONF_COMPOWER
+      compower_accumulate(&compower_idle_activity);
+#endif
             return;
           }
         }

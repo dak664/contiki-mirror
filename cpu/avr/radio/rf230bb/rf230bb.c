@@ -496,11 +496,11 @@ static void
 on(void)
 {
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
-  
+   RF230_receive_on = 1;  //see if sampling in clock.c works better with this 
 #ifdef RF230BB_HOOK_RADIO_ON
   RF230BB_HOOK_RADIO_ON();
 #endif
-
+  
   if (hal_get_slptr()) {
 #if defined(__AVR_ATmega128RFA1__)
 	rf230_interruptwait=1;
@@ -510,11 +510,8 @@ on(void)
 #endif
 	sei();
 	hal_set_slptr_low();
-#if 1  //5 msec
+#if 1
 	while (rf230_interruptwait) {}
-#elif 1 //also 5 msec
-		    delay_us(TIME_SLEEP_TO_TRX_OFF);
-				    delay_us(TIME_SLEEP_TO_TRX_OFF);
 #else
 {int i;for (i=0;i<10000;i++) {
 	if (!rf230_interruptwait) break;
@@ -542,18 +539,21 @@ on(void)
   DEBUGFLOW('b');
 #endif
 
-  RF230_receive_on = 1;
+//  RF230_receive_on = 1;
 }
 static void
 off(void)
 {
+#if RF230BB_CONF_LEDONPORTE1
+  PORTE&=~(1<<PE1); //ledoff
+#endif
 #ifdef RF230BB_HOOK_RADIO_OFF
   RF230BB_HOOK_RADIO_OFF();
 #endif
 
   /* Wait any transmission to end */
   rf230_waitidle(); 
-  RF230_receive_on = 0;
+ // RF230_receive_on = 0;
 #if RADIOALWAYSON
 /* Do not transmit autoacks when stack thinks radio is off */
   radio_set_trx_state(RX_ON);
@@ -566,13 +566,13 @@ off(void)
   hal_set_slptr_high();
   ENERGEST_OFF(ENERGEST_TYPE_LED_RED);
 #if RF230BB_CONF_LEDONPORTE1
-  PORTE&=~(1<<PE1); //ledoff
+ // PORTE&=~(1<<PE1); //ledoff
 #endif
 // DEBUGFLOW('d');
 #else
  // DEBUGFLOW('e');
 #endif
-
+  RF230_receive_on = 0;
 #endif /* RADIOALWAYSON */
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
@@ -1594,7 +1594,7 @@ rf230_cca(void)
 
   /* Turn radio on if necessary. If radio is currently busy return busy channel */
   /* This may happen when testing radio duty cycling with RADIOALWAYSON */
-#if 0
+#if 1
   if(RF230_receive_on) {
     if (hal_get_slptr()) {  //should not be sleeping!
 	  DEBUGFLOW('<');
@@ -1607,7 +1607,7 @@ rf230_cca(void)
     rf230_on();
   }
   /* Don't allow interrupts! */
-  cli();
+//  cli();
 #endif
   /* CCA Mode Mode 1=Energy above threshold  2=Carrier sense only  3=Both 0=Either (RF231 only) */
   /* Use the current mode. Note triggering a manual CCA is not recommended in extended mode */
@@ -1616,27 +1616,31 @@ rf230_cca(void)
   /* Start the CCA, wait till done, return result */
   /* Note reading the TRX_STATUS register clears both CCA_STATUS and CCA_DONE bits */
 #if defined(__AVR_ATmega128RFA1__)
-  /* Manual CCA gives no interrupt in extended mode, and testing cca done hangs the MCU */
-#if 1
+#if 1  //interrupt method
     sei();
 //rf230_waitidle();
-//disable reception for version bug
+//TODO:disable reception for version bug
   radio_set_trx_state(RX_ON);
 //  rf230_waitidle();
 	rf230_cccwait=1;
-
+//CCA_REQUEST is supposed to trigger the interrupt but it doesn't
   //  hal_subregister_write(SR_CCA_REQUEST,1);
 	hal_register_write(PHY_ED_LEVEL,0);
 	//  delay_us(TIME_CCA);
 	//  	if (hal_register_read(RG_PHY_ED_LEVEL)<(91-77)) cca=0xff;
 	while (rf230_cccwait) {}
-		  	if (hal_register_read(RG_PHY_ED_LEVEL)<(91-77)) cca=0xff;
+#ifdef RF230_CONF_CCA_THRES
+    if (hal_register_read(RG_PHY_ED_LEVEL)<(91+RF230_CONF_CCA_THRES) cca=0xff;
+#else
+	if (hal_register_read(RG_PHY_ED_LEVEL)<(91-77)) cca=0xff;
+#endif
+//TODO:see if the status register works!
  //   cca=hal_register_read(RG_TRX_STATUS);
 #if RF230_CONF_AUTOACK
   radio_set_trx_state(RX_AACK_ON);
 #endif
 #else
-  /* So just read the current ED register without delay */
+  /* If already in receive mode can read the current ED register without delay */
   /* CCA energy threshold = -91dB + 2*SR_CCA_ED_THRESH. Reset defaults to -77dB */
 #ifdef RF230_CONF_CCA_THRES
     if (hal_register_read(RG_PHY_ED_LEVEL)<(91+RF230_CONF_CCA_THRES) cca=0xff;
@@ -1647,6 +1651,8 @@ rf230_cca(void)
 
 
 #else /* RF230, RF231 */
+  /* Start the CCA, wait till done, return result */
+  /* Note reading the TRX_STATUS register clears both CCA_STATUS and CCA_DONE bits */
   hal_subregister_write(SR_CCA_REQUEST,1);
   delay_us(TIME_CCA);
   while ((cca & 0x80) == 0 ) {
