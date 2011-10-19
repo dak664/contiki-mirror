@@ -303,7 +303,7 @@ init(void)
     return 0;
   }
 
-    PRINTF("cc2430_rf_init called\n");
+  PRINTF("cc2430_rf_init called\n");
 
   RFPWR &= ~RREG_RADIO_PD;  /*make sure it's powered*/
   while((RFPWR & ADI_RADIO_PD) == 1);
@@ -452,7 +452,7 @@ transmit(unsigned short transmit_len)
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
 
   if(rf_flags & WAS_OFF){
-	  off();
+    off();
   }
 
   RIMESTATS_ADD(lltx);
