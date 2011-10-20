@@ -495,51 +495,42 @@ static uint8_t locked, lock_on, lock_off;
 static void
 on(void)
 {
+   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);//testing
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
-   RF230_receive_on = 1;  //see if sampling in clock.c works better with this 
+  RF230_receive_on = 1;
 #ifdef RF230BB_HOOK_RADIO_ON
   RF230BB_HOOK_RADIO_ON();
 #endif
-  
+
+/* If radio is off (slptr high), turn it on */
   if (hal_get_slptr()) {
-#if defined(__AVR_ATmega128RFA1__)
-	rf230_interruptwait=1;
-	ENERGEST_ON(ENERGEST_TYPE_LED_RED);
+  	ENERGEST_ON(ENERGEST_TYPE_LED_RED);
 #if RF230BB_CONF_LEDONPORTE1
 	PORTE|=(1<<PE1); //ledon
 #endif
+#if defined(__AVR_ATmega128RFA1__)
+/* Use the poweron interrupt for delay */
+	rf230_interruptwait=1;
 	sei();
 	hal_set_slptr_low();
-#if 1
 	while (rf230_interruptwait) {}
-#else
-{int i;for (i=0;i<10000;i++) {
-	if (!rf230_interruptwait) break;
-}}
-#endif
-}
 #else /* SPI based radios */
+/* SPI based radios. The wake time depends on board capacitance, use 2x the nominal value for safety */
     uint8_t sreg = SREG;
     cli();
-//   DEBUGFLOW('0');
     hal_set_slptr_low();
-    delay_us(TIME_SLEEP_TO_TRX_OFF);
-    delay_us(TIME_SLEEP_TO_TRX_OFF);//extra delay for now, wake time depends on board capacitance
+    delay_us(TIME_SLEEP_TO_TRX_OFF * 2);
 	SREG=sreg;
+#endif
   }
   rf230_waitidle();
-#endif
 
 #if RF230_CONF_AUTOACK
  // radio_set_trx_state(is_promiscuous?RX_ON:RX_AACK_ON);
   radio_set_trx_state(RX_AACK_ON);
-//DEBUGFLOW('a');
 #else
   radio_set_trx_state(RX_ON);
-  DEBUGFLOW('b');
 #endif
-
-//  RF230_receive_on = 1;
 }
 static void
 off(void)
@@ -553,11 +544,10 @@ off(void)
 
   /* Wait any transmission to end */
   rf230_waitidle(); 
- // RF230_receive_on = 0;
+
 #if RADIOALWAYSON
 /* Do not transmit autoacks when stack thinks radio is off */
   radio_set_trx_state(RX_ON);
-//DEBUGFLOW('c');
 #else 
   /* Force the device into TRX_OFF. */   
   radio_reset_state_machine();
@@ -565,17 +555,11 @@ off(void)
   /* Sleep Radio */
   hal_set_slptr_high();
   ENERGEST_OFF(ENERGEST_TYPE_LED_RED);
-#if RF230BB_CONF_LEDONPORTE1
- // PORTE&=~(1<<PE1); //ledoff
 #endif
-// DEBUGFLOW('d');
-#else
- // DEBUGFLOW('e');
-#endif
-  RF230_receive_on = 0;
 #endif /* RADIOALWAYSON */
 
-  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+   RF230_receive_on = 0;
+   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 }
 /*---------------------------------------------------------------------------*/
 #define GET_LOCK() locked = 1
@@ -793,6 +777,18 @@ void rf230_warm_reset(void) {
 
   /* Carrier sense threshold (not implemented in RF230 or RF231) */
 // hal_subregister_write(SR_CCA_CS_THRES,1);
+
+  /* Receiver sensitivity. If nonzero rf231/128rfa1 saves 0.5ma in rx mode */
+  /* Not implemented on rf230 but does not hurt to write to it */
+#ifdef RF230_MIN_RX_POWER
+#if RF230_MIN_RX_POWER > 84
+#warning rf231 power threshold clipped to -48dBm by hardware register
+ hal_register_write(RG_RX_SYN, 0xf);
+#elif RF230_MIN_RX_POWER < 0
+#error RF230_MIN_RX_POWER can not be negative!
+#endif
+  hal_register_write(RG_RX_SYN, RF230_MIN_RX_POWER/6 + 1); //1-15 -> -90 to -48dBm
+#endif
 
   /* CCA energy threshold = -91dB + 2*SR_CCA_ED_THRESH. Reset defaults to -77dB */
   /* Use RF230 base of -91;  RF231 base is -90 according to datasheet */
@@ -1609,6 +1605,7 @@ rf230_cca(void)
   /* Don't allow interrupts! */
 //  cli();
 #endif
+  ENERGEST_ON(ENERGEST_TYPE_LED_YELLOW);
   /* CCA Mode Mode 1=Energy above threshold  2=Carrier sense only  3=Both 0=Either (RF231 only) */
   /* Use the current mode. Note triggering a manual CCA is not recommended in extended mode */
 //hal_subregister_write(SR_CCA_MODE,1);
@@ -1659,7 +1656,7 @@ rf230_cca(void)
     cca=hal_register_read(RG_TRX_STATUS);
   }
 #endif
-  
+  ENERGEST_OFF(ENERGEST_TYPE_LED_YELLOW); 
   if(radio_was_off) {
     rf230_off();
   }

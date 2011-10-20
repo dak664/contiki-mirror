@@ -212,23 +212,35 @@ unsigned long clock_seconds(void);
 /* csma needed for burst mode at present. Webserver won't work without it */
 #define NETSTACK_CONF_MAC         csma_driver
 #define NETSTACK_CONF_RDC         contikimac_driver
+/* Default is two CCA separated by 500 usec */
+#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE   8
+/* Wireshark won't decode with the header, but padded packets will fail ipv6 checksum */
 #define CONTIKIMAC_CONF_WITH_CONTIKIMAC_HEADER 0
+/* So without the header this needed for RPL mesh to form */
+//#define SHORTEST_PACKET_SIZE               43-18  //multicast RPL DIS length
+/* TX routine passes the cca/ack result in the return parameter */
 #define CONTIKIMAC_CONF_HARDWARE_ACKDETECT     1
+/* Not tested much yet */
+#define WITH_PHASE_OPTIMIZATION                0
 #define CONTIKIMAC_CONF_COMPOWER               1
 #define RIMESTATS_CONF_ON                      1
-#define WITH_PHASE_OPTIMIZATION                0
+
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
 #define CHANNEL_802_15_4          26
 /* The radio needs to interrupt during an rtimer interrupt */
 #define RTIMER_CONF_NESTED_INTERRUPTS 1
 #define RF230_CONF_AUTOACK        1
+/* A 0 here means non-extended mode; 1 means extended mode with no retry, >1 for retrys */
 #define RF230_CONF_AUTORETRIES    1
+/* A 0 here means no cca; 1 means extended mode with cca but no retry, >1 for backoff retrys */
 #define RF230_CONF_CSMARETRIES    1
-#define CONTIKIMAC_CONF_RADIO_ALWAYS_ON  0
+/* The rf231 and atmega128rfa1 can use an rssi threshold for triggering rx_busy that saves 0.5ma in rx mode */
+/* 1 - 15 maps into -90 to -48 dBm. Undefine for maximum sensitivity */
+#define RF230_MIN_RX_POWER        1
 #define SICSLOWPAN_CONF_FRAG      1
 #define SICSLOWPAN_CONF_MAXAGE    3
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
+
 
 #elif 1  /* cx-mac radio cycling */
 /* RF230 does clear-channel assessment in extended mode (autoretries>0) */

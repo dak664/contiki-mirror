@@ -643,6 +643,29 @@ generate_sensor_readings(void *arg)
   else if (*(char *)(uip_appdata + numprinted-2)==0) {numprinted-=2;}
   else if (*(char *)(uip_appdata + numprinted-1)==0) {numprinted-=1;}
 #endif
+#if 0
+  static const char httpd_cgi_sensor40[] HTTPD_STRING_ATTR = "<em>Other      (ENERGEST):</em> RIRQ %u.%02u%%";
+  static const char httpd_cgi_sensor41[] HTTPD_STRING_ATTR = "RLED %u.%02u%%\n";
+  sl=(10000UL*energest_total_time[ENERGEST_TYPE_IRQ].current)/RTIMER_ARCH_SECOND;
+  h=sl;p1=h/100;p2=h-p1*100;
+  numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor40,p1,p2);
+  sl=(10000UL*energest_total_time[ENERGEST_TYPE_LED_RED].current)/RTIMER_ARCH_SECOND;
+  h=sl;p1=h/100;p2=h-p1*100;
+  numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor41,p1,p2);
+#else
+  static const char httpd_cgi_sensor40[] HTTPD_STRING_ATTR = "<em>Other      (ENERGEST):</em> RIRQ %lu ";
+  static const char httpd_cgi_sensor41[] HTTPD_STRING_ATTR = "RLED %lu ";
+  static const char httpd_cgi_sensor42[] HTTPD_STRING_ATTR = "GLED %lu ";
+  static const char httpd_cgi_sensor43[] HTTPD_STRING_ATTR = "YLED %lu\n";
+  sl=energest_total_time[ENERGEST_TYPE_IRQ].current;
+  numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor40,sl);
+  sl=energest_total_time[ENERGEST_TYPE_LED_RED].current;
+  numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor41,sl);
+  sl=energest_total_time[ENERGEST_TYPE_LED_GREEN].current;
+  numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor42,sl);
+  sl=energest_total_time[ENERGEST_TYPE_LED_YELLOW].current;
+  numprinted+=httpd_snprintf((char *)uip_appdata+numprinted, uip_mss()-numprinted, httpd_cgi_sensor43,sl);
+#endif
 }
 #endif /* ENERGEST_CONF_ON */
 

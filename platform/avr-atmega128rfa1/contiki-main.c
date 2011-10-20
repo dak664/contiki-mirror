@@ -102,7 +102,8 @@ uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
 /* Get periodic prints from idle loop, from clock seconds or rtimer interrupts */
 /* Use of rtimer will conflict with other rtimer interrupts such as contikimac radio cycling */
 /* STAMPS will print ENERGEST outputs if that is enabled. */
-#define PERIODICPRINTS 1
+/* RS232 output will delay contikimac power cycles and give much larger radio on times! */
+#define PERIODICPRINTS 0
 #if PERIODICPRINTS
 //#define PINGS 64
 #define ROUTES 600
@@ -426,6 +427,7 @@ main(void)
 #if 0
 //bug in codesourcery compiler returns an extra count for each inserted zero padding
 //%03x returns 5 when 3 is printed, 4 when 30 is printed, 3 when 300 is printed
+//enable this code to test your toolchain
   {uint8_t i,sl;char mystr[32];
   strcpy(mystr,"aaaaaaaaaa");
   sl=sprintf(mystr, "%03u", 3);
@@ -472,6 +474,7 @@ printf("numprinted %u, stringlength %u, string %s\n",sl,strlen(mystr),mystr);
 
 #if 0
 /* Clock.c can trigger a periodic PLL calibration in the RF230BB driver.
+ * Calibration only necessary if the radio  continuously on for > 5 minutes
  * This can show when that happens.
  */
     extern uint8_t rf230_calibrated;

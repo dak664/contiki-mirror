@@ -51,6 +51,7 @@
 #include "sys/compower.h"
 #include "sys/pt.h"
 #include "sys/rtimer.h"
+#include "sys/energest.h"
 
 
 #include <string.h>
@@ -107,11 +108,13 @@ static int is_receiver_awake = 0;
 #define CCA_COUNT_MAX_TX                   6
 
 /* CCA_CHECK_TIME is the time it takes to perform a CCA check. */
+/* Note this may be zero e.g. AVRs having 7612 ticks/sec; ok since the cca routine hangs */
 #define CCA_CHECK_TIME                     RTIMER_ARCH_SECOND / 8192
 
 /* CCA_SLEEP_TIME is the time between two successive CCA checks. */
-#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 2000
-//#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 100
+//#define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 2000
+/* Bump this up to 4 ticks for AVRs with 7812 ticks/sec */
+#define CCA_SLEEP_TIME                     (RTIMER_ARCH_SECOND + 200) / 2000
 
 /* CHECK_TIME is the total time it takes to perform CCA_COUNT_MAX
    CCAs. */
@@ -123,8 +126,11 @@ static int is_receiver_awake = 0;
 
 /* LISTEN_TIME_AFTER_PACKET_DETECTED is the time that we keep checking
    for activity after a potential packet has been detected by a CCA
-   check. */
+   check. LISTEN_TIME_AFTER_PACKET_TO_ME_DETECTED is the time after a
+   unicast packet directed to the node. Setting longer than the TCP ack
+   turnaround will avoid much strobe activity. */
 #define LISTEN_TIME_AFTER_PACKET_DETECTED  RTIMER_ARCH_SECOND / 80
+#define LISTEN_TIME_AFTER_PACKET_TO_ME_DETECTED  RTIMER_ARCH_SECOND / 80
 
 /* MAX_SILENCE_PERIODS is the maximum amount of periods (a period is
    CCA_CHECK_TIME + CCA_SLEEP_TIME) that we allow to be silent before
@@ -316,6 +322,7 @@ powercycle_turn_radio_on(void)
     on();
   }
 }
+    uint8_t packet_seen;  //expose to radio driver
 /*---------------------------------------------------------------------------*/
 static char
 powercycle(struct rtimer *t, void *ptr)
@@ -325,9 +332,10 @@ powercycle(struct rtimer *t, void *ptr)
   cycle_start = RTIMER_NOW();
   
   while(1) {
-    static uint8_t packet_seen;
+//   static uint8_t packet_seen;
     static rtimer_clock_t t0;
     static uint8_t count;
+    static rtimer_clock_t start,listenend;
 
     cycle_start += CYCLE_TIME;
 
@@ -336,6 +344,7 @@ powercycle(struct rtimer *t, void *ptr)
     for(count = 0; count < CCA_COUNT_MAX; ++count) {
       t0 = RTIMER_NOW();
       if(we_are_sending == 0 && we_are_receiving_burst == 0) {
+	    	ENERGEST_ON(ENERGEST_TYPE_LED_GREEN);
         powercycle_turn_radio_on();
         /* Check if a packet is seen in the air. If so, we keep the
              radio on for a while (LISTEN_TIME_AFTER_PACKET_DETECTED) to
@@ -344,32 +353,55 @@ powercycle(struct rtimer *t, void *ptr)
              false positive: a spurious radio interference that was not
              caused by an incoming packet. */
         if(NETSTACK_RADIO.channel_clear() == 0) {
+			    	ENERGEST_OFF(ENERGEST_TYPE_LED_GREEN);
           packet_seen = 1;
           break;
         }
-        powercycle_turn_radio_off();
+#if 0
+/* attempt to keep radio on after a powercycle when packet received wait has not timed out.
+ * not working on the 128rfa1, the rtimer wrap leaves it on occasionally for 8 seconds */
+		if(!RTIMER_CLOCK_LT(RTIMER_NOW(), listenend)) {
+			    	ENERGEST_OFF(ENERGEST_TYPE_LED_GREEN);
+			powercycle_turn_radio_off();
+		} else if (RTIMER_CLOCK_LT(RTIMER_NOW(), 2 * CYCLE_TIME)) {  //rtimer has probably wrapped
+			    	ENERGEST_OFF(ENERGEST_TYPE_LED_GREEN);
+			powercycle_turn_radio_off();
+		}
+#else
+	    	ENERGEST_OFF(ENERGEST_TYPE_LED_GREEN);
+		powercycle_turn_radio_off();
+#endif
       }
+	  
       schedule_powercycle_fixed(t, RTIMER_NOW() + CCA_SLEEP_TIME);
       PT_YIELD(&pt);
     }
 
     if(packet_seen) {
-      static rtimer_clock_t start;
+//      static rtimer_clock_t start;
       static uint8_t silence_periods, periods;
       start = RTIMER_NOW();
+	  listenend = start + LISTEN_TIME_AFTER_PACKET_DETECTED;
+//	  if (listenend < start) rtimerwrap = 0xffff;else rtimerwrap = 0;
 
       periods = silence_periods = 0;
-      while(we_are_sending == 0 && radio_is_on &&
-            RTIMER_CLOCK_LT(RTIMER_NOW(),
-                            (start + LISTEN_TIME_AFTER_PACKET_DETECTED))) {
+ //     while(we_are_sending == 0 && radio_is_on &&
+      while(radio_is_on &&
+            RTIMER_CLOCK_LT(RTIMER_NOW(),listenend)) {
 
+//driver can cancel packet_seen if does not pass address filter
+		if (packet_seen == 0) {
+			listenend=RTIMER_NOW();
+			 powercycle_turn_radio_off();
+			break;
+		}			
         /* Check for a number of consecutive periods of
              non-activity. If we see two such periods, we turn the
              radio off. Also, if a packet has been successfully
              received (as indicated by the
              NETSTACK_RADIO.pending_packet() function), we stop
              snooping. */
-#if 1		//econotag much better with this out. dont know about 128rfa1
+#if 0		//econotag much better with this out. dont know about 128rfa1
         if(NETSTACK_RADIO.channel_clear()) {
           ++silence_periods;
         } else {
@@ -394,6 +426,8 @@ powercycle(struct rtimer *t, void *ptr)
           break;
         }
         if(NETSTACK_RADIO.pending_packet()) {
+		  listenend = start + LISTEN_TIME_AFTER_PACKET_TO_ME_DETECTED;
+//		  if (listenend < start) rtimerwrap =0xffff; else rtimerwrap = 0;
           break;
         }
 
@@ -408,7 +442,9 @@ powercycle(struct rtimer *t, void *ptr)
           powercycle_turn_radio_off();
         }
       }
-    }
+    } else {
+	  listenend = 0;
+	}
 
     if(RTIMER_CLOCK_LT(RTIMER_NOW() - cycle_start, CYCLE_TIME - CHECK_TIME * 4)) {
       schedule_powercycle_fixed(t, CYCLE_TIME + cycle_start);
@@ -604,7 +640,9 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr, struct rdc_buf_
     for(i = 0; i < CCA_COUNT_MAX_TX; ++i) {
       t0 = RTIMER_NOW();
       on();
+#if CCA_CHECK_TIME > 0
       while(RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + CCA_CHECK_TIME)) { }
+#endif
       if(NETSTACK_RADIO.channel_clear() == 0) {
         collisions++;
         off();
