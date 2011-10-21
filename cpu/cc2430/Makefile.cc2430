@@ -137,13 +137,12 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
 	rm -f $@
 	for target in $^; do echo $$target >> $@; done
 
-.PRECIOUS: %.$(TARGET) %.ihx %.hex $(OBJECTDIR)/%.app.rel
+.PRECIOUS: %.$(TARGET)
 
 # build app/example local object files. We need a separate rule so that we can
 # pass -DAUTOSTART_ENABLE for those files only
 $(OBJECTDIR)/%.app.rel: %.c $(OBJECTDIR)/segment.rules
-	$(CC) $(call c_seg,$<) -DAUTOSTART_ENABLE $(CFLAGS) -c $< -o $@ -Wp,-MMD,$(@:.rel=.d),-MQ,$@
-	@$(FINALIZE_SDCC_DEPENDENCY)
+	$(CC) $(call c_seg,$<) -DAUTOSTART_ENABLE $(CFLAGS) -c $< -o $@
 
 # .ihx is the sdcc binary output file
 %.ihx: $(OBJECTDIR)/%.app.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib
