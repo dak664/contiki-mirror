@@ -1,7 +1,7 @@
 # segment.rules - platform/sensinode
 
 # segment.rules file for code in platform/sensinode
-# Please see cpu/cc2430/segment.rules for more info on segments
+# Please see cpu/cc2430/segment.rules for more info on code segments
 # and for rules of thumb on what to do and what not to do
 
 # Keep main() in HOME
@@ -10,16 +10,4 @@ HOME contiki-sensinode-main.c
 # Files with ISRs must be in HOME
 HOME platform/sensinode/dev/button-sensor.c
 
-# All apps in HOME
-# make sure this rule catches platform/sensinode/apps before some other rule
-HOME apps
-
-BANK1 m25p16.c
-BANK1 viztool.c
-BANK2 disco.c
-
-# Put the rest of platform/sensinode in BANK3
-BANK3 platform/sensinode
-
 # segment.rules - platform/sensinode - end
-

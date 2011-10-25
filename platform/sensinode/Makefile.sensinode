@@ -61,16 +61,18 @@ FORCE:
 	cp $< $(<:.hex=.$(TARGET))
 	if [ -f $(<:.hex=.ihx) ] ; then \
 	cp $(<:.hex=.ihx) $(<:.hex=-$(MODEL_SUFFIX).ihx); fi
+	@echo "\nReport"
+	@echo "==============="
 	@echo 'Code footprint:'
 	@echo    'Area                                Addr        Size' \
 	         '         Decimal'
 	@echo    '----------------------------------  --------    --------' \
 	         '     --------'
 	@echo -n 'HOME,CSEG,CONST,XINIT,GS*           $(HOME_START)    '
-	@egrep ',CODE\)' $(<:.hex=.map) | egrep -v '(^BANK.[^=])' | uniq | \
+	@egrep ',CODE\)' $(<:.hex=.map) | egrep -v '(^BANK[1-9][^=])' | uniq | \
 	awk '{ SUM += $$5 } END { printf "%08X =    %8d", SUM, SUM }'
 	@echo '. bytes (REL,CON,CODE)'
-	@egrep '(^BANK.[^=])' $(<:.hex=.map) | uniq | sort
+	@egrep '(^BANK[1-9][^=])' $(<:.hex=.map) | uniq | sort
 	@egrep -A 5 'Other memory' $(<:.hex=.mem)
 
 %.upload: %.hex

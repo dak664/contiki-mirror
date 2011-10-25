@@ -31,6 +31,7 @@ contiki-sensinode.lib
 *.sym
 *.cdb
 *.omf
+*.banks
 *.sensinode
 
 # other platform build stuff

@@ -6,6 +6,8 @@ AR       = sdcclib
 OBJCOPY  = objcopy
 STRIP    = strip
 PACKIHX  = packihx
+BANK_ALLOC = $(CONTIKI)/cpu/cc2430/bank-alloc.py
+SEGMENT_RULES = $(OBJECTDIR)/segment.rules
 
 CFLAGS  += --model-$(MEMORY_MODEL) --stack-auto -DSDCC_CC2430 --std-c99
 
@@ -63,13 +65,12 @@ ifeq ($(HAVE_BANKING),1)
   ## Yes
   MEMORY_MODEL=huge
   LDFLAGS += -Wl-bBANK1=0x018000
-  LDFLAGS += -Wl-bBANK2=0x028000
-  LDFLAGS += -Wl-bBANK3=0x038000
+  LD_POST_FLAGS += -Wl-bBANK2=0x028000
+  LD_POST_FLAGS += -Wl-bBANK3=0x038000
   LDFLAGS += -Wl-r
   CFLAGS += -DHAVE_SDCC_BANKING
   #use this in $(call c_seg,$<) to get segment for a source file.
-  c_seg = --codeseg $(word 1,$(shell cat $(OBJECTDIR)/segment.rules | \
-    perl $(CONTIKI_CPU)/segment.rules.pl $1 ) CSEG )
+  c_seg = --codeseg $(shell python $(BANK_ALLOC) $1 $(SEGMENT_RULES) $2)
 else
   ## No banking
   MEMORY_MODEL=large
@@ -78,7 +79,7 @@ endif
 
 ### CPU-dependent cleanup files
 CLEAN += *.lnk *.lk *.sym *.lib *.ihx *.rel *.mem *.rst *.asm *.hex *.sensinode
-CLEAN += *.omf *.cdb
+CLEAN += *.omf *.cdb *.banks
 CLEAN += symbols.c symbols.h
 
 ### CPU-dependent directories
@@ -114,15 +115,16 @@ PROJECT_OBJECTFILES = $(addprefix $(OBJECTDIR)/, \
 SEGMENT_RULE_FILES = $(foreach dir, . $(CONTIKI_PLATFORM_DIRS) \
 	$(CONTIKI_CPU_DIRS_LIST), $(wildcard $(dir)/segment.rules) )
 
-$(OBJECTDIR)/segment.rules: $(SEGMENT_RULE_FILES)
-	cat $(SEGMENT_RULE_FILES) > $@
+$(SEGMENT_RULES): $(SEGMENT_RULE_FILES)
+	cat $(SEGMENT_RULE_FILES) | \
+	   sed -e 's/#.*$$//' -e 's/^\s*//' -e '/^$$/d' > $@
 
 CUSTOM_RULE_LINK=1
 CUSTOM_RULE_C_TO_OBJECTDIR_O=1
 CUSTOM_RULE_ALLOBJS_TO_TARGETLIB=1
 
-$(OBJECTDIR)/%.rel: %.c $(OBJECTDIR)/segment.rules
-	$(CC) $(call c_seg,$<) $(CFLAGS) -c $< -o $@ -Wp,-MMD,$(@:.rel=.d),-MQ,$@
+$(OBJECTDIR)/%.rel: %.c $(SEGMENT_RULES)
+	$(CC) $(call c_seg,$<,$@) $(CFLAGS) -c $< -o $@ -Wp,-MMD,$(@:.rel=.d),-MQ,$@
 	@$(FINALIZE_SDCC_DEPENDENCY)
 
 $(OBJECTDIR)/%.rel: %.cS
@@ -141,13 +143,26 @@ contiki-$(TARGET).lib: $(CONTIKI_OBJECTFILES) $(PROJECT_OBJECTFILES) \
 
 # build app/example local object files. We need a separate rule so that we can
 # pass -DAUTOSTART_ENABLE for those files only
-$(OBJECTDIR)/%.app.rel: %.c $(OBJECTDIR)/segment.rules
-	$(CC) $(call c_seg,$<) -DAUTOSTART_ENABLE $(CFLAGS) -c $< -o $@
+$(OBJECTDIR)/%.app.rel: %.c $(SEGMENT_RULES)
+	$(CC) $(call c_seg,$<,$@) -DAUTOSTART_ENABLE $(CFLAGS) -c $< -o $@
 
 # .ihx is the sdcc binary output file
 %.ihx: $(OBJECTDIR)/%.app.rel $(CONTIKI_TARGET_MAIN) contiki-$(TARGET).lib
-	$(CC) $(LDFLAGS) -o $@ $(CONTIKI_TARGET_MAIN) $(OBJECTDIR)/$*.app.rel -llibsdcc.lib -lcontiki-$(TARGET).lib
+# Automatic bank relocation when building banked code
+ifeq ($(HAVE_BANKING),1)
+	@echo "\nFirst Link"
+	@echo "==============="
+	$(CC) $(LDFLAGS) -o $@ $(CONTIKI_TARGET_MAIN) $(OBJECTDIR)/$*.app.rel -llibsdcc.lib -lcontiki-$(TARGET).lib > /dev/null
+	@echo "\nBank Allocation"
+	@echo "==============="
+	python $(BANK_ALLOC) $(basename $(@F)) $(SEGMENT_RULES) $(OFFSET_FIRMWARE)
+	@echo "\nFinal Link"
+	@echo "==============="
+endif
+	$(CC) $(LDFLAGS) $(LD_POST_FLAGS) -o $@ $(CONTIKI_TARGET_MAIN) $(OBJECTDIR)/$*.app.rel -llibsdcc.lib -lcontiki-$(TARGET).lib > /dev/null
 
 # Pack the hex file for programmers which dislike SDCC output hex format
 %.hex: %.ihx
+	@echo "\nPack hex file"
+	@echo "==============="
 	$(PACKIHX) $< > $@
