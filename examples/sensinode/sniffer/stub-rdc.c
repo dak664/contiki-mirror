@@ -65,7 +65,7 @@ on(void)
 static int
 off(int keep_radio_on)
 {
-  return 1;
+  return keep_radio_on;
 }
 /*---------------------------------------------------------------------------*/
 static unsigned short
