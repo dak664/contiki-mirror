@@ -130,10 +130,10 @@ unsigned long clock_seconds(void);
 #endif /* UIP_CONF_IPV6 */
 
 /* See uip-ds6.h */
-#define UIP_CONF_DS6_NBR_NBU      20
+#define UIP_CONF_DS6_NBR_NBU      4
 #define UIP_CONF_DS6_DEFRT_NBU    2
 #define UIP_CONF_DS6_PREFIX_NBU   3
-#define UIP_CONF_DS6_ROUTE_NBU    20
+#define UIP_CONF_DS6_ROUTE_NBU    4
 #define UIP_CONF_DS6_ADDR_NBU     3
 #define UIP_CONF_DS6_MADDR_NBU    0
 #define UIP_CONF_DS6_AADDR_NBU    0
@@ -149,8 +149,8 @@ unsigned long clock_seconds(void);
 #define SICSLOWPAN_CONF_ADDR_CONTEXT_1 {addr_contexts[1].prefix[0]=0xbb;addr_contexts[1].prefix[1]=0xbb;}
 #define SICSLOWPAN_CONF_ADDR_CONTEXT_2 {addr_contexts[2].prefix[0]=0x20;addr_contexts[2].prefix[1]=0x01;addr_contexts[2].prefix[2]=0x49;addr_contexts[2].prefix[3]=0x78,addr_contexts[2].prefix[4]=0x1d;addr_contexts[2].prefix[5]=0xb1;}
 
-/* 211 bytes per queue buffer */
-#define QUEUEBUF_CONF_NUM         8
+/* 211 bytes per queue buffer. Contikimac burst mode needs ? for a 1280 byte MTU 16 works*/
+#define QUEUEBUF_CONF_NUM         15
 
 /* 54 bytes per queue ref buffer */
 #define QUEUEBUF_CONF_REF_NUM     2
@@ -165,13 +165,13 @@ unsigned long clock_seconds(void);
 /* ACKs to other ports become interleaved with computation-intensive GETs, so ACKs are particularly missed. */
 /* Increasing the number of packet receive buffers in RAM helps to keep ACKs from being lost */
 
-#define UIP_CONF_MAX_CONNECTIONS 4
+#define UIP_CONF_MAX_CONNECTIONS 2
 
 /* 2 bytes per TCP listening port */
 #define UIP_CONF_MAX_LISTENPORTS 4
 
 /* 25 bytes per UDP connection */
-#define UIP_CONF_UDP_CONNS      10
+#define UIP_CONF_UDP_CONNS      5
 
 #define UIP_CONF_IP_FORWARD      0
 #define UIP_CONF_FWCACHE_SIZE    0
@@ -237,7 +237,7 @@ unsigned long clock_seconds(void);
 #define RF230_CONF_CSMARETRIES    1
 /* The rf231 and atmega128rfa1 can use an rssi threshold for triggering rx_busy that saves 0.5ma in rx mode */
 /* 1 - 15 maps into -90 to -48 dBm. Undefine for maximum sensitivity */
-#define RF230_MIN_RX_POWER        1
+#define RF230_MIN_RX_POWER        0
 #define SICSLOWPAN_CONF_FRAG      1
 #define SICSLOWPAN_CONF_MAXAGE    3
 

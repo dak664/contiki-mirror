@@ -12,7 +12,7 @@ function ax(m){s('ax',m+2000,4000,'Acceleration (X-axis) '+m+'mg');}
 function ay(m){s('ay',m+2000,4000,'Acceleration (Y-axis) '+m+'mg');}
 function az(m){s('az',m+2000,4000,'Acceleration (Z-axis) '+m+'mg');}
 function rs(m){s('rs',n,100,'RSSI '+n);}
-function p(c,l,t,r){cp=5*c/100;lt=90*t/100;lr=66*r/100;n=cp+lt+lr;
+function p(c,l,t,r){cp=0.136*c;lt=0.478*t;lr=0.412*r;n=cp+lt+lr;//128rfa1@3v3
  s('p',n,200,'Power consumption '+dc(n,2)+' mW');
  s('pc',cp,100,'CPU power '+dc(cp,2)+' mW');
  s('pr',lr,200,'Radio RX power '+dc(lr,2)+' mW');
