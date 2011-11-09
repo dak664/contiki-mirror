@@ -30,7 +30,7 @@
  */
 
 /*
- * Machine dependent cc2430 SLIP routines for UART1.
+ * Sensinode/cc2430 SLIP routines (over UART1).
  */
 
 #include "dev/slip.h"
