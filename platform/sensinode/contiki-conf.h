@@ -17,7 +17,6 @@
 #include <lint.h>
 
 /* Time type. */
-/*typedef unsigned long clock_time_t;*/
 typedef unsigned short clock_time_t;
 
 /* Defines tick counts for a second. */
@@ -196,7 +195,7 @@ typedef unsigned short clock_time_t;
 
 #ifndef CC2430_RF_CONF_AUTOACK
 #define CC2430_RF_CONF_AUTOACK 1
-#endif /* CC2420_CONF_AUTOACK */
+#endif /* CC2430_CONF_AUTOACK */
 
 #if UIP_CONF_IPV6
 /* Addresses, Sizes and Interfaces */
@@ -269,7 +268,9 @@ typedef unsigned short clock_time_t;
 }
 
 #define MAC_CONF_CHANNEL_CHECK_RATE          8
-#define QUEUEBUF_CONF_NUM                    8
+#ifndef QUEUEBUF_CONF_NUM
+#define QUEUEBUF_CONF_NUM                    6
+#endif
 
 #else /* UIP_CONF_IPV6 */
 /* Network setup for non-IPv6 (rime). */
