@@ -56,6 +56,7 @@ static rtimer_clock_t t0;
 #define SAMPLE_INTERVAL (CLOCK_SECOND)
 #define CHANNEL_MIN 11
 #define CHANNEL_MAX 26
+/* ToDo: Do this in infinite RX. Take more samples */
 /*---------------------------------------------------------------------------*/
 PROCESS(energy_scan, "Energy Scanner");
 AUTOSTART_PROCESSES(&energy_scan);

@@ -9,7 +9,7 @@ PROJECT_SOURCEFILES += stub-rdc.c
 
 CONTIKI_PROJECT = energy-scan
 
-all: $(CONTIKI_PROJECT) 
+all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../../..
 
