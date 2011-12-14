@@ -40,6 +40,10 @@
 #include "dev/slip.h"
 #include "dev/leds.h"
 
+#ifndef CC2430_RF_CONF_CHANNEL
+#define CC2430_RF_CONF_CHANNEL 0xFF
+#endif
+
 static uint8_t prefix_set;
 /*---------------------------------------------------------------------------*/
 PROCESS(border_router_process, "Border Router process");
