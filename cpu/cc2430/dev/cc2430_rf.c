@@ -59,15 +59,15 @@
 /* moved leds code to BANK1 to make space for cc2430_rf_process in HOME */
 /* can't call code in BANK1 from alternate banks unless it is marked with __banked */
 #include "dev/leds.h"
-#define RF_RX_LED_ON()		leds_on(LEDS_RED);
-#define RF_RX_LED_OFF()		leds_off(LEDS_RED);
-#define RF_TX_LED_ON()		leds_on(LEDS_GREEN);
-#define RF_TX_LED_OFF()		leds_off(LEDS_GREEN);
+#define RF_RX_LED_ON()    leds_on(LEDS_RED);
+#define RF_RX_LED_OFF()   leds_off(LEDS_RED);
+#define RF_TX_LED_ON()    leds_on(LEDS_GREEN);
+#define RF_TX_LED_OFF()   leds_off(LEDS_GREEN);
 #else
 #define RF_RX_LED_ON()
-#define RF_RX_LED_OFF()		
+#define RF_RX_LED_OFF()
 #define RF_TX_LED_ON()
-#define RF_TX_LED_OFF()		
+#define RF_TX_LED_OFF()
 #endif
 #define DEBUG 0
 #if DEBUG
@@ -86,7 +86,7 @@
 #define LQI_BIT_MASK 0x7F
 
 /* 192 ms, radio off -> on interval */
-#define ONOFF_TIME                    RTIMER_ARCH_SECOND / 3125
+#define ONOFF_TIME                    ((RTIMER_ARCH_SECOND / 3125) + 4)
 
 #if CC2430_RF_CONF_HEXDUMP
 #include "uart1.h"
@@ -182,11 +182,11 @@ cc2430_rf_channel_set(uint8_t channel)
     return -1;
   }
 
-  cc2430_rf_command(ISSTOP);	/*make sure CSP is not running*/
+  cc2430_rf_command(ISSTOP);  /*make sure CSP is not running*/
   cc2430_rf_command(ISRFOFF);
   /* Channel values: 11-26 */
   freq = (uint16_t) channel - 11;
-  freq *= 5;	/*channel spacing*/
+  freq *= 5;  /*channel spacing*/
   freq += 357; /*correct channel range*/
   freq |= 0x4000; /*LOCK_THR = 1*/
   FSCTRLH = (freq >> 8);
@@ -219,43 +219,43 @@ cc2430_rf_power_set(uint8_t new_power)
  *
  *
  * \return pdTRUE
- * \return pdFALSE	bus not free
+ * \return pdFALSE  bus not free
  */
 int
 cc2430_rf_tx_enable(void)
 {
-  DMAARM = 0x80 + (1 << 0);	/*ABORT + channel bit*/
+  DMAARM = 0x80 + (1 << 0); /*ABORT + channel bit*/
 
   return 1;
 }
 #endif
 /*---------------------------------------------------------------------------*/
 /**
-	* Set MAC addresses
-	*
-	*	\param pan The PAN address to set
-	*	\param adde The short address to set
-	*	\param ieee_addr The 64-bit IEEE address to set
-	*/
+  * Set MAC addresses
+  *
+  * \param pan The PAN address to set
+  * \param adde The short address to set
+  * \param ieee_addr The 64-bit IEEE address to set
+  */
 void
 cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr)
 {
-	uint8_t f;
-	__xdata unsigned char *ptr;
+  uint8_t f;
+  __xdata unsigned char *ptr;
 
-	PANIDH = pan >> 8;
-	PANIDL = pan & 0xff;
+  PANIDH = pan >> 8;
+  PANIDL = pan & 0xff;
 
-	SHORTADDRH = addr >> 8;
-	SHORTADDRL = addr & 0xff;
+  SHORTADDRH = addr >> 8;
+  SHORTADDRL = addr & 0xff;
 
-	if(ieee_addr != NULL) {
-		ptr = &IEEE_ADDR7;
-	    /* LSB first, MSB last for 802.15.4 addresses in CC2420 */
-		for (f = 0; f < 8; f++) {
-			*ptr-- = ieee_addr[f];
-		}
-	}
+  if(ieee_addr != NULL) {
+    ptr = &IEEE_ADDR7;
+      /* LSB first, MSB last for 802.15.4 addresses in CC2420 */
+    for (f = 0; f < 8; f++) {
+      *ptr-- = ieee_addr[f];
+    }
+  }
 }
 #if 0 /* currently unused */
 /*---------------------------------------------------------------------------*/
@@ -264,7 +264,7 @@ cc2430_rf_set_addr(unsigned pan, unsigned addr, const uint8_t *ieee_addr)
  *
  * Coordinator use this function detect best channel for PAN-network.
  * \return RSSI-energy level dBm.
- * \return 0	operation failed.
+ * \return 0  operation failed.
  */
 
 int8_t
@@ -403,13 +403,10 @@ transmit(unsigned short transmit_len)
 {
   uint8_t counter;
   int ret = RADIO_TX_ERR;
-  rtimer_clock_t t0;
 
   if(!(rf_flags & RX_ACTIVE)) {
-    t0 = RTIMER_NOW();
     on();
     rf_flags |= WAS_OFF;
-    while (RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + ONOFF_TIME));
   }
 
   if(channel_clear() == CC2430_CCA_BUSY) {
@@ -628,19 +625,24 @@ pending_packet(void)
 static int
 on(void)
 {
+  rtimer_clock_t t0;
   PRINTF("cc2430_rf_rx_enable called\n");
   if(!(rf_flags & RX_ACTIVE)) {
-    IOCFG0 = 0x7f;   // Set the FIFOP threshold 127
-    RSSIH = 0xd2; /* -84dbm = 0xd2 default, 0xe0 -70 dbm */
+    t0 = RTIMER_NOW();
     rf_flags |= RX_ACTIVE;
+    IOCFG0 = 0x7f; // Set the FIFOP threshold 127
+    RSSIH = 0xd2; /* -84dbm = 0xd2 default, 0xe0 -70 dbm */
 
-    RFPWR &= ~RREG_RADIO_PD;  /*make sure it's powered*/
-    while((RFIF & IRQ_RREG_ON) == 0); /*wait for power up*/
-    SLEEP &= ~OSC_PD; /*Osc on*/
-    while((SLEEP & XOSC_STB) == 0); /*wait for power up*/
+    RFPWR &= ~RREG_RADIO_PD; /* make sure it's powered */
+    while ((RFIF & IRQ_RREG_ON) == 0); /* wait for power up */
+
+    /* Make sure the RREG On Interrupt Flag is 0 next time we get called */
+    RFIF &= ~IRQ_RREG_ON;//added
 
     cc2430_rf_command(ISRXON);
     cc2430_rf_command(ISFLUSHRX);
+    while (RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + ONOFF_TIME));
+
   }
   PRINTF("cc2430_rf_rx_enable done\n");
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -658,12 +660,16 @@ on(void)
 static int
 off(void)
 {
-  cc2430_rf_command(ISSTOP);  /*make sure CSP is not running*/
+  cc2430_rf_command(ISSTOP);  /* make sure CSP is not running */
   cc2430_rf_command(ISRFOFF);
 
-  RFPWR |= RREG_RADIO_PD;   /*RF powerdown*/
+  RFPWR |= RREG_RADIO_PD;   /* RF powerdown */
 
-  rf_flags = 0;
+  /* Clear the RREG On Interrupt Flag */
+  RFIF &= ~IRQ_RREG_ON;
+
+  rf_flags &= ~RX_ACTIVE;
+  rf_flags &= ~WAS_OFF;
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   return 1;
 }
