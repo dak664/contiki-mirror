@@ -54,6 +54,13 @@ static __data int len;
 #define PUTCHAR(...) do {} while(0)
 #endif
 
+
+#if !CLOCK_CONF_ACCURATE
+extern volatile __data clock_time_t count;
+/* accurate clock is stack hungry */
+extern volatile __bit sleep_flag;
+#endif
+
 extern rimeaddr_t rimeaddr_node_addr;
 static __data int r;
 #if ENERGEST_CONF_ON
@@ -304,6 +311,17 @@ main(void)
     do {
       /* Reset watchdog and handle polls and events */
       watchdog_periodic();
+
+      /**/
+#if !CLOCK_CONF_ACCURATE
+      if(sleep_flag) {
+        if(etimer_pending() &&
+            (etimer_next_expiration_time() - count - 1) > MAX_TICKS) { /*core/sys/etimer.c*/
+          etimer_request_poll();
+        }
+        sleep_flag = 0;
+      }
+#endif
       r = process_run();
     } while(r > 0);
 #if SHORTCUTS_CONF_NETSTACK

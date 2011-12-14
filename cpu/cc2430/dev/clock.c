@@ -52,12 +52,16 @@
 /* One clock tick is 7.8 ms */
 #define TICK_VAL (32768/128)  /* 256 */
 
-#define MAX_TICKS (~((clock_time_t)0) / 2)
-
 /* Used in sleep timer interrupt for calculating the next interrupt time */
 static unsigned long timer_value;
 /*starts calculating the ticks right after reset*/
+#if CLOCK_CONF_ACCURATE
 static volatile __data clock_time_t count = 0;
+#else
+volatile __data clock_time_t count = 0;
+/* accurate clock is stack hungry */
+volatile __bit sleep_flag;
+#endif
 /*calculates seconds*/
 static volatile __data clock_time_t seconds = 0;
 
@@ -157,10 +161,14 @@ clock_ISR( void ) __interrupt (ST_VECTOR)
     ++seconds;
   }
   
+#if CLOCK_CONF_ACCURATE
   if(etimer_pending() &&
      (etimer_next_expiration_time() - count - 1) > MAX_TICKS) {	/*core/sys/etimer.c*/
     etimer_request_poll();
   }
+#else
+  sleep_flag = 1;
+#endif
   
   IRCON &= ~STIF;		/*IRCON.STIF=Sleep timer interrupt flag. This flag called this interrupt func, now reset it*/
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);

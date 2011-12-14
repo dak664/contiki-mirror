@@ -28,6 +28,11 @@ typedef unsigned long  u32_t;      /* 32 bit type */
 typedef   signed long  s32_t;      /* 32 bit type */
 typedef unsigned short uip_stats_t;
 
+
+/* Time type. */
+typedef unsigned short clock_time_t;
+#define MAX_TICKS (~((clock_time_t)0) / 2)
+
 /* Compiler configurations */
 #define CCIF
 #define CLIF
