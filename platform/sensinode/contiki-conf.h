@@ -20,7 +20,7 @@
 #define CLOCK_CONF_SECOND		128
 
 /* The clock ISR is stack-hungry and may cause crashes.
- * Define this as 0 if you want to use ContikiMAC */
+ * Define this as 0 if you are suffering from frequent stack overflows */
 #ifndef CLOCK_CONF_ACCURATE
 #define CLOCK_CONF_ACCURATE 0
 #endif
