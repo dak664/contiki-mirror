@@ -22,7 +22,7 @@
 /* The clock ISR is stack-hungry and may cause crashes.
  * Define this as 0 if you are suffering from frequent stack overflows */
 #ifndef CLOCK_CONF_ACCURATE
-#define CLOCK_CONF_ACCURATE 0
+#define CLOCK_CONF_ACCURATE 1
 #endif
 
 /* Memory filesystem RAM size. */
