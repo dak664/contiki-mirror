@@ -630,14 +630,14 @@ on(void)
   if(!(rf_flags & RX_ACTIVE)) {
     t0 = RTIMER_NOW();
     rf_flags |= RX_ACTIVE;
-    IOCFG0 = 0x7f; // Set the FIFOP threshold 127
+    IOCFG0 = 0x7f; /* Set the FIFOP threshold 127 */
     RSSIH = 0xd2; /* -84dbm = 0xd2 default, 0xe0 -70 dbm */
 
     RFPWR &= ~RREG_RADIO_PD; /* make sure it's powered */
     while ((RFIF & IRQ_RREG_ON) == 0); /* wait for power up */
 
     /* Make sure the RREG On Interrupt Flag is 0 next time we get called */
-    RFIF &= ~IRQ_RREG_ON;//added
+    RFIF &= ~IRQ_RREG_ON;
 
     cc2430_rf_command(ISRXON);
     cc2430_rf_command(ISFLUSHRX);
