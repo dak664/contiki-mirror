@@ -13,34 +13,51 @@
 
 #include "contiki.h"
 #include "sys/clock.h"
+#include "sys/rtimer.h"
 #include "dev/leds.h"
-#include <stdio.h> /* For printf() */
 
+#include <stdio.h>
+/*---------------------------------------------------------------------------*/
+#define TEST_CLOCK_DELAY     1
+#define TEST_RTIMER          1
+#define TEST_ETIMER          1
+#define TEST_CLOCK_SECONDS   1
 /*---------------------------------------------------------------------------*/
 PROCESS(clock_test_process, "Clock test process");
 AUTOSTART_PROCESSES(&clock_test_process);
 /*---------------------------------------------------------------------------*/
+#if TEST_RTIMER
 void
 rt_callback(struct rtimer *t, void *ptr) {
   printf("Task called at %u\n", RTIMER_NOW());
 }
-
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(clock_test_process, ev, data)
 {
   static struct etimer et;
-  static struct rtimer rt;
 
-  static clock_time_t count, start_count, end_count, diff;
+#if TEST_CLOCK_DELAY
+  static clock_time_t start_count, end_count, diff;
+#endif
+#if TEST_CLOCK_SECONDS
   static unsigned long sec;
-  static u8_t i;
+#endif
+#if TEST_ETIMER
+  static clock_time_t count;
+#endif
+#if TEST_RTIMER
   uint16_t rt_now, rt_for;
+  static struct rtimer rt;
+#endif
+  static uint8_t i;
 
   PROCESS_BEGIN();
-  rtimer_init();
+
+#if TEST_CLOCK_DELAY
   printf("Clock delay test (10 x (10,000xi) cycles):\n");
   i = 1;
-  while (i < 6) {
+  while(i < 6) {
     start_count = clock_time();
     clock_delay(10000 * i);
     end_count = clock_time();
@@ -48,7 +65,9 @@ PROCESS_THREAD(clock_test_process, ev, data)
     printf("Delayed %u = %u ticks = ~%u ms\n", 10000 * i, diff, diff * 8);
     i++;
   }
-  
+#endif
+
+#if TEST_RTIMER
   printf("Rtimer Test (10 x 1s):\n");
   i = 0;
   while(i < 10) {
@@ -65,7 +84,9 @@ PROCESS_THREAD(clock_test_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     i++;
   }
+#endif
 
+#if TEST_ETIMER
   printf("Clock tick and etimer test (10 x 1s):\n");
   i = 0;
   while(i < 10) {
@@ -79,7 +100,9 @@ PROCESS_THREAD(clock_test_process, ev, data)
     leds_toggle(LEDS_RED);
     i++;
   }
+#endif
 
+#if TEST_CLOCK_SECONDS
   printf("Clock seconds test (10 x 5s):\n");
   i = 0;
   while(i < 10) {
@@ -93,6 +116,7 @@ PROCESS_THREAD(clock_test_process, ev, data)
     leds_toggle(LEDS_GREEN);
     i++;
   }
+#endif
 
   PROCESS_END();
 }
