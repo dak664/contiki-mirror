@@ -32,11 +32,16 @@ contiki-sensinode.lib
 *.cdb
 *.omf
 *.banks
+*.flags
 *.sensinode
 
 # other platform build stuff
 *.native
 *.minimal-net
+
+# cc2530dk
+contiki-cc2530dk.lib
+*.cc2530dk
 
 # cc2430 converter objects
 cpu/cc2430/converter/converter
