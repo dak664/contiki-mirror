@@ -3,7 +3,7 @@ TARGET=sensinode
 endif
 
 # Make absolutely certain that you specify your device here
-DEFINES=MODEL_N740
+DEFINES+=MODEL_N740
 
 CONTIKI_PROJECT = flash
 

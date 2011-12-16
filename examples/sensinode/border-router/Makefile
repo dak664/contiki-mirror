@@ -3,7 +3,7 @@ TARGET=sensinode
 endif
 
 # Make absolutely certain that you specify your device here
-DEFINES=MODEL_N601,PROJECT_CONF_H
+DEFINES+=MODEL_N601,PROJECT_CONF_H
 
 # We need uIPv6, therefore we also need banking
 HAVE_BANKING=1
