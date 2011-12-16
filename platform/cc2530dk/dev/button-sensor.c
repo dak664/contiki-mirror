@@ -33,7 +33,7 @@
  * This file contains ISRs: Keep it in the HOME bank.
  */
 #include "dev/port.h"
-#include "button-sensor.h"
+#include "dev/button-sensor.h"
 /*---------------------------------------------------------------------------*/
 #if BUTTON_SENSOR_ON
 static __data struct timer debouncetimer;
@@ -61,7 +61,6 @@ int configure(int type, int value)
   switch(type) {
   case SENSORS_HW_INIT:
     P0INP |= 2; /* Tri-state */
-    /* Generates INT when released */
     BUTTON_IRQ_ON_PRESS();
     BUTTON_FUNC_GPIO();
     BUTTON_DIR_INPUT();
@@ -95,8 +94,9 @@ port_0_isr(void) __interrupt(P0INT_VECTOR)
       sensors_changed(&button_sensor);
     }
   }
-  P0IFG = 0;
-  P0IF = 0;
+
+  BUTTON_IRQ_FLAG_OFF();
+
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   EA = 1;
 }
