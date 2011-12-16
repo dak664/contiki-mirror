@@ -53,8 +53,8 @@ PROCESS_THREAD(blink_process, ev, data)
 
     blinks = leds_get();
     leds_off(LEDS_ALL);
-    leds_on((blinks+ + 1) & LEDS_ALL);
-    printf("Blink... (state %0.2X)\n", blinks);
+    leds_on((blinks + 1) & LEDS_ALL);
+    printf("Blink... (state %0.2X)\n", leds_get());
   }
 
   PROCESS_END();
