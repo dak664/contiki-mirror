@@ -31,5 +31,11 @@ void uart0_rx_isr( void ) __interrupt (URX0_VECTOR);
 #define UART0_RX_INT(v)
 #define UART0_RX_EN()
 #endif /* UART0_CONF_WITH_INPUT */
+#else
+#define uart0_init(...)
+#define uart0_writeb(...)
+#define uart0_set_input(...)
+#define UART0_RX_INT(v)
+#define UART0_RX_EN()
 #endif /* UART0_ENABLE */
 #endif /* UART_0_H */
