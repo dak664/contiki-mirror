@@ -88,17 +88,23 @@ def get_total_size(project):
 
 # Open project.map and retrieve the list of modules linked in
 # This will only consider contiki sources, not SDCC libraries
+# NB: Sometimes object filenames get truncated:
+# contiki-sensinode.lib                     [ obj_sensinode/watchdog-cc2430.re ]
+# See how for this file the 'l' in 'rel' is missing. For that reason, we retrieve
+# the filaname until the last '.' but without the extension and we append 'rel'
+# As long as the filename doesn't get truncated, we're good
 def populate(project, modules, segment_rules, bins):
 	bankable_total = 0
 	user_total = 0
 
 	map_file = project + '.map'
-	file_pat = re.compile('obj_sensinode[^ ]+\.rel')
+	file_pat = re.compile('obj_sensinode[^ ]+\.')
 	for line in open(map_file):
 		file_name = file_pat.search(line)
 		if file_name is not None:
-			code_size = retrieve_module_size(file_name.group(0))
-			seg = get_object_seg(file_name.group(0))
+			mod = file_name.group(0) + 'rel'
+			code_size = retrieve_module_size(mod)
+			seg = get_object_seg(mod)
 			if seg is not None:
 				# This module has been assigned to a bank by the user
 				#print 'In', seg, file_name.group(0), 'size', code_size
@@ -106,7 +112,7 @@ def populate(project, modules, segment_rules, bins):
 				user_total += code_size
 			else:
 				# We are free to allocate this module
-				modules.append([file_name.group(0), code_size, "NONE"])
+				modules.append([mod, code_size, "NONE"])
 				bankable_total += code_size
 	return bankable_total, user_total
 
