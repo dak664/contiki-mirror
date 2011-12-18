@@ -39,7 +39,7 @@
 #include "contiki.h"
 #include "dev/radio.h"
 #include "dev/cc2530-rf.h"
-#include "cc2530.h"
+#include "cc253x.h"
 #include "sfr-bits.h"
 #include "sys/clock.h"
 #include "sys/rtimer.h"

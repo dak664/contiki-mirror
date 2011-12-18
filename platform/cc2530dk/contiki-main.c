@@ -18,7 +18,7 @@
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
 #include "debug.h"
-#include "cc2530.h"
+#include "cc253x.h"
 #include "sfr-bits.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"

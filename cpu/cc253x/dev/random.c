@@ -39,7 +39,7 @@
  * \author
  *         George Oikonomou - <oikonomou@users.sourceforge.net>
  */
-#include "cc2530.h"
+#include "cc253x.h"
 #include "sfr-bits.h"
 #include "dev/cc2530-rf.h"
 /*---------------------------------------------------------------------------*/

@@ -11,7 +11,7 @@
 
 #ifndef __DMA_H
 #define __DMA_H
-#include "cc2530.h"
+#include "cc253x.h"
 
 /* DMA triggers */
 #define DMA_T_NONE       0 /* None, DMAREQ.DMAREQx bits start transfer */

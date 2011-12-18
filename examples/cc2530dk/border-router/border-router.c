@@ -39,7 +39,7 @@
 #include "dev/watchdog.h"
 #include "dev/slip.h"
 #include "dev/leds.h"
-#include "cc2530.h"
+#include "cc253x.h"
 
 static uint8_t prefix_set;
 /*---------------------------------------------------------------------------*/

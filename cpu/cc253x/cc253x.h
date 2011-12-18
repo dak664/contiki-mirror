@@ -1,44 +1,49 @@
-/*-------------------------------------------------------------------------
-   Definitions for TI/Chipcon cc2530, cc2531 and cc2533 SFR registers.
-
-   Based on information in:
-   "CC253x System-on-Chip Solution for 2.4-GHz IEEE 802.15.4 and ZigBee®
-    Applications"
-   Literature Number: SWRU191B. April 2009–Revised September 2010
-
-   Copyright (C) 2011, George Oikonomou - <oikonomou@users.sourceforge.net>
-
-   This library is free software; you can redistribute it and/or modify it
-   under the terms of the GNU General Public License as published by the
-   Free Software Foundation; either version 2.1, or (at your option) any
-   later version.
-
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this library; see the file COPYING. If not, write to the
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.
-
-   As a special exception, if you link this library with other files,
-   some of which are compiled with SDCC, to produce an executable,
-   this library does not by itself cause the resulting executable to
-   be covered by the GNU General Public License. This exception does
-   not however invalidate any other reasons why the executable file
-   might be covered by the GNU General Public License.
--------------------------------------------------------------------------*/
-/**
- * This file is NOT part of the Contiki Operating System.
+/*
+ * Copyright (c) 2011, George Oikonomou - <oikonomou@users.sourceforge.net>
+ * All rights reserved.
  *
- * It is being distributed through this repository until it becomes part
- * of the SDCC source tree.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ * This file is part of the Contiki operating system.
  */
 
-#ifndef __CC2530_H__
-#define __CC2530_H__
+/**
+ * \file
+ *   Definitions for TI/Chipcon cc2530, cc2531 and cc2533 SFR registers.
+ *
+ *   Based on information in:
+ *   "CC253x System-on-Chip Solution for 2.4-GHz IEEE 802.15.4 and ZigBee®
+ *    Applications"
+ *   Literature Number: SWRU191B. April 2009–Revised September 2010
+ *
+ * \author
+ *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ */
+
+#ifndef __CC253X_H__
+#define __CC253X_H__
 
 /*---------------------------------------------------------------------------*/
 /* Compiler Abstraction */
@@ -661,4 +666,4 @@ SFRX(X_P2DIR,     0x70FF); /* Port 2 direction */
 SFRX(X_INFOPAGE,  0x7800); /* Start of Information Page */
 SFRX(X_IEEE_ADDR, 0x780C); /* Start of unique IEEE Address */
 
-#endif /* __CC2530_H__ */
+#endif /* __CC253X_H__ */

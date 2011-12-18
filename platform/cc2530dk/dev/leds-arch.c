@@ -39,7 +39,7 @@
 #include "contiki-conf.h"
 #include "dev/leds.h"
 #include "dev/leds-arch.h"
-#include "cc2530.h"
+#include "cc253x.h"
 
 /*
  * LEDS

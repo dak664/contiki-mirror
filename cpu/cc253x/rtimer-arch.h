@@ -46,7 +46,7 @@
 #define __RTIMER_ARCH_H__
 
 #include "contiki-conf.h"
-#include "cc2530.h"
+#include "cc253x.h"
 
 /*
  * 32 MHz clock, prescaled down to 500 kHz for all 4 timers in clock_init().

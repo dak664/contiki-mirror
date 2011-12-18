@@ -43,7 +43,7 @@
 #ifndef __ADC_SENSOR_H__
 #define __ADC_SENSOR_H__
 
-#include "cc2530.h"
+#include "cc253x.h"
 #include "contiki-conf.h"
 #include "lib/sensors.h"
 

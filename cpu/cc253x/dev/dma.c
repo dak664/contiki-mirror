@@ -12,7 +12,7 @@
 
 #include "contiki.h"
 #include "dev/dma.h"
-#include "cc2530.h"
+#include "cc253x.h"
 
 #if DMA_ON
 struct dma_config dma_conf[DMA_CHANNEL_COUNT]; /* DMA Descriptors */

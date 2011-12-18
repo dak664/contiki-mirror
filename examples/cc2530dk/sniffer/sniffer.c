@@ -28,7 +28,7 @@
  */
 
 #include "contiki.h"
-#include "cc2530.h"
+#include "cc253x.h"
 
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"

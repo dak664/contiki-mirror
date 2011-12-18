@@ -13,7 +13,7 @@
 #include "contiki.h"
 
 #include "dev/dma.h"
-#include "cc2530.h"
+#include "cc253x.h"
 
 #if DMA_ON
 extern struct process * dma_callback[DMA_CHANNEL_COUNT];

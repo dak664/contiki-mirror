@@ -40,7 +40,7 @@
  */
 
 #include "sys/energest.h"
-#include "cc2530.h"
+#include "cc253x.h"
 #include "sfr-bits.h"
 #include "contiki-conf.h"
 

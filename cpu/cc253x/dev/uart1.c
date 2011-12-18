@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cc2530.h"
+#include "cc253x.h"
 #include "dev/uart1.h"
 
 #if UART1_ENABLE

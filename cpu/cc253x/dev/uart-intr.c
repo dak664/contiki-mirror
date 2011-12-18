@@ -10,7 +10,7 @@
  *   interrupt routines which must be in HOME bank.  handles received data from UART.
  *
  */
-#include "cc2530.h"
+#include "cc253x.h"
 
 #include "dev/uart0.h"
 #include "dev/uart1.h"
