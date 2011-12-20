@@ -179,13 +179,13 @@ ifeq ($(HAVE_BANKING),1)
 	@echo "==============="
 	@for bank in $(BANKS); do \
 		echo $(SREC_CAT) $(SREC_FLAGS) $(@:.hex=.banked-hex) -intel \
-		-crop 0x"$$bank"0000 "0x"$$bank"FFFF" \
+		-crop 0x"$$bank"8000 "0x"$$bank"FFFF" \
 		-offset -$$((0x8000 * $$bank + 0x08000)) -o bank"$$bank".hex -intel; \
 		$(SREC_CAT) $(SREC_FLAGS) $(@:.hex=.banked-hex) -intel \
-		-crop 0x"$$bank"0000 "0x"$$bank"FFFF" \
+		-crop 0x"$$bank"8000 "0x"$$bank"FFFF" \
 		-offset -$$((0x8000 * $$bank + 0x08000)) -o bank"$$bank".hex -intel; \
 	done 
-	$(SREC_CAT) $(SREC_FLAGS) $(@:.hex=.banked-hex) -intel -crop 0x00000 0x0FFFF -o home.ihx -intel
+	$(SREC_CAT) $(SREC_FLAGS) $(@:.hex=.banked-hex) -intel -crop 0x00000 0x07FFF -o home.ihx -intel
 	srec_cat home.ihx -intel $(foreach file,$(FILES),$(file) -intel) -o $@ -intel
 	rm -f home.ihx $(FILES)
 else
