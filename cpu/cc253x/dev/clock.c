@@ -51,7 +51,7 @@
 #define MAX_TICKS (~((clock_time_t)0) / 2)
 /*---------------------------------------------------------------------------*/
 /* Do NOT remove the absolute address and do NOT remove the initialiser here */
-__xdata __at(0x0000) unsigned long timer_value = 0;
+__xdata __at(0x0000) static unsigned long timer_value = 0;
 
 static volatile __data clock_time_t count = 0; /* Uptime in ticks */
 static volatile __data clock_time_t seconds = 0; /* Uptime in secs */
