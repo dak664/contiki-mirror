@@ -35,7 +35,6 @@
 #include <avr/boot.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
-#include "dev/rs232.h"
 #include "elfloader-arch.h"
 #include "lib/mmem.h"
 #include <string.h> //memset
@@ -64,6 +63,7 @@
 
 #define DEBUG 0
 #if DEBUG
+/*#include "dev/rs232.h"*/
 /*#define PRINTF(...) rs232_print_p(RS232_PORT_1, __VA_ARGS__)*/
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
