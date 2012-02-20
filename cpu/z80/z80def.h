@@ -55,16 +55,18 @@ typedef unsigned char   uint8_t;
 typedef   signed short  int16_t;
 typedef unsigned short uint16_t;
 typedef unsigned long  uint32_t;
-typedef unsigned char   u8_t;      /* 8 bit type */
-typedef unsigned short u16_t;      /* 16 bit type */
-typedef unsigned long  u32_t;      /* 32 bit type */
-typedef   signed long  s32_t;      /* 32 bit type */
 typedef unsigned short uip_stats_t;
-typedef   signed long  int32_t;    /* 32 bit type */
 #ifndef _SIZE_T_DEFINED
 #define _SIZE_T_DEFINED
 typedef unsigned int size_t;
 #endif
+
+/* These names are deprecated, use C99 names. */
+typedef unsigned char   u8_t;      /* 8 bit type */
+typedef unsigned short u16_t;      /* 16 bit type */
+typedef unsigned long  u32_t;      /* 32 bit type */
+typedef   signed long  s32_t;      /* 32 bit type */
+typedef   signed long  int32_t;    /* 32 bit type */
 
 /* Compiler configurations */
 #define CCIF
