@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * @(#)$Id: elfloader-avr.c,v 1.10 2009/07/16 18:02:34 dak664 Exp $
  */
 
 #include <stdio.h>
@@ -63,9 +62,8 @@
 
 #define DEBUG 0
 #if DEBUG
-/*#include "dev/rs232.h"*/
-/*#define PRINTF(...) rs232_print_p(RS232_PORT_1, __VA_ARGS__)*/
-#define PRINTF(...) printf(__VA_ARGS__)
+#include <avr/pgmspace.h>
+#define PRINTF(FORMAT,args...) printf_P(PSTR(FORMAT),##args)
 #else
 #define PRINTF(...)
 #endif

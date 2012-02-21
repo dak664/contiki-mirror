@@ -33,7 +33,6 @@
  * \author Adam Dunkels <adam@sics.se>
  * \author Simon Barner <barner@in.tum.de>
  *
- * @(#)$Id: mtarch.c,v 1.1 2006/12/22 16:55:53 barner Exp $
  */
 
 #include <avr/io.h>
@@ -217,9 +216,9 @@ mtarch_pstart(void)
 }
 /*--------------------------------------------------------------------------*/
 void
-mtarch_stop(struct mtarch_thread *thread)
+mtarch_stop(struct mtarch_thread *t)
 {
-
+  
 }
 /*--------------------------------------------------------------------------*/
 int
