@@ -1,5 +1,7 @@
-#define F_CPU 15000000
- 
+#ifndef F_CPU
+#error "F_CPU is not defined"
+#endif
+
 #define K_DELAY_100us	F_CPU/61349
 #define K_DELAY_1ms		F_CPU/6013
 #define K_DELAY_10ms	F_CPU/600
