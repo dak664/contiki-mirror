@@ -46,8 +46,8 @@
 #error Change SERIAL_LINE_CONF_BUFSIZE in contiki-conf.h.
 #endif
 
-#define IGNORE_CHAR(c) (c == 0x0d)
-#define END 0x0a
+#define CHAR_LF  0x0A
+#define CHAR_CR  0x0D
 
 static struct ringbuf rxbuf;
 static uint8_t rxbuf_data[BUFSIZE];
@@ -61,10 +61,6 @@ int
 serial_line_input_byte(unsigned char c)
 {
   static uint8_t overflow = 0; /* Buffer overflow: ignore until END */
-  
-  if(IGNORE_CHAR(c)) {
-    return 0;
-  }
 
   if(!overflow) {
     /* Add character */
@@ -73,9 +69,9 @@ serial_line_input_byte(unsigned char c)
       overflow = 1;
     }
   } else {
-    /* Buffer overflowed:
+    /* Ring-buffer overflowed:
      * Only (try to) add terminator characters, otherwise skip */
-    if(c == END && ringbuf_put(&rxbuf, c) != 0) {
+    if( (c == CHAR_CR || c == CHAR_LF) && ringbuf_put(&rxbuf, c) != 0) {
       overflow = 0;
     }
   }
@@ -84,33 +80,34 @@ serial_line_input_byte(unsigned char c)
   process_poll(&serial_line_process);
   return 1;
 }
+
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(serial_line_process, ev, data)
 {
   static char buf[BUFSIZE];
-  static int ptr;
+  static uint8_t last_char = 0;
+  static int ptr = 0;
 
   PROCESS_BEGIN();
 
   serial_line_event_message = process_alloc_event();
-  ptr = 0;
 
   while(1) {
     /* Fill application buffer until newline or empty */
     int c = ringbuf_get(&rxbuf);
-    
+
     if(c == -1) {
-      /* Buffer empty, wait for poll */
+      /* Ring-buffer empty, wait for poll */
       PROCESS_YIELD();
     } else {
-      if(c != END) {
-        if(ptr < BUFSIZE-1) {
-          buf[ptr++] = (uint8_t)c;
-        } else {
-          /* Ignore character (wait for EOL) */
-        }
-      } else {
-        /* Terminate */
+      /* Work around for 'c' being overwritten after the PROCESS_WAIT_EVENT_UNTIL macro */
+      uint8_t l = last_char;
+      last_char = c;
+
+      if(l == CHAR_CR && c == CHAR_LF) {
+        /* Ignore LF after a CR */
+      } else if(c == CHAR_CR || c == CHAR_LF) {
+        /* Terminate buffer */
         buf[ptr++] = (uint8_t)'\0';
 
         /* Broadcast event */
@@ -122,6 +119,12 @@ PROCESS_THREAD(serial_line_process, ev, data)
           PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
         }
         ptr = 0;
+      } else {
+        if(ptr < BUFSIZE-1) {
+          buf[ptr++] = (uint8_t)c;
+        } else {
+          /* Ignore character (wait for EOL) */
+        }
       }
     }
   }
