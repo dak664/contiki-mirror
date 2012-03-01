@@ -85,12 +85,14 @@ serial_line_input_byte(unsigned char c)
 PROCESS_THREAD(serial_line_process, ev, data)
 {
   static char buf[BUFSIZE];
-  static uint8_t last_char = 0;
-  static int ptr = 0;
+  static uint8_t last_char;
+  static int ptr;
 
   PROCESS_BEGIN();
 
   serial_line_event_message = process_alloc_event();
+  ptr = 0;
+  last_char = 0;
 
   while(1) {
     /* Fill application buffer until newline or empty */
