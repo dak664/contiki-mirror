@@ -20,6 +20,10 @@ else
   LDFLAGS  = -Wl
 endif
 
+ifeq ($(HOST_OS),Darwin)
+  AROPTS = rc
+endif
+
 ### Compilation rules
 
 %.so: $(OBJECTDIR)/%.o
