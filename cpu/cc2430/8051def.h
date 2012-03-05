@@ -14,6 +14,24 @@
 
 #include <stdint.h>
 
+/*
+ * lint - style defines to help syntax parsers with sdcc-specific 8051 code
+ * They don't interfere with actual compilation
+ */
+#if !defined(__SDCC_mcs51) && !defined(SDCC_mcs51)
+#define __data
+#define __xdata
+#define __code
+#define __bit bool
+#define __sfr volatile unsigned char
+#define __sbit volatile bool
+#define __critical
+#define __at(x)
+#define __using(x)
+#define __interrupt(x)
+#define __naked
+#endif
+
 #define CC_CONF_FUNCTION_POINTER_ARGS	1
 #define CC_CONF_FASTCALL
 #define CC_CONF_VA_ARGS		1

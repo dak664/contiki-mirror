@@ -10,12 +10,6 @@
 #include "project-conf.h"
 #endif /* PROJECT_CONF_H */
 
-/*
- * To help syntax checkers with parsing of sdcc keywords. It basically defines
- * empty macros for keywords such as __sfr etc. Does nothing when compiling
- */
-#include <lint.h>
-
 /* Time type. */
 typedef unsigned short clock_time_t;
 

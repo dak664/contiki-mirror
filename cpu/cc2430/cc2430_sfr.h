@@ -11,11 +11,7 @@
 #ifndef REG_CC2430_H
 #define REG_CC2430_H
 
-/*
- * To help syntax checkers with parsing of sdcc keywords. It basically defines
- * empty macros for keywords such as __sfr etc. Does nothing when compiling
- */
-#include <lint.h>
+#include "8051def.h"
 
 /*  BYTE Register  */
 
