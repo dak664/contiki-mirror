@@ -10,7 +10,7 @@
 /* UART BAUD Rates */
 /*
  * Macro to set speed of UART N by setting the UnBAUD SFR to M and the
- * UnGCR SRF to E. See the cc2430 datasheet for possible values of M and E
+ * UnGCR SRF to E. See the cc2530 datasheet for possible values of M and E
  */
 #define UART_SET_SPEED(N, M, E) do{ U##N##BAUD = M; U##N##GCR = E; } while(0)
 
