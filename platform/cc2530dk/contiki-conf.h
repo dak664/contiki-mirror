@@ -31,7 +31,6 @@ typedef unsigned short clock_time_t;
  * USARTs:
  *   SmartRF RS232 -> USART0 / Alternative 1 (UART)
  *   SmartRF LCD   -> USART1 / Alternative 2 (SPI)
- *   Default: Both Disabled
  */
 #define UART_ON_USART     0
 
