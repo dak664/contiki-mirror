@@ -51,12 +51,12 @@
 #define CLKCONCMD_CLKSPD1   0x02
 #define CLKCONCMD_CLKSPD0   0x01
 
-/* SLEEPCMD */
+/* SLEEPCMD and SLEEPSTA */
 #define SLEEP_OSC32K_CALDIS  0x80
 #define SLEEP_XOSC_STB       0x40
 #define SLEEP_HFRC_STB       0x20
-#define SLEEP_RST1           0x10
-#define SLEEP_RST0           0x08
+#define SLEEP_RST1           0x10 /* SLEEPSTA only */
+#define SLEEP_RST0           0x08 /* SLEEPSTA only */
 #define SLEEP_OSC_PD         0x04
 #define SLEEP_MODE1          0x02
 #define SLEEP_MODE0          0x01
