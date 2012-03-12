@@ -136,22 +136,22 @@ PROCESS_THREAD(udp_server_process, ev, data)
   putstring("Button 1: Print RIME stats\n");
 #endif
 
-#if UIP_CONF_ROUTER
+#if SERVER_RPL_ROOT
   uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
-#if SERVER_RPL_ROOT
+  print_local_addresses();
+
   dag = rpl_set_root(&uip_ds6_get_global(ADDR_PREFERRED)->ipaddr);
   if(dag != NULL) {
     uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
     rpl_set_prefix(dag, &ipaddr, 64);
-    PRINTF("Created a new RPL dag\n");
+    PRINTF("Created a new RPL dag with ID: ");
+    PRINT6ADDR(&dag->dag_id);
+    PRINTF("\n");
   }
 #endif /* SERVER_RPL_ROOT */
-#endif /* UIP_CONF_ROUTER */
-
-  print_local_addresses();
 
   server_conn = udp_new(NULL, UIP_HTONS(0), NULL);
   udp_bind(server_conn, UIP_HTONS(3000));
