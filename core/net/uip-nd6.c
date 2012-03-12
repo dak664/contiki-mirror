@@ -154,7 +154,7 @@ create_llao(uint8_t *llao, uint8_t type) {
 void
 uip_nd6_ns_input(void)
 {
-  u8_t flags;
+  uint8_t flags;
   PRINTF("Received NS from");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF("to");
@@ -387,10 +387,10 @@ uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
 void
 uip_nd6_na_input(void)
 {
-  u8_t is_llchange;
-  u8_t is_router;
-  u8_t is_solicited;
-  u8_t is_override;
+  uint8_t is_llchange;
+  uint8_t is_router;
+  uint8_t is_solicited;
+  uint8_t is_override;
 
   PRINTF("Received NA from");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
