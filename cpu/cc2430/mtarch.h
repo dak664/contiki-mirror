@@ -35,7 +35,7 @@
   * 	just exists so that mt.c can compile cleanly.
   *
   * 	This is based on the original mtarch.h for z80 by Takahide Matsutsuka
-  * 
+  *
   * \author
   *	  George Oikonomou - <oikonomou@users.sourceforge.net>
   */
