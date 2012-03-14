@@ -46,12 +46,6 @@
 #include "dev/button-sensor.h"
 #include "dev/slip.h"
 
-/* For internal webserver Makefile must set APPS += webserver and PROJECT_SOURCEFILES += httpd-simple.c */
-#if WEBSERVER
-#include "webserver-nogui.h"
-#include "httpd-simple.h"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,15 +65,31 @@ static uint8_t prefix_set;
 PROCESS(border_router_process, "Border router process");
 
 #if WEBSERVER==0
- /* No webserver */
+/* No webserver */
 AUTOSTART_PROCESSES(&border_router_process);
 #elif WEBSERVER>1
-/* Use an external webserver process */
-//PROCESS_NAME(webserver_nogui_process);
+/* Use an external webserver application */
+#include "webserver-nogui.h"
 AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 #else
-AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 /* Use simple webserver with only one page */
+#include "httpd-simple.h"
+PROCESS(webserver_nogui_process, "Web server");
+PROCESS_THREAD(webserver_nogui_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+  httpd_init();
+
+  while(1) {
+    PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
+    httpd_appcall(data);
+  }
+  
+  PROCESS_END();
+}
+AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
+
 static const char *TOP = "<html><head><title>ContikiRPL</title></head><body>\n";
 static const char *BOTTOM = "</body></html>\n";
 static char buf[128];
