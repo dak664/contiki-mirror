@@ -535,7 +535,6 @@ rpl_parent_t *
 rpl_find_parent_any_dag(rpl_instance_t *instance, uip_ipaddr_t *addr)
 {
   static rpl_parent_t *p;
-  static rpl_parent_t *p;
   static rpl_dag_t *dag, *end;
 
   for(dag = &instance->dag_table[0], end = dag + RPL_MAX_DODAG_PER_INSTANCE; dag < end; ++dag) {
