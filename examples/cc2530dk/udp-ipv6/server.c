@@ -143,7 +143,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
 
   print_local_addresses();
 
-  dag = rpl_set_root(&uip_ds6_get_global(ADDR_PREFERRED)->ipaddr);
+  dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &uip_ds6_get_global(ADDR_PREFERRED)->ipaddr);
   if(dag != NULL) {
     uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
     rpl_set_prefix(dag, &ipaddr, 64);
