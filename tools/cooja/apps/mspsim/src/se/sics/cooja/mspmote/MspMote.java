@@ -57,16 +57,21 @@ import se.sics.cooja.motes.AbstractEmulatedMote;
 import se.sics.cooja.mspmote.interfaces.MspSerial;
 import se.sics.cooja.mspmote.plugins.CodeVisualizerSkin;
 import se.sics.cooja.mspmote.plugins.MspBreakpointContainer;
+import se.sics.cooja.plugins.BufferListener.BufferAccess;
 import se.sics.cooja.plugins.Visualizer;
 import se.sics.mspsim.cli.CommandHandler;
 import se.sics.mspsim.cli.LineListener;
 import se.sics.mspsim.cli.LineOutputStream;
+import se.sics.mspsim.core.CPUMonitor;
 import se.sics.mspsim.core.EmulationException;
 import se.sics.mspsim.core.MSP430;
+import se.sics.mspsim.core.MSP430Constants;
 import se.sics.mspsim.platform.GenericNode;
 import se.sics.mspsim.ui.JFrameWindowManager;
 import se.sics.mspsim.util.ComponentRegistry;
 import se.sics.mspsim.util.ConfigManager;
+import se.sics.mspsim.util.DebugInfo;
+import se.sics.mspsim.util.ELF;
 import se.sics.mspsim.util.MapEntry;
 import se.sics.mspsim.util.MapTable;
 
@@ -294,6 +299,15 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
    */
   protected abstract boolean initEmulator(File ELFFile);
 
+  private boolean booted = false;
+
+  public void simTimeChanged(long diff) {
+    /* Compensates for simulation time changes (without simulation execution) */
+    lastExecute -= diff;
+    nextExecute -= diff;
+    scheduleNextWakeup(nextExecute);
+  }
+
   private long lastExecute = -1; /* Last time mote executed */
   private long nextExecute;
   public void execute(long time) {
@@ -301,10 +315,11 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
   }
   public void execute(long t, int duration) {
     /* Wait until mote boots */
-    if (myMoteInterfaceHandler.getClock().getTime() < 0) {
+    if (!booted && myMoteInterfaceHandler.getClock().getTime() < 0) {
       scheduleNextWakeup(t - myMoteInterfaceHandler.getClock().getTime());
       return;
     }
+    booted = true;
 
     if (stopNextInstruction) {
       stopNextInstruction = false;
@@ -320,7 +335,7 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
     if (t < lastExecute) {
       throw new RuntimeException("Bad event ordering: " + lastExecute + " < " + t);
     }
-
+    
     /* Execute MSPSim-based mote */
     /* TODO Try-catch overhead */
     try {
@@ -330,6 +345,10 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
       lastExecute = t;
     } catch (EmulationException e) {
       String stackTraceOutput = sendCLICommandAndPrint("stacktrace");
+      if (stackTraceOutput == null) {
+        stackTraceOutput = "";
+      }
+      stackTraceOutput = e.getMessage() + "\n\n" + stackTraceOutput;
       throw (ContikiError)
       new ContikiError(stackTraceOutput).initCause(e);
     }
@@ -484,7 +503,118 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
   }
 
   public String getExecutionDetails() {
-  	return executeCLICommand("stacktrace");
+    return executeCLICommand("stacktrace");
   }
 
+  public String getPCString() {
+    int pc = myCpu.reg[MSP430Constants.PC];
+    ELF elf = (ELF)myCpu.getRegistry().getComponent(ELF.class); 
+    DebugInfo di = elf.getDebugInfo(pc);
+    
+    /* Following code examples from MSPsim, DebugCommands.java */
+    if (di == null) {
+      di = elf.getDebugInfo(pc + 1);
+    }
+    if (di == null) {
+      /* Return PC value */
+      return String.format("*%02x", myCpu.reg[MSP430Constants.PC]);
+    }
+
+    int lineNo = di.getLine();
+    String file = di.getFile();
+    file = file==null?"?":file;
+    if (file.contains("/")) {
+      /* strip path */
+      file = file.substring(file.lastIndexOf('/')+1, file.length());
+    }
+    String function = di.getFunction();
+    function = function==null?"?":function;
+    if (function.contains(":")) {
+      /* strip arguments */
+      function = function.substring(0, function.lastIndexOf(':'));
+    }
+    return file + ":" + function + ":" + lineNo;
+    
+    /*return executeCLICommand("line " + myCpu.reg[MSP430Constants.PC]);*/
+  }
+
+  public MemoryMonitor createMemoryMonitor(final MemoryEventHandler meh) {
+    return new MemoryMonitor() {
+      private boolean started = false;
+      private int address = -1;
+      private int size = -1;
+      private CPUMonitor myMonitor = null;
+      private boolean isPointer = false;
+      private MemoryMonitor pointedMemory = null;
+      public boolean start(int address, int size) {
+        if (started) {
+          return started;
+        }
+
+        final MemoryMonitor thisMonitor = this;
+        myMonitor = new CPUMonitor() {
+          public void cpuAction(int type, int adr, int data) {
+            MemoryEventType t;
+            if (type == CPUMonitor.MEMORY_WRITE) {
+              t = MemoryEventType.WRITE;
+            } else if (type == CPUMonitor.MEMORY_READ) {
+              t = MemoryEventType.READ;
+            } else {
+              t = MemoryEventType.UNKNOWN;
+            }
+
+            meh.event(thisMonitor, t, adr, data);
+          }
+        };
+
+        /* TODO Make sure no other part of Cooja overrides this! */
+        for (int a = address; a < address+size; a++) {
+          myCpu.addWatchPoint(a, myMonitor);
+        }
+
+        this.address = address;
+        this.size = size;
+        started = true;
+        return started;
+      }
+      public void stop() {
+        if (!started) {
+          return;
+        }
+        started = false;
+        
+        for (int a = address; a < address+size; a++) {
+          myCpu.removeWatchPoint(a, myMonitor);
+        }
+      }
+      public Mote getMote() {
+        return MspMote.this;
+      }
+      public int getAddress() {
+        return address;
+      }
+      public int getSize() {
+        return size;
+      }
+
+      public boolean isPointer() {
+        return isPointer;
+      }
+      public void setPointer(boolean isPointer, MemoryMonitor pointedMemory) {
+        this.isPointer = isPointer;
+        this.pointedMemory = pointedMemory;
+      }
+      public MemoryMonitor getPointedMemory() {
+        return pointedMemory;
+      }
+      
+      private BufferAccess lastBufferAccess = null;
+      public void setLastBufferAccess(BufferAccess ba) {
+        this.lastBufferAccess = ba;
+      }
+      public BufferAccess getLastBufferAccess() {
+        return lastBufferAccess;
+      }
+    };
+  }
 }
