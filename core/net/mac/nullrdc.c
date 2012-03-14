@@ -41,6 +41,7 @@
 
 #include "net/mac/nullrdc.h"
 #include "net/packetbuf.h"
+#include "net/queuebuf.h"
 #include "net/netstack.h"
 #include <string.h>
 
@@ -211,7 +212,7 @@ send_packet(mac_callback_t sent, void *ptr)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
 {
   if(buf_list != NULL) {
