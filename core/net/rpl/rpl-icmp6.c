@@ -403,9 +403,6 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 {
   unsigned char *buffer;
   static int pos;
-#if !RPL_LEAF_ONLY
-  uip_ipaddr_t addr;
-#endif /* !RPL_LEAF_ONLY */
 
 #if RPL_LEAF_ONLY
   /* only respond to unicast DIS */
