@@ -116,6 +116,7 @@ LIST(neighbor_list);
 static void packet_sent(void *ptr, int status, int num_transmissions);
 static void packet_sent_cb(void *ptr, int status);
 static int mac_status;
+static const rimeaddr_t *addr;
 #else
 static void packet_sent(void *ptr, int status, int num_transmissions);
 #endif
@@ -163,7 +164,7 @@ transmit_packet_list(void *ptr)
       /* Send packets in the neighbor's list */
       NETSTACK_RDC.send_list(packet_sent, n, q);
 #if CSMA_SHORTCUT
-      packet_sent_cb(q, mac_status);
+      packet_sent_cb(n, mac_status);
 #endif
     }
   }
@@ -218,11 +219,9 @@ packet_sent(void *ptr, int status, int num_transmissions)
   struct rdc_buf_list *q = list_head(n->queued_packet_list);
   struct qbuf_metadata *metadata = (struct qbuf_metadata *)q->ptr;
   clock_time_t time = 0;
-#if !SHORTCUTS_CONF_NETSTACK
-  mac_callback_t sent;
-  void *cptr;
-  int num_tx;
-#endif
+  static mac_callback_t sent;
+  static void *cptr;
+  static int num_tx;
   int backoff_transmissions;
 
   switch(status) {
@@ -238,11 +237,9 @@ packet_sent(void *ptr, int status, int num_transmissions)
     break;
   }
 
-#if !SHORTCUTS_CONF_NETSTACK
   sent = metadata->sent;
   cptr = metadata->cptr;
   num_tx = n->transmissions;
-#endif
 
   if(status == MAC_TX_COLLISION ||
      status == MAC_TX_NOACK) {
@@ -306,9 +303,9 @@ packet_sent(void *ptr, int status, int num_transmissions)
     }
     free_first_packet(n);
 #if SHORTCUTS_CONF_NETSTACK
-      if(metadata->sent) {
-        metadata->sent(metadata->cptr, status, (int) n->transmissions);
-      }
+    if(sent) {
+      sent(cptr, status, num_tx);
+    }
 #else
     mac_call_sent_callback(sent, cptr, status, num_tx);
 #endif
@@ -325,7 +322,7 @@ send_packet(mac_callback_t sent, void *ptr)
      entry. Instead, just send it out.  */
   if(!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                    &rimeaddr_null)) {
-    const rimeaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+    addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
     /* Look for the neighbor entry */
     n = neighbor_queue_from_addr(addr);
@@ -393,7 +390,13 @@ send_packet(mac_callback_t sent, void *ptr)
     } else {
       PRINTF("csma: could not allocate neighbor, dropping packet\n");
     }
+#if SHORTCUTS_CONF_NETSTACK
+    if(sent) {
+      sent(ptr, MAC_TX_ERR, 1);
+    }
+#else
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR, 1);
+#endif
   } else {
     PRINTF("csma: send broadcast\n");
 #if CSMA_SHORTCUT
