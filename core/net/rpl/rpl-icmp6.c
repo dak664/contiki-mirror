@@ -72,6 +72,16 @@ static void dio_input(void);
 static void dao_input(void);
 static void dao_ack_input(void);
 
+/* some debug callbacks useful when debugging RPL networks */
+#ifdef RPL_DEBUG_DIO_INPUT
+void RPL_DEBUG_DIO_INPUT(uip_ipaddr_t *, rpl_dio_t *);
+#endif
+
+#ifdef RPL_DEBUG_DAO_OUTPUT
+void RPL_DEBUG_DAO_OUTPUT(rpl_parent_t *);
+#endif
+
+
 static uint8_t dao_sequence;
 static uip_ipaddr_t addr;
 static uip_ipaddr_t prefix;
@@ -361,6 +371,10 @@ dio_input(void)
     }
   }
 
+#ifdef RPL_DEBUG_DIO_INPUT
+  RPL_DEBUG_DIO_INPUT(&from, &dio);
+#endif
+
   rpl_process_dio(&from, &dio);
 }
 /*---------------------------------------------------------------------------*/
@@ -645,6 +659,10 @@ dao_output(rpl_parent_t *n, rpl_lifetime_t lifetime)
   } else {
     dag = n->dag;
   }
+
+#ifdef RPL_DEBUG_DAO_OUTPUT
+  RPL_DEBUG_DAO_OUTPUT(n);
+#endif
 
   buffer = UIP_ICMP_PAYLOAD;
 

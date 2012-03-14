@@ -262,17 +262,20 @@ static struct timer reass_timer;
 static struct rime_sniffer *callback = NULL;
 
 void
-rime_sniffer_add(struct rime_sniffer *s) {
+rime_sniffer_add(struct rime_sniffer *s)
+{
   callback = s;
 }
 
 void
-rime_sniffer_remove(struct rime_sniffer *s) {
+rime_sniffer_remove(struct rime_sniffer *s)
+{
   callback = NULL;
 }
 
 static void
-set_packet_attrs() {
+set_packet_attrs()
+{
   int c = 0;
   /* set protocol in NETWORK_ID */
   packetbuf_set_attr(PACKETBUF_ATTR_NETWORK_ID, UIP_IP_BUF->proto);
@@ -495,12 +498,14 @@ compress_hdr_hc06(rimeaddr_t *rime_destaddr)
 {
   uint8_t tmp, iphc0, iphc1;
 #if DEBUG
-  PRINTF("before compression: ");
-  for(tmp = 0; tmp < UIP_IP_BUF->len[1] + 40; tmp++) {
-    uint8_t data = ((uint8_t *) (UIP_IP_BUF))[tmp];
-    PRINTF("%02x", data);
+  { uint16_t ndx;
+    PRINTF("before compression (%d): ", UIP_IP_BUF->len[1]);
+    for(ndx = 0; ndx < UIP_IP_BUF->len[1] + 40; ndx++) {
+      uint8_t data = ((uint8_t *) (UIP_IP_BUF))[ndx];
+      PRINTF("%02x", data);
+    }
+    PRINTF("\n");
   }
-  PRINTF("\n");
 #endif
 
   hc06_ptr = rime_ptr + 2;
@@ -1191,10 +1196,10 @@ uncompress_hdr_hc1(uint16_t ip_len)
   
   /* src and dest ip addresses */
   uip_ip6addr(&SICSLOWPAN_IP_BUF->srcipaddr, 0xfe80, 0, 0, 0, 0, 0, 0, 0);
-  uip_sd6_set_addr_iid(&SICSLOWPAN_IP_BUF->srcipaddr,
+  uip_ds6_set_addr_iid(&SICSLOWPAN_IP_BUF->srcipaddr,
 		       (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
   uip_ip6addr(&SICSLOWPAN_IP_BUF->destipaddr, 0xfe80, 0, 0, 0, 0, 0, 0, 0);
-  uip_sd6_set_addr_iid(&SICSLOWPAN_IP_BUF->destipaddr,
+  uip_ds6_set_addr_iid(&SICSLOWPAN_IP_BUF->destipaddr,
 		       (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
   
   uncomp_hdr_len += UIP_IPH_LEN;
@@ -1307,6 +1312,9 @@ packet_sent(void *ptr, int status, int transmissions)
 #if SICSLOWPAN_CONF_NEIGHBOR_INFO
   neighbor_info_packet_sent(status, transmissions);
 #endif /* SICSLOWPAN_CONF_NEIGHBOR_INFO */
+  if(callback != NULL) {
+    callback->output_callback(status);
+  }
 }
 /*--------------------------------------------------------------------*/
 /**
@@ -1352,11 +1360,6 @@ output(uip_lladdr_t *localdest)
   /* The MAC address of the destination of the packet */
   static rimeaddr_t dest;
 
-  if (callback) {
-    set_packet_attrs();
-    callback->output_callback(0);
-  }
-
   /* init */
   uncomp_hdr_len = 0;
   rime_hdr_len = 0;
@@ -1367,6 +1370,12 @@ output(uip_lladdr_t *localdest)
 
   packetbuf_set_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS,
                      SICSLOWPAN_MAX_MAC_TRANSMISSIONS);
+
+  if(callback) {
+    /* call the attribution when the callback comes, but set attributes
+       here ! */
+    set_packet_attrs();
+  }
 
 #define TCP_FIN 0x01
 #define TCP_ACK 0x10
@@ -1732,11 +1741,11 @@ input(void)
 
 #if DEBUG
     {
-      uint8_t tmp;
-      PRINTF("after decompression: ");
-      for (tmp = 0; tmp < SICSLOWPAN_IP_BUF->len[1] + 40; tmp++) {
-	uint8_t data = ((uint8_t *) (SICSLOWPAN_IP_BUF))[tmp];
-	PRINTF("%02x", data);
+      uint16_t ndx;
+      PRINTF("after decompression %u:", SICSLOWPAN_IP_BUF->len[1]);
+      for (ndx = 0; ndx < SICSLOWPAN_IP_BUF->len[1] + 40; ndx++) {
+        uint8_t data = ((uint8_t *) (SICSLOWPAN_IP_BUF))[ndx];
+        PRINTF("%02x", data);
       }
       PRINTF("\n");
     }
@@ -1747,7 +1756,7 @@ input(void)
 #endif /* SICSLOWPAN_CONF_NEIGHBOR_INFO */
 
     /* if callback is set then set attributes and call */
-    if (callback) {
+    if(callback) {
       set_packet_attrs();
       callback->input_callback();
     }
