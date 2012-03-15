@@ -91,7 +91,7 @@ set_prefix_64(uip_ipaddr_t *prefix_64) {
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
 
   /* Become root of a new DODAG with ID our global v6 address */
-  dag = rpl_set_root(&ipaddr);
+  dag = rpl_set_root(RPL_DEFAULT_INSTANCE, &ipaddr);
   if(dag != NULL) {
     rpl_set_prefix(dag, &ipaddr, 64);
     PRINTF("Created a new RPL dag with ID: ");
