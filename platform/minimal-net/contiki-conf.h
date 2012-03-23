@@ -45,11 +45,14 @@
 #define CCIF
 #define CLIF
 
+/* These names are deprecated, use C99 names. */
 typedef uint8_t   u8_t;
 typedef uint16_t u16_t;
 typedef uint32_t u32_t;
 typedef  int32_t s32_t;
+
 typedef unsigned short uip_stats_t;
+
 
 #if UIP_CONF_IPV6
 /* The Windows build uses wpcap to connect to a host interface. It finds the interface by scanning for
@@ -94,7 +97,6 @@ typedef unsigned short uip_stats_t;
  * They should all attach to a minimal-net rpl border that uses the same primary interface.
  * For multihop testing, configure intermediate notes as routers.
  */
-#define RPL_CONF_ADJUST_LLH_LEN    1
 #define HARD_CODED_ADDRESS      "bbbb::10"  //the prefix is ignored for a rpl node
 #define UIP_CONF_ROUTER                 0
 #define UIP_CONF_ND6_SEND_RA            0

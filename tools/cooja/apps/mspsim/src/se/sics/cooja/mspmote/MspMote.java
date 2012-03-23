@@ -31,12 +31,13 @@
 
 package se.sics.cooja.mspmote;
 
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Observable;
 
 import org.apache.log4j.Logger;
@@ -56,13 +57,12 @@ import se.sics.cooja.interfaces.IPAddress;
 import se.sics.cooja.motes.AbstractEmulatedMote;
 import se.sics.cooja.mspmote.interfaces.MspSerial;
 import se.sics.cooja.mspmote.plugins.CodeVisualizerSkin;
-import se.sics.cooja.mspmote.plugins.MspBreakpointContainer;
-import se.sics.cooja.plugins.BufferListener.BufferAccess;
+import se.sics.cooja.mspmote.plugins.MspBreakpoint;
 import se.sics.cooja.plugins.Visualizer;
+import se.sics.mspsim.cli.CommandContext;
 import se.sics.mspsim.cli.CommandHandler;
 import se.sics.mspsim.cli.LineListener;
 import se.sics.mspsim.cli.LineOutputStream;
-import se.sics.mspsim.core.CPUMonitor;
 import se.sics.mspsim.core.EmulationException;
 import se.sics.mspsim.core.MSP430;
 import se.sics.mspsim.core.MSP430Constants;
@@ -74,6 +74,7 @@ import se.sics.mspsim.util.DebugInfo;
 import se.sics.mspsim.util.ELF;
 import se.sics.mspsim.util.MapEntry;
 import se.sics.mspsim.util.MapTable;
+import se.sics.mspsim.util.SimpleProfiler;
 
 /**
  * @author Fredrik Osterlind
@@ -88,13 +89,12 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
   }
 
   private CommandHandler commandHandler;
-  private ArrayList<LineListener> commandListeners = new ArrayList<LineListener>();
   private MSP430 myCpu = null;
   private MspMoteType myMoteType = null;
   private MspMoteMemory myMemory = null;
   private MoteInterfaceHandler myMoteInterfaceHandler = null;
   public ComponentRegistry registry = null;
-  
+
   /* Stack monitoring variables */
   private boolean stopNextInstruction = false;
   private boolean monitorStackUsage = false;
@@ -102,15 +102,11 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
   private int heapStartAddress;
   private StackOverflowObservable stackOverflowObservable = new StackOverflowObservable();
 
-  private MspBreakpointContainer breakpointsContainer;
-
   public MspMote() {
     myMoteType = null;
     myCpu = null;
     myMemory = null;
     myMoteInterfaceHandler = null;
-
-    /* Scheduled from setConfigXML */
   }
 
   public MspMote(MspMoteType moteType, Simulation simulation) {
@@ -120,7 +116,7 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
     /* Schedule us immediately */
     requestImmediateWakeup();
   }
-  
+
   protected void initMote() {
     if (myMoteType != null) {
       initEmulator(myMoteType.getContikiFirmwareFile());
@@ -129,9 +125,8 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
       /* TODO Setup COOJA-specific window manager */
       registry.registerComponent("windowManager", new JFrameWindowManager());
 
-      /* Create watchpoint container */
       try {
-        breakpointsContainer = new MspBreakpointContainer(this, ((MspMoteType)getType()).getFirmwareDebugInfo());
+        debuggingInfo = ((MspMoteType)getType()).getFirmwareDebugInfo();
       } catch (IOException e) {
         throw (RuntimeException) new RuntimeException("Error: " + e.getMessage()).initCause(e);
       }
@@ -148,24 +143,6 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
 
   protected MoteInterfaceHandler createMoteInterfaceHandler() {
     return new MoteInterfaceHandler(this, getType().getMoteInterfaceClasses());
-  }
-
-  public void sendCLICommand(String line) {
-    if (commandHandler != null) {
-      commandHandler.lineRead(line);
-    }
-  }
-
-  public boolean hasCLIListener() {
-    return !commandListeners.isEmpty();
-  }
-
-  public void addCLIListener(LineListener listener) {
-    commandListeners.add(listener);
-  }
-
-  public void removeCLIListener(LineListener listener) {
-    commandListeners.remove(listener);
   }
 
   /**
@@ -234,17 +211,7 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
    * @throws IOException Preparing mote failed
    */
   protected void prepareMote(File fileELF, GenericNode node) throws IOException {
-    LineOutputStream lout = new LineOutputStream(new LineListener() {
-      public void lineRead(String line) {
-        for (LineListener l: commandListeners.toArray(new LineListener[0])) {
-          if (l == null) {
-            continue;
-          }
-          l.lineRead(line);
-        }
-      }});
-    PrintStream out = new PrintStream(lout);
-    this.commandHandler = new CommandHandler(out, out);
+    this.commandHandler = new CommandHandler(System.out, System.err);
     node.setCommandHandler(commandHandler);
 
     ConfigManager config = new ConfigManager();
@@ -265,10 +232,14 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
     /* Create mote address memory */
     MapTable map = ((MspMoteType)getType()).getELF().getMap();
     MapEntry[] allEntries = map.getAllEntries();
-    myMemory = new MspMoteMemory(allEntries, myCpu);
+    myMemory = new MspMoteMemory(this, allEntries, myCpu);
 
     heapStartAddress = map.heapStartAddress;
     myCpu.reset();
+  }
+
+  public CommandHandler getCLICommandHandler() {
+    return commandHandler;
   }
 
   /* called when moteID is updated */
@@ -323,10 +294,9 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
 
     if (stopNextInstruction) {
       stopNextInstruction = false;
-      /*sendCLICommandAndPrint("trace 1000");*/ /* TODO Enable */
       scheduleNextWakeup(t);
       throw new RuntimeException("MSPSim requested simulation stop");
-    } 
+    }
 
     if (lastExecute < 0) {
       /* Always execute one microsecond the first time */
@@ -335,22 +305,18 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
     if (t < lastExecute) {
       throw new RuntimeException("Bad event ordering: " + lastExecute + " < " + t);
     }
-    
+
     /* Execute MSPSim-based mote */
     /* TODO Try-catch overhead */
     try {
-      nextExecute = 
-        t + duration + 
+      nextExecute =
+        t + duration +
         myCpu.stepMicros(t - lastExecute, duration);
       lastExecute = t;
     } catch (EmulationException e) {
-      String stackTraceOutput = sendCLICommandAndPrint("stacktrace");
-      if (stackTraceOutput == null) {
-        stackTraceOutput = "";
-      }
-      stackTraceOutput = e.getMessage() + "\n\n" + stackTraceOutput;
+      String trace = e.getMessage() + "\n\n" + getStackTrace();
       throw (ContikiError)
-      new ContikiError(stackTraceOutput).initCause(e);
+      new ContikiError(trace).initCause(e);
     }
 
     /* Schedule wakeup */
@@ -359,8 +325,12 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
     }
     /*logger.debug(t + ": Schedule next wakeup at " + nextExecute);*/
     scheduleNextWakeup(nextExecute);
-    
-    
+
+    if (stopNextInstruction) {
+      stopNextInstruction = false;
+      throw new RuntimeException("MSPSim requested simulation stop");
+    }
+
     /* XXX TODO Reimplement stack monitoring using MSPSim internals */
     /*if (monitorStackUsage) {
       int newStack = cpu.reg[MSP430.SP];
@@ -376,27 +346,34 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
       }
     }*/
   }
-  
-  public String sendCLICommandAndPrint(String cmd) {
-  	String response = executeCLICommand(cmd); 
-  	logger.fatal(response);
-    return response;
+
+  public String getStackTrace() {
+    return executeCLICommand("stacktrace");
   }
-  
+
+  public int executeCLICommand(String cmd, CommandContext context) {
+    return commandHandler.executeCommand(cmd, context);
+  }
+
   public String executeCLICommand(String cmd) {
     final StringBuilder sb = new StringBuilder();
-    LineListener tmp = new LineListener() {
+    LineListener ll = new LineListener() {
       public void lineRead(String line) {
-        sb.append(line + "\n");
+        sb.append(line).append("\n");
       }
     };
-    commandListeners.add(tmp);
-    sendCLICommand(cmd);
-    commandListeners.remove(tmp);
-    
+    PrintStream po = new PrintStream(new LineOutputStream(ll));
+    CommandContext c = new CommandContext(commandHandler, null, "", new String[0], 1, null);
+    c.out = po;
+    c.err = po;
+
+    if (0 != executeCLICommand(cmd, c)) {
+      sb.append("\nWarning: command failed");
+    }
+
     return sb.toString();
   }
-  
+
   public int getCPUFrequency() {
     return myCpu.getDCOFrequency();
   }
@@ -404,14 +381,15 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
   public int getID() {
     return getInterfaces().getMoteID().getMoteID();
   }
-  
+
   public boolean setConfigXML(Simulation simulation, Collection<Element> configXML, boolean visAvailable) {
     setSimulation(simulation);
-    myMoteInterfaceHandler = createMoteInterfaceHandler();
+    if (myMoteInterfaceHandler == null) {
+      myMoteInterfaceHandler = createMoteInterfaceHandler();
+    }
 
-    /* Create watchpoint container */
     try {
-      breakpointsContainer = new MspBreakpointContainer(this, ((MspMoteType)getType()).getFirmwareDebugInfo());
+      debuggingInfo = ((MspMoteType)getType()).getFirmwareDebugInfo();
     } catch (IOException e) {
       throw (RuntimeException) new RuntimeException("Error: " + e.getMessage()).initCause(e);
     }
@@ -422,7 +400,7 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
       if (name.equals("motetype_identifier")) {
         /* Ignored: handled by simulation */
       } else if ("breakpoints".equals(element.getName())) {
-        breakpointsContainer.setConfigXML(element.getChildren(), visAvailable);
+        setWatchpointConfigXML(element.getChildren(), visAvailable);
       } else if (name.equals("interface_config")) {
         String intfClass = element.getText().trim();
         if (intfClass.equals("se.sics.cooja.mspmote.interfaces.MspIPAddress")) {
@@ -458,7 +436,7 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
 
     /* Breakpoints */
     element = new Element("breakpoints");
-    element.addContent(breakpointsContainer.getConfigXML());
+    element.addContent(getWatchpointConfigXML());
     config.add(element);
 
     // Mote interfaces
@@ -476,48 +454,38 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
     return config;
   }
 
-
-  /* Watchpoints: Forward to breakpoint container */
-  public void addWatchpointListener(ActionListener listener) {
-    breakpointsContainer.addWatchpointListener(listener);
-  }
-
-  public Watchpoint getLastWatchpoint() {
-    return breakpointsContainer.getLastWatchpoint();
-  }
-
-  public Mote getMote() {
-    return breakpointsContainer.getMote();
-  }
-
-  public ActionListener[] getWatchpointListeners() {
-    return breakpointsContainer.getWatchpointListeners();
-  }
-
-  public void removeWatchpointListener(ActionListener listener) {
-    breakpointsContainer.removeWatchpointListener(listener);
-  }
-
-  public MspBreakpointContainer getBreakpointsContainer() {
-    return breakpointsContainer;
-  }
-
   public String getExecutionDetails() {
     return executeCLICommand("stacktrace");
   }
 
   public String getPCString() {
-    int pc = myCpu.reg[MSP430Constants.PC];
-    ELF elf = (ELF)myCpu.getRegistry().getComponent(ELF.class); 
+    int pc = myCpu.getPC();
+    ELF elf = myCpu.getRegistry().getComponent(ELF.class);
     DebugInfo di = elf.getDebugInfo(pc);
-    
+
     /* Following code examples from MSPsim, DebugCommands.java */
     if (di == null) {
       di = elf.getDebugInfo(pc + 1);
     }
     if (di == null) {
       /* Return PC value */
-      return String.format("*%02x", myCpu.reg[MSP430Constants.PC]);
+      SimpleProfiler sp = (SimpleProfiler)myCpu.getProfiler();
+      try {
+        MapEntry mapEntry = sp.getCallMapEntry(0);
+        if (mapEntry != null) {
+          String file = mapEntry.getFile();
+          if (file != null) {
+            if (file.indexOf('/') >= 0) {
+              file = file.substring(file.lastIndexOf('/')+1);
+            }
+          }
+          String name = mapEntry.getName();
+          return file + ":?:" + name;
+        }
+        return String.format("*%02x", myCpu.reg[MSP430Constants.PC]);
+      } catch (Exception e) {
+        return null;
+      }
     }
 
     int lineNo = di.getLine();
@@ -527,94 +495,158 @@ public abstract class MspMote extends AbstractEmulatedMote implements Mote, Watc
       /* strip path */
       file = file.substring(file.lastIndexOf('/')+1, file.length());
     }
+
     String function = di.getFunction();
-    function = function==null?"?":function;
+    function = function==null?"":function;
     if (function.contains(":")) {
       /* strip arguments */
       function = function.substring(0, function.lastIndexOf(':'));
     }
-    return file + ":" + function + ":" + lineNo;
-    
-    /*return executeCLICommand("line " + myCpu.reg[MSP430Constants.PC]);*/
+    if (function.equals("* not available")) {
+      function = "?";
+    }
+    return file + ":" + lineNo + ":" + function;
+
+    /*return executeCLICommand("line " + myCpu.getPC());*/
   }
 
-  public MemoryMonitor createMemoryMonitor(final MemoryEventHandler meh) {
-    return new MemoryMonitor() {
-      private boolean started = false;
-      private int address = -1;
-      private int size = -1;
-      private CPUMonitor myMonitor = null;
-      private boolean isPointer = false;
-      private MemoryMonitor pointedMemory = null;
-      public boolean start(int address, int size) {
-        if (started) {
-          return started;
+
+  /* WatchpointMote */
+  private ArrayList<WatchpointListener> watchpointListeners = new ArrayList<WatchpointListener>();
+  private ArrayList<MspBreakpoint> watchpoints = new ArrayList<MspBreakpoint>();
+  private Hashtable<File, Hashtable<Integer, Integer>> debuggingInfo = null;
+
+  public void addWatchpointListener(WatchpointListener listener) {
+    watchpointListeners.add(listener);
+  }
+  public void removeWatchpointListener(WatchpointListener listener) {
+    watchpointListeners.remove(listener);
+  }
+  public WatchpointListener[] getWatchpointListeners() {
+    return watchpointListeners.toArray(new WatchpointListener[0]);
+  }
+
+  public Watchpoint addBreakpoint(File codeFile, int lineNr, int address) {
+    MspBreakpoint bp = new MspBreakpoint(this, address, codeFile, new Integer(lineNr));
+    watchpoints.add(bp);
+
+    for (WatchpointListener listener: watchpointListeners) {
+      listener.watchpointsChanged();
+    }
+    return bp;
+  }
+  public void removeBreakpoint(Watchpoint watchpoint) {
+    ((MspBreakpoint)watchpoint).unregisterBreakpoint();
+    watchpoints.remove(watchpoint);
+
+    for (WatchpointListener listener: watchpointListeners) {
+      listener.watchpointsChanged();
+    }
+  }
+  public Watchpoint[] getBreakpoints() {
+    return watchpoints.toArray(new Watchpoint[0]);
+  }
+
+  public boolean breakpointExists(int address) {
+    if (address < 0) {
+      return false;
+    }
+    for (Watchpoint watchpoint: watchpoints) {
+      if (watchpoint.getExecutableAddress() == address) {
+        return true;
+      }
+    }
+    return false;
+  }
+  public boolean breakpointExists(File file, int lineNr) {
+    for (Watchpoint watchpoint: watchpoints) {
+      if (watchpoint.getCodeFile() == null) {
+        continue;
+      }
+      if (watchpoint.getCodeFile().compareTo(file) != 0) {
+        continue;
+      }
+      if (watchpoint.getLineNumber() != lineNr) {
+        continue;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  public Integer getExecutableAddressOf(File file, int lineNr) {
+    if (file == null || lineNr < 0 || debuggingInfo == null) {
+      return null;
+    }
+
+    /* Match file */
+    Hashtable<Integer, Integer> lineTable = debuggingInfo.get(file);
+    if (lineTable == null) {
+      Enumeration<File> fileEnum = debuggingInfo.keys();
+      while (fileEnum.hasMoreElements()) {
+        File f = fileEnum.nextElement();
+        if (f != null && f.getName().equals(file.getName())) {
+          lineTable = debuggingInfo.get(f);
+          break;
         }
-
-        final MemoryMonitor thisMonitor = this;
-        myMonitor = new CPUMonitor() {
-          public void cpuAction(int type, int adr, int data) {
-            MemoryEventType t;
-            if (type == CPUMonitor.MEMORY_WRITE) {
-              t = MemoryEventType.WRITE;
-            } else if (type == CPUMonitor.MEMORY_READ) {
-              t = MemoryEventType.READ;
-            } else {
-              t = MemoryEventType.UNKNOWN;
-            }
-
-            meh.event(thisMonitor, t, adr, data);
-          }
-        };
-
-        /* TODO Make sure no other part of Cooja overrides this! */
-        for (int a = address; a < address+size; a++) {
-          myCpu.addWatchPoint(a, myMonitor);
-        }
-
-        this.address = address;
-        this.size = size;
-        started = true;
-        return started;
       }
-      public void stop() {
-        if (!started) {
-          return;
-        }
-        started = false;
-        
-        for (int a = address; a < address+size; a++) {
-          myCpu.removeWatchPoint(a, myMonitor);
+    }
+    if (lineTable == null) {
+      return null;
+    }
+
+    /* Match line number */
+    Integer address = lineTable.get(lineNr);
+    if (address != null) {
+      Enumeration<Integer> lineEnum = lineTable.keys();
+      while (lineEnum.hasMoreElements()) {
+        Integer l = lineEnum.nextElement();
+        if (l != null && l.intValue() == lineNr) {
+          /* Found line address */
+          return lineTable.get(l);
         }
       }
-      public Mote getMote() {
-        return MspMote.this;
-      }
-      public int getAddress() {
-        return address;
-      }
-      public int getSize() {
-        return size;
-      }
+    }
 
-      public boolean isPointer() {
-        return isPointer;
+    return null;
+  }
+
+  public void signalBreakpointTrigger(MspBreakpoint b) {
+    if (b.stopsSimulation() && getSimulation().isRunning()) {
+      /* Stop simulation immediately */
+      stopNextInstruction();
+    }
+
+    /* Notify listeners */
+    WatchpointListener[] listeners = getWatchpointListeners();
+    for (WatchpointListener listener: listeners) {
+      listener.watchpointTriggered(b);
+    }
+  }
+
+  public Collection<Element> getWatchpointConfigXML() {
+    ArrayList<Element> config = new ArrayList<Element>();
+    Element element;
+
+    for (MspBreakpoint breakpoint: watchpoints) {
+      element = new Element("breakpoint");
+      element.addContent(breakpoint.getConfigXML());
+      config.add(element);
+    }
+
+    return config;
+  }
+  public boolean setWatchpointConfigXML(Collection<Element> configXML, boolean visAvailable) {
+    for (Element element : configXML) {
+      if (element.getName().equals("breakpoint")) {
+        MspBreakpoint breakpoint = new MspBreakpoint(this);
+        if (!breakpoint.setConfigXML(element.getChildren(), visAvailable)) {
+          logger.warn("Could not restore breakpoint: " + breakpoint);
+        } else {
+          watchpoints.add(breakpoint);
+        }
       }
-      public void setPointer(boolean isPointer, MemoryMonitor pointedMemory) {
-        this.isPointer = isPointer;
-        this.pointedMemory = pointedMemory;
-      }
-      public MemoryMonitor getPointedMemory() {
-        return pointedMemory;
-      }
-      
-      private BufferAccess lastBufferAccess = null;
-      public void setLastBufferAccess(BufferAccess ba) {
-        this.lastBufferAccess = ba;
-      }
-      public BufferAccess getLastBufferAccess() {
-        return lastBufferAccess;
-      }
-    };
+    }
+    return true;
   }
 }

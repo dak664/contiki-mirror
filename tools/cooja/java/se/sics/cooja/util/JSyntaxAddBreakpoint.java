@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Institute for Pervasive Computing, ETH Zurich
+ * Copyright (c) 2012, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,25 +26,49 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
+ * $Id: CodeUI.java,v 1.8 2009/09/23 08:16:06 fros4943 Exp $
  */
 
-/**
- * \file
- *      CoAP module for separate responses
- * \author
- *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
- */
+package se.sics.cooja.util;
 
-#ifndef COAP_SEPARATE_H_
-#define COAP_SEPARATE_H_
+import java.awt.event.ActionEvent;
+import java.io.File;
 
-#include "er-coap-06.h"
+import javax.swing.Action;
+import javax.swing.JMenuItem;
+import javax.swing.text.JTextComponent;
 
-#ifndef COAP_SEPARATE_THRESHOLD
-#define COAP_SEPARATE_THRESHOLD         42
-#endif
+import jsyntaxpane.SyntaxDocument;
+import jsyntaxpane.actions.DefaultSyntaxAction;
 
-void coap_separate_handler(resource_t *resource, void *request, void *response);
+import org.apache.log4j.Logger;
 
-#endif /* COAP_SEPARATE_H_ */
+import se.sics.cooja.WatchpointMote;
+
+public class JSyntaxAddBreakpoint extends DefaultSyntaxAction {
+  private static Logger logger = Logger.getLogger(JSyntaxAddBreakpoint.class);
+
+  public JSyntaxAddBreakpoint() {
+    super("addbreakpoint");
+  }
+  
+  public void actionPerformed(ActionEvent e) {
+    JMenuItem menuItem = (JMenuItem) e.getSource();
+    Action action = menuItem.getAction();
+    WatchpointMote watchpointMote = (WatchpointMote) action.getValue("WatchpointMote");
+    if (watchpointMote == null) {
+      logger.warn("Error: No source, cannot configure breakpoint");
+      return;
+    }
+
+    File file = (File) action.getValue("WatchpointFile");
+    Integer line = (Integer) action.getValue("WatchpointLine");
+    Integer address = (Integer) action.getValue("WatchpointAddress");
+    if (file == null || line == null || address == null) {
+      logger.warn("Error: Bad breakpoint info, cannot add breakpoint");
+      return;
+    }
+
+    watchpointMote.addBreakpoint(file, line, address);
+  }
+}
