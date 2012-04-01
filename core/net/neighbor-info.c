@@ -91,6 +91,9 @@ update_metric(const rimeaddr_t *dest, int packet_metric)
   }
 }
 /*---------------------------------------------------------------------------*/
+#if SHORTCUTS_CONF_NETSTACK
+#define add_neighbor(a) neighbor_attr_add_neighbor(a)
+#else
 static void
 add_neighbor(const rimeaddr_t *addr)
 {
@@ -105,6 +108,7 @@ add_neighbor(const rimeaddr_t *addr)
     break;
   }
 }
+#endif
 /*---------------------------------------------------------------------------*/
 void
 neighbor_info_packet_sent(int status, int numtx)
@@ -128,11 +132,7 @@ neighbor_info_packet_sent(int status, int numtx)
 
   switch(status) {
   case MAC_TX_OK:
-#if !SHORTCUTS_CONF_NETSTACK
     add_neighbor(dest);
-#else
-    neighbor_attr_add_neighbor(dest);
-#endif
 #if UIP_DS6_LL_NUD
     nbr = uip_ds6_nbr_ll_lookup((uip_lladdr_t *)dest);
     if(nbr != NULL &&
@@ -170,11 +170,7 @@ neighbor_info_packet_received(void)
   PRINTF("neighbor-info: packet received from %d.%d\n",
 	src->u8[sizeof(*src) - 2], src->u8[sizeof(*src) - 1]);
 
-#if !SHORTCUTS_CONF_NETSTACK
   add_neighbor(src);
-#else
-  neighbor_attr_add_neighbor(src);
-#endif
 }
 /*---------------------------------------------------------------------------*/
 int

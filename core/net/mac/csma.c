@@ -284,13 +284,7 @@ packet_sent(void *ptr, int status, int num_transmissions)
       PRINTF("csma: drop with status %d after %d transmissions, %d collisions\n",
              status, n->transmissions, n->collisions);
       free_first_packet(n);
-#if SHORTCUTS_CONF_NETSTACK
-      if(metadata->sent) {
-        metadata->sent(metadata->cptr, status, (int) n->transmissions);
-      }
-#else
       mac_call_sent_callback(sent, cptr, status, num_tx);
-#endif
     }
   } else {
     if(status == MAC_TX_OK) {
@@ -299,13 +293,7 @@ packet_sent(void *ptr, int status, int num_transmissions)
       PRINTF("csma: rexmit failed %d: %d\n", n->transmissions, status);
     }
     free_first_packet(n);
-#if SHORTCUTS_CONF_NETSTACK
-    if(sent) {
-      sent(cptr, status, num_tx);
-    }
-#else
     mac_call_sent_callback(sent, cptr, status, num_tx);
-#endif
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -387,13 +375,7 @@ send_packet(mac_callback_t sent, void *ptr)
     } else {
       PRINTF("csma: could not allocate neighbor, dropping packet\n");
     }
-#if SHORTCUTS_CONF_NETSTACK
-    if(sent) {
-      sent(ptr, MAC_TX_ERR, 1);
-    }
-#else
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR, 1);
-#endif
   } else {
     PRINTF("csma: send broadcast\n");
 #if CSMA_SHORTCUT
