@@ -107,21 +107,18 @@ MEMB(packet_memb, struct rdc_buf_list, MAX_QUEUED_PACKETS);
 MEMB(metadata_memb, struct qbuf_metadata, MAX_QUEUED_PACKETS);
 LIST(neighbor_list);
 
+static void packet_sent(void *ptr, int status, int num_transmissions);
+static void transmit_packet_list(void *ptr);
+
 /* This shortcut is only meant to be used with sicslowmac and null RDC */
 #ifndef CSMA_SHORTCUT
 #define CSMA_SHORTCUT SHORTCUTS_CONF_NETSTACK
 #endif
 
 #if CSMA_SHORTCUT
-static void packet_sent(void *ptr, int status, int num_transmissions);
 static void packet_sent_cb(void *ptr, int status);
 static int mac_status;
-static const rimeaddr_t *addr;
-#else
-static void packet_sent(void *ptr, int status, int num_transmissions);
 #endif
-static void transmit_packet_list(void *ptr);
-
 /*---------------------------------------------------------------------------*/
 static struct
 neighbor_queue *neighbor_queue_from_addr(const rimeaddr_t *addr) {
@@ -322,7 +319,7 @@ send_packet(mac_callback_t sent, void *ptr)
      entry. Instead, just send it out.  */
   if(!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                    &rimeaddr_null)) {
-    addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+    static const rimeaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
     /* Look for the neighbor entry */
     n = neighbor_queue_from_addr(addr);
