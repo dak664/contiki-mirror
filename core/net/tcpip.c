@@ -526,7 +526,7 @@ eventhandler(process_event_t ev, process_data_t data)
 void
 tcpip_input(void)
 {
-#if SHORTCUTS_CONF_NETSTACK
+#if NETSTACK_CONF_SHORTCUTS
 /* calling process_post_sync, adds many bytes onto stack with the
  * only affect being process.c::process_current modified and restored
  * this is unnessary overhead, since it always leads to packet_input
@@ -738,7 +738,7 @@ tcpip_uipcall(void)
 #endif /* UIP_TCP */
   
   if(ts->p != NULL) {
-#if SHORTCUTS_CONF_NETSTACK
+#if NETSTACK_CONF_SHORTCUTS
     /* Directly invoke the relevant thread to reduce stack usage by 15 bytes */
     ts->p->thread(&ts->p->pt, tcpip_event, ts->state);
 #else

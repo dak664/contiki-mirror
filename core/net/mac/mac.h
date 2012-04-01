@@ -47,7 +47,7 @@
 
 typedef void (* mac_callback_t)(void *ptr, int status, int transmissions);
 
-#if SHORTCUTS_CONF_NETSTACK
+#if NETSTACK_CONF_SHORTCUTS
 #define mac_call_sent_callback(sent, ptr, status, num_tx) do { \
   if(sent) { sent(ptr, status, num_tx); } \
 } while(0);

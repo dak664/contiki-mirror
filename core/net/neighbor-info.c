@@ -91,7 +91,7 @@ update_metric(const rimeaddr_t *dest, int packet_metric)
   }
 }
 /*---------------------------------------------------------------------------*/
-#if SHORTCUTS_CONF_NETSTACK
+#if NETSTACK_CONF_SHORTCUTS
 #define add_neighbor(a) neighbor_attr_add_neighbor(a)
 #else
 static void

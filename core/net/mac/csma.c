@@ -112,7 +112,7 @@ static void transmit_packet_list(void *ptr);
 
 /* This shortcut is only meant to be used with sicslowmac and null RDC */
 #ifndef CSMA_SHORTCUT
-#define CSMA_SHORTCUT SHORTCUTS_CONF_NETSTACK
+#define CSMA_SHORTCUT NETSTACK_CONF_SHORTCUTS
 #endif
 
 #if CSMA_SHORTCUT
