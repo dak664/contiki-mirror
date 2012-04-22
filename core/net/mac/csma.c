@@ -307,7 +307,8 @@ send_packet(mac_callback_t sent, void *ptr)
      entry. Instead, just send it out.  */
   if(!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                    &rimeaddr_null)) {
-    static const rimeaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+    static const rimeaddr_t *addr;
+    addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
     /* Look for the neighbor entry */
     n = neighbor_queue_from_addr(addr);
