@@ -10,6 +10,8 @@
 #include "project-conf.h"
 #endif /* PROJECT_CONF_H */
 
+#include "models.h"
+
 /*
  * Define this as 1 to poll the etimer process from within main instead of from
  * the clock ISR. This reduces the ISR's stack usage and may prevent crashes.
@@ -112,12 +114,6 @@
 #ifndef LPM_CONF_MODE
 #define LPM_CONF_MODE         0 /* 0: no LPM, 1: MCU IDLE, 2: Drop to PM1 */
 #endif
-
-/* Some files include leds.h before us */
-#undef LEDS_YELLOW
-#undef LEDS_RED
-#define LEDS_YELLOW 4
-#define LEDS_RED    2
 
 /* DMA Configuration */
 #ifndef DMA_CONF_ON
