@@ -1,10 +1,5 @@
-/**
- * \addtogroup shell
- * @{
- */
-
 /*
- * Copyright (c) 2008, Swedish Institute of Computer Science.
+ * Copyright (c) 2011, Zolertia(TM) is a trademark of Advancare,SL
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,82 +27,57 @@
  * SUCH DAMAGE.
  *
  * This file is part of the Contiki operating system.
+ *
  */
 
 /**
  * \file
- *         A shell back-end for the serial port
+ *         A quick program for testing the light ziglet driver in the Z1 platform
  * \author
- *         Adam Dunkels <adam@sics.se>
+ *         Antonio Lignan <alinan@zolertia.com>
  */
 
-#include "contiki.h"
-#include "shell.h"
-
-#include "dev/serial-line.h"
-#include "net/rime.h"
-
 #include <stdio.h>
-#include <string.h>
+#include "contiki.h"
+#include "dev/i2cmaster.h"
+#include "dev/light-ziglet.h"
 
 
-/*---------------------------------------------------------------------------*/
-PROCESS(serial_shell_process, "Contiki serial shell");
-/*---------------------------------------------------------------------------*/
-void
-shell_default_output(const char *text1, int len1, const char *text2, int len2)
-{
-  int i;
-  if(text1 == NULL) {
-    text1 = "";
-    len1 = 0;
-  }
-  if(text2 == NULL) {
-    text2 = "";
-    len2 = 0;
-  }
+#if 1
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
-  /* Precision (printf("%.Ns", text1)) not supported on all platforms.
-     putchar(c) not be supported on all platforms. */
-  for(i = 0; i < len1; i++) {
-    printf("%c", text1[i]);
-  }
-  for(i = 0; i < len2; i++) {
-    printf("%c", text2[i]);
-  }
-  printf("\r\n");
-}
+
+#if 0
+#define PRINTFDEBUG(...) printf(__VA_ARGS__)
+#else
+#define PRINTFDEBUG(...)
+#endif
+
+
+#define SENSOR_READ_INTERVAL (CLOCK_SECOND)
+
+PROCESS(test_process, "Test light ziglet process");
+AUTOSTART_PROCESSES(&test_process);
 /*---------------------------------------------------------------------------*/
-void
-shell_prompt(char *str)
-{
-  printf("%d.%d: %s\r\n", rimeaddr_node_addr.u8[0], rimeaddr_node_addr.u8[1],
-	 str);
-}
-/*---------------------------------------------------------------------------*/
-void
-shell_exit(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(serial_shell_process, ev, data)
+static struct etimer et;
+
+PROCESS_THREAD(test_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  shell_init();
+  uint16_t light;
+
+  light_ziglet_init();
 
   while(1) {
-    PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
-    shell_input(data, strlen(data));
-  }
+    etimer_set(&et, SENSOR_READ_INTERVAL);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
+    light = light_ziglet_read();
+    PRINTF("Light = %u\n", light);
+  }
   PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
-void
-serial_shell_init(void)
-{
-  process_start(&serial_shell_process, NULL);
-}
-/*---------------------------------------------------------------------------*/
-/** @} */

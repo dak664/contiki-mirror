@@ -102,13 +102,6 @@ public class LogScriptEngine {
   private long startRealTime;
   private long nextProgress;
 
-  private interface ScriptLog {
-    public void log(String log);
-    public void testOK();
-    public void testFailed();
-    public void generateMessage(long delay, String msg);
-  }
-
   public LogScriptEngine(Simulation simulation) {
     this.simulation = simulation;
   }
@@ -116,12 +109,17 @@ public class LogScriptEngine {
   /* Only called from the simulation loop */
   private void stepScript() {
     /* Release script - halt simulation */
-    semaphoreScript.release();
+    Semaphore semScript = semaphoreScript;
+    Semaphore semSim = semaphoreSim;
+    if (semScript == null || semSim == null) {
+      return;
+    }
+    semScript.release();
 
     /* ... script executing ... */
 
     try {
-      semaphoreSim.acquire();
+      semSim.acquire();
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
