@@ -53,7 +53,7 @@ import se.sics.cooja.mspmote.interfaces.MspMoteID;
 import se.sics.cooja.mspmote.interfaces.MspSerial;
 import se.sics.cooja.mspmote.interfaces.TR1001Radio;
 
-@ClassDescription("ESB Mote Type")
+@ClassDescription("ESB mote...")
 @AbstractionLevelDescription("Emulated level")
 public class ESBMoteType extends MspMoteType {
   private static Logger logger = Logger.getLogger(ESBMoteType.class);
@@ -82,7 +82,6 @@ public class ESBMoteType extends MspMoteType {
 
   public boolean configureAndInit(Container parentContainer, Simulation simulation, boolean visAvailable)
   throws MoteTypeCreationException {
-    this.simulation = simulation;
 
     /* SPECIAL CASE: Cooja started in applet.
      * Use preconfigured Contiki firmware */
