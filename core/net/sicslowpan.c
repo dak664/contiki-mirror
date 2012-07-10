@@ -1368,8 +1368,10 @@ output(uip_lladdr_t *localdest)
   /* The MAC address of the destination of the packet */
   static rimeaddr_t dest;
 
+#if SICSLOWPAN_CONF_FRAG
   /* Number of bytes processed. */
-  uint16_t processed_ip_out_len;
+  static uint16_t processed_ip_out_len;
+#endif
 
   /* init */
   uncomp_hdr_len = 0;
@@ -1578,8 +1580,12 @@ input(void)
   uint8_t frag_offset = 0;
 #if SICSLOWPAN_CONF_FRAG
   /* tag of the fragment */
-  uint16_t frag_tag = 0;
-  uint8_t first_fragment = 0, last_fragment = 0;
+  static uint16_t frag_tag;
+  static uint8_t first_fragment;
+  static uint8_t last_fragment;
+  frag_tag = 0;
+  first_fragment = 0;
+  last_fragment = 0;
 #endif /*SICSLOWPAN_CONF_FRAG*/
 
   /* init */
@@ -1673,6 +1679,8 @@ input(void)
     /* this is a FRAGN, skip the header compression dispatch section */
     goto copypayload;
   }
+  /* Ugly 8051 stack depth fix */
+  dummy();
 #endif /* SICSLOWPAN_CONF_FRAG */
 
   /* Process next dispatch and headers */
