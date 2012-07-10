@@ -103,7 +103,14 @@ static struct seqno received_seqnos[MAX_SEQNOS];
 static void
 send_packet(mac_callback_t sent, void *ptr)
 {
-  int ret;
+  uint8_t ret;
+#if NULLRDC_802154_AUTOACK
+  static int is_broadcast;
+  static uint8_t dsn;
+  static rtimer_clock_t wt;
+  static uint8_t ackbuf[ACK_LEN];
+#endif
+
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &rimeaddr_node_addr);
 #if NULLRDC_802154_AUTOACK || NULLRDC_802154_AUTOACK_HW
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
@@ -116,8 +123,6 @@ send_packet(mac_callback_t sent, void *ptr)
   } else {
 
 #if NULLRDC_802154_AUTOACK
-    int is_broadcast;
-    uint8_t dsn;
     dsn = ((uint8_t *)packetbuf_hdrptr())[2] & 0xff;
 
     NETSTACK_RADIO.prepare(packetbuf_hdrptr(), packetbuf_totlen());
@@ -139,7 +144,6 @@ send_packet(mac_callback_t sent, void *ptr)
         if(is_broadcast) {
           ret = MAC_TX_OK;
         } else {
-          rtimer_clock_t wt;
 
           /* Check for ack */
           wt = RTIMER_NOW();
@@ -150,8 +154,7 @@ send_packet(mac_callback_t sent, void *ptr)
           if(NETSTACK_RADIO.receiving_packet() ||
              NETSTACK_RADIO.pending_packet() ||
              NETSTACK_RADIO.channel_clear() == 0) {
-            int len;
-            uint8_t ackbuf[ACK_LEN];
+            uint8_t len;
 
             wt = RTIMER_NOW();
             watchdog_periodic();
