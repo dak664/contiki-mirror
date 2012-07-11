@@ -829,7 +829,7 @@ public class GUI extends Observable {
           }
 
           String description = GUI.getDescriptionOf(moteTypeClass);
-          menuItem = new JMenuItem(description);
+          menuItem = new JMenuItem(description + "...");
           menuItem.setActionCommand("create mote type");
           menuItem.putClientProperty("class", moteTypeClass);
         /*  menuItem.setToolTipText(abstractionLevelDescription);*/
@@ -4479,7 +4479,7 @@ public class GUI extends Observable {
       return getSimulation() != null;
     }
   };
-  GUIAction exitCoojaAction = new GUIAction("Exit") {
+  GUIAction exitCoojaAction = new GUIAction("Exit", 'x') {
 		private static final long serialVersionUID = 7523822251658687665L;
 		public void actionPerformed(ActionEvent e) {
       myGUI.doQuit(true);
