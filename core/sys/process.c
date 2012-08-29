@@ -269,7 +269,7 @@ do_event(void)
 
     /* Since we have seen the new event, we move pointer upwards
        and decrese the number of events. */
-    fevent = (fevent + 1) % PROCESS_CONF_NUMEVENTS;
+    fevent = (process_num_events_t) (fevent + 1) % PROCESS_CONF_NUMEVENTS;
     --nevents;
 
     /* If this is a broadcast event, we deliver it to all events, in
