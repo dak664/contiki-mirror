@@ -70,7 +70,7 @@ static struct channel *
 input(void)
 {
   const struct packetbuf_attrlist *a;
-  int byteptr, bitptr, len;
+  uint16_t byteptr, bitptr, len;
   uint8_t *hdrptr;
   struct raw_hdr *hdr;
   struct channel *c;
@@ -132,7 +132,7 @@ static int
 output(struct channel *c)
 {
   const struct packetbuf_attrlist *a;
-  int byteptr, len;
+  uint16_t byteptr, len;
   uint8_t *hdrptr;
   struct raw_hdr *hdr;
   
@@ -189,7 +189,7 @@ output(struct channel *c)
 static int
 hdrsize(const struct packetbuf_attrlist *a)
 {
-  int size, len;
+  uint16_t size, len;
   
   /* Compute the total size of the final header by summing the size of
      all attributes that are used on this channel. */
