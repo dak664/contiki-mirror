@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Loughborough University - Computer Science
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,57 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
  */
 
 /**
  * \file
- *         Project specific configuration defines for the border router /
- *         slip bridge example for cc253x.
- *
+ *         A set of debugging tools
  * \author
- *         George Oikonomou - <oikonomou@users.sourceforge.net>
+ *         Nicolas Tsiftes <nvt@sics.se>
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-
-#define VIZTOOL_MAX_PAYLOAD_LEN 120
-#define LPM_CONF_MODE 0
-
-/* Needed when building for the Smart RF. No effect in cc2531 USB builds */
-#define SLIP_ARCH_CONF_ENABLE 1
-
-/* Leave this alone when building for the cc2531 USB dongle.
- * Has no effect when building for the SmartRF. */
-#define USB_SERIAL_CONF_BUFFERED 1
-
-#endif /* PROJECT_CONF_H_ */
+#include "net/uip-debug.h"
+#include "debug.h"
+/*---------------------------------------------------------------------------*/
+void
+uip_debug_ipaddr_print(const uip_ipaddr_t *addr)
+{
+#if UIP_CONF_IPV6
+  uint16_t a;
+  unsigned int i;
+  int f;
+  for(i = 0, f = 0; i < sizeof(uip_ipaddr_t); i += 2) {
+    a = (addr->u8[i] << 8) + addr->u8[i + 1];
+    if(a == 0 && f >= 0) {
+      if(f++ == 0) {
+        putstring("::");
+      }
+    } else {
+      if(f > 0) {
+        f = -1;
+      } else if(i > 0) {
+        putstring(":");
+      }
+      puthex(a >> 8);
+      puthex(a & 0xFF);
+    }
+  }
+#else /* UIP_CONF_IPV6 */
+  PRINTA("%u.%u.%u.%u", addr->u8[0], addr->u8[1], addr->u8[2], addr->u8[3]);
+#endif /* UIP_CONF_IPV6 */
+}
+/*---------------------------------------------------------------------------*/
+void
+uip_debug_lladdr_print(const uip_lladdr_t *addr)
+{
+  unsigned int i;
+  for(i = 0; i < sizeof(uip_lladdr_t); i++) {
+    if(i > 0) {
+      putstring(":");
+    }
+    puthex(addr->addr[i]);
+  }
+}
+/*---------------------------------------------------------------------------*/
