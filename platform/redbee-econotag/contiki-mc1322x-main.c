@@ -199,7 +199,7 @@ init_lowlevel(void)
 	trim_xtal();
 	
 	/* uart init */
-	uart_init(BRINC, BRMOD, SAMP);
+	uart_init(UART1, 115200);
 	
 	default_vreg_init();
 
@@ -280,7 +280,7 @@ void oui_to_eui64(rimeaddr_t *eui64, uint32_t oui, uint64_t ext) {
 	eui64->u8[7] =  ext        & 0xff;
 }
 
-unsigned short node_id = 0;
+extern unsigned short node_id;
 
 void
 set_rimeaddr(rimeaddr_t *addr) 

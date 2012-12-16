@@ -121,6 +121,10 @@ send_packet(mac_callback_t sent, void *ptr)
     ret = MAC_TX_ERR_FATAL;
   } else {
 
+#ifdef NETSTACK_ENCRYPT
+    NETSTACK_ENCRYPT();
+#endif /* NETSTACK_ENCRYPT */
+
 #if NULLRDC_802154_AUTOACK
     dsn = ((uint8_t *)packetbuf_hdrptr())[2] & 0xff;
 
@@ -216,6 +220,10 @@ send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
 static void
 packet_input(void)
 {
+#ifdef NETSTACK_DECRYPT
+    NETSTACK_DECRYPT();
+#endif /* NETSTACK_DECRYPT */
+
 #if NULLRDC_802154_AUTOACK
   if(packetbuf_datalen() == ACK_LEN) {
     /* Ignore ack packets */

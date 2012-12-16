@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2005, Swedish Institute of Computer Science.
+ * Copyright (c) 2010, Mariano Alvira <mar@devl.org> and other contributors
+ * to the MC1322x project (http://mc1322x.devl.org)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +27,29 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
+ * This file is part of libmc1322x: see http://mc1322x.devl.org
+ * for details. 
  *
- * Author: Adam Dunkels <adam@sics.se>
  *
  */
 
-#ifndef __NODE_ID_H__
-#define __NODE_ID_H__
+#ifndef BOARD_M12_H
+#define BOARD_M12_H
 
-void node_id_restore(void);
-void node_id_burn(unsigned short node_id);
+/* XTAL TUNE parameters */
+/* see http://devl.org/pipermail/mc1322x/2009-December/000162.html */
+/* for details about how to make this measurement */
 
-extern unsigned short node_id;
+/* Econotag also needs an addtional 12pf on board */
+/* Coarse tune: add 4pf */
+#define CTUNE_4PF 1
+/* Coarse tune: add 0-15 pf (CTUNE is 4 bits) */
+#define CTUNE 3
+/* Fine tune: add FTUNE * 156fF (FTUNE is 5bits) */
+#define FTUNE 3
 
-#endif /* __NODE_ID_H__ */
+#define vreg_init buck_init
+#define board_init m12_init
+#include <std_conf.h>
+
+#endif
