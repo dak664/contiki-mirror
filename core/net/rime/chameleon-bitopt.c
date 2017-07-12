@@ -70,7 +70,7 @@ static const uint8_t bitmask[9] = { 0x00, 0x80, 0xc0, 0xe0, 0xf0,
 
 /*---------------------------------------------------------------------------*/
 uint8_t CC_INLINE
-get_bits_in_byte(uint8_t *from, int bitpos, int vallen)
+get_bits_in_byte(uint8_t *from, uint16_t bitpos, uint16_t vallen)
 {
   uint16_t shifted_val;
 
@@ -86,9 +86,9 @@ get_bits_in_byte(uint8_t *from, int bitpos, int vallen)
 }
 /*---------------------------------------------------------------------------*/
 void
-get_bits(uint8_t *to, uint8_t *from, int bitpos, int vallen)
+get_bits(uint8_t *to, uint8_t *from, uint16_t bitpos, uint16_t vallen)
 {
-  int i, bits;
+  uint16_t i, bits;
   
   
   if(vallen < 8) {
@@ -158,9 +158,9 @@ set_bits_in_byte(uint8_t *target, int bitpos, uint8_t val, int vallen)
 }
 /*---------------------------------------------------------------------------*/
 void
-set_bits(uint8_t *ptr, int bitpos, uint8_t *val, int vallen)
+set_bits(uint8_t *ptr, int bitpos, uint8_t *val, uint16_t vallen)
 {
-  int i, bits;
+  uint16_t i, bits;
 
   /*  PRINTF("set_bits %p bitpos %d, val %p len %d\n",
       ptr, bitpos, val, vallen);*/
@@ -234,8 +234,8 @@ static int
 pack_header(struct channel *c)
 {
   const struct packetbuf_attrlist *a;
-  int hdrbytesize;
-  int byteptr, bitptr, len;
+  uint16_t hdrbytesize;
+  uint16_t byteptr, bitptr, len;
   uint8_t *hdrptr;
   struct bitopt_hdr *hdr;
   
@@ -299,8 +299,8 @@ static struct channel *
 unpack_header(void)
 {
   const struct packetbuf_attrlist *a;
-  int byteptr, bitptr, len;
-  int hdrbytesize;
+  uint16_t byteptr, bitptr, len;
+  uint16_t hdrbytesize;
   uint8_t *hdrptr;
   struct bitopt_hdr *hdr;
   struct channel *c;

@@ -24,7 +24,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: Radio.java,v 1.11 2009/11/25 16:05:47 fros4943 Exp $
  */
 
 package se.sics.cooja.interfaces;
@@ -139,18 +138,18 @@ public abstract class Radio extends MoteInterface {
   public abstract boolean isInterfered();
 
   /**
-   * @return True if the simulated radio receiver is turned on
+   * @return True if the simulated radio transceiver is on
    */
-  public abstract boolean isReceiverOn();
+  public abstract boolean isRadioOn();
 
   /**
    * Interferes with any current reception. If this method is called, the packet
    * will be dropped. This method can be used to simulate radio interference
    * such as high background noise or radio packet collisions.
-   * 
-   * When the radio is no longer interfered, the {@link #signalReceptionEnd()} 
+   *
+   * When the radio is no longer interfered, the {@link #signalReceptionEnd()}
    * method must be called.
-   *  
+   *
    * @see #signalReceptionEnd()
    */
   public abstract void interfereAnyReception();
@@ -169,6 +168,25 @@ public abstract class Radio extends MoteInterface {
    * @return Maximum output power indicator
    */
   public abstract int getOutputPowerIndicatorMax();
+  
+  /** 
+   * Returns the current LQI-value. This might differ from platform to platform 
+   * @return Current LQI value.
+   *  
+   * 
+   */
+  public int getLQI() throws UnsupportedOperationException {
+	  throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Sets the LQI. This in not supported by all platforms. Also results may differ
+   * from platform to platform. 
+   *
+   * @param lqi The current LQI
+   */
+  public void setLQI(int lqi){
+  }
 
   /**
    * @return Current surrounding signal strength

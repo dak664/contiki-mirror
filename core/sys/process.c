@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * @(#)$Id: process.c,v 1.12 2010/10/20 22:24:46 adamdunkels Exp $
  */
 
 /**
@@ -269,7 +268,7 @@ do_event(void)
 
     /* Since we have seen the new event, we move pointer upwards
        and decrese the number of events. */
-    fevent = (fevent + 1) % PROCESS_CONF_NUMEVENTS;
+    fevent = (process_num_events_t) (fevent + 1) % PROCESS_CONF_NUMEVENTS;
     --nevents;
 
     /* If this is a broadcast event, we deliver it to all events, in

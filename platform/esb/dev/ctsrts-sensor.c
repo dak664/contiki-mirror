@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * @(#)$Id: ctsrts-sensor.c,v 1.4 2010/02/08 00:00:45 nifi Exp $
  */
 
 /**
@@ -43,7 +42,6 @@
 #include "dev/ctsrts-sensor.h"
 #include "dev/irq.h"
 #include "dev/hwconf.h"
-#include <signal.h>
 
 const struct sensors_sensor ctsrts_sensor;
 

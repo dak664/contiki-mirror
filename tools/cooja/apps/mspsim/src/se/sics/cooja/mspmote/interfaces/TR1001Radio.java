@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: TR1001Radio.java,v 1.20 2010/02/05 08:44:57 fros4943 Exp $
  */
 
 package se.sics.cooja.mspmote.interfaces;
@@ -354,7 +353,7 @@ public class TR1001Radio extends Radio implements USARTListener, CustomDataRadio
     return mote;
   }
 
-  public boolean isReceiverOn() {
+  public boolean isRadioOn() {
     /* TODO Implement me */
     return true;
   }

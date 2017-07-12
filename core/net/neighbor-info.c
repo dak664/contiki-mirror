@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * $Id: neighbor-info.c,v 1.18 2010/12/15 14:35:07 nvt-se Exp $
  */
 /**
  * \file
@@ -58,15 +57,18 @@ static neighbor_info_subscriber_t subscriber_callback;
 static void
 update_metric(const rimeaddr_t *dest, int packet_metric)
 {
-  link_metric_t *metricp;
-  link_metric_t recorded_metric, new_metric;
+  static link_metric_t *metricp;
+  static link_metric_t recorded_metric;
+  static link_metric_t new_metric;
   unsigned long time;
+  int first_update = 0;
 
   metricp = (link_metric_t *)neighbor_attr_get_data(&attr_etx, dest);
   packet_metric = NEIGHBOR_INFO_ETX2FIX(packet_metric);
   if(metricp == NULL || *metricp == 0) {
     recorded_metric = NEIGHBOR_INFO_ETX2FIX(ETX_LIMIT);
     new_metric = packet_metric;
+    first_update = 1;
   } else {
     recorded_metric = *metricp;
     /* Update the EWMA of the ETX for the neighbor. */
@@ -84,12 +86,15 @@ update_metric(const rimeaddr_t *dest, int packet_metric)
     time = clock_seconds();
     neighbor_attr_set_data(&attr_etx, dest, &new_metric);
     neighbor_attr_set_data(&attr_timestamp, dest, &time);
-    if(new_metric != recorded_metric && subscriber_callback != NULL) {
+    if((first_update || new_metric != recorded_metric) && subscriber_callback != NULL) {
       subscriber_callback(dest, 1, new_metric);
     }
   }
 }
 /*---------------------------------------------------------------------------*/
+#if NETSTACK_CONF_SHORTCUTS
+#define add_neighbor(a) neighbor_attr_add_neighbor(a)
+#else
 static void
 add_neighbor(const rimeaddr_t *addr)
 {
@@ -104,12 +109,13 @@ add_neighbor(const rimeaddr_t *addr)
     break;
   }
 }
+#endif
 /*---------------------------------------------------------------------------*/
 void
 neighbor_info_packet_sent(int status, int numtx)
 {
-  const rimeaddr_t *dest;
-  link_metric_t packet_metric;
+  static const rimeaddr_t *dest;
+  static link_metric_t packet_metric;
 #if UIP_DS6_LL_NUD
   uip_ds6_nbr_t *nbr;
 #endif /* UIP_DS6_LL_NUD */

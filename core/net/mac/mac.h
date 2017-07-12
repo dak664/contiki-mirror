@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * $Id: mac.h,v 1.14 2010/10/03 20:37:32 adamdunkels Exp $
  */
 
 /**
@@ -47,7 +46,13 @@
 
 typedef void (* mac_callback_t)(void *ptr, int status, int transmissions);
 
+#if NETSTACK_CONF_SHORTCUTS
+#define mac_call_sent_callback(sent, ptr, status, num_tx) do { \
+  if(sent) { sent(ptr, status, num_tx); } \
+} while(0);
+#else
 void mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx);
+#endif
 
 /**
  * The structure of a MAC protocol driver in Contiki.

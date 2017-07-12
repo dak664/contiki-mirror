@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: framer-802154.c,v 1.12 2010/06/14 19:19:16 adamdunkels Exp $
  */
 
 /**
@@ -62,18 +61,8 @@ static uint8_t mac_dsn;
 
 static uint8_t initialized = 0;
 
-/**  \brief The 16-bit identifier of the PAN on which the device is
- *   sending to.  If this value is 0xffff, the device is not
- *   associated.
- */
-static const uint16_t mac_dst_pan_id = IEEE802154_PANID;
-
-/**  \brief The 16-bit identifier of the PAN on which the device is
- *   operating.  If this value is 0xffff, the device is not
- *   associated.
- */
-static const uint16_t mac_src_pan_id = IEEE802154_PANID;
-
+static frame802154_t frame;
+static uint8_t len;
 /*---------------------------------------------------------------------------*/
 static int
 is_broadcast_addr(uint8_t mode, uint8_t *addr)
@@ -90,11 +79,9 @@ is_broadcast_addr(uint8_t mode, uint8_t *addr)
 static int
 create(void)
 {
-  frame802154_t params;
-  uint8_t len;
 
   /* init to zeros */
-  memset(&params, 0, sizeof(params));
+  memset(&frame, 0, sizeof(frame));
 
   if(!initialized) {
     initialized = 1;
@@ -102,25 +89,25 @@ create(void)
   }
 
   /* Build the FCF. */
-  params.fcf.frame_type = FRAME802154_DATAFRAME;
-  params.fcf.security_enabled = 0;
-  params.fcf.frame_pending = packetbuf_attr(PACKETBUF_ATTR_PENDING);
+  frame.fcf.frame_type = FRAME802154_DATAFRAME;
+  frame.fcf.security_enabled = 0;
+  frame.fcf.frame_pending = packetbuf_attr(PACKETBUF_ATTR_PENDING);
   if(rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), &rimeaddr_null)) {
-    params.fcf.ack_required = 0;
+    frame.fcf.ack_required = 0;
   } else {
-    params.fcf.ack_required = packetbuf_attr(PACKETBUF_ATTR_MAC_ACK);
+    frame.fcf.ack_required = packetbuf_attr(PACKETBUF_ATTR_MAC_ACK);
   }
-  params.fcf.panid_compression = 0;
+  frame.fcf.panid_compression = 0;
 
   /* Insert IEEE 802.15.4 (2003) version bit. */
-  params.fcf.frame_version = FRAME802154_IEEE802154_2003;
+  frame.fcf.frame_version = FRAME802154_IEEE802154_2003;
 
   /* Increment and set the data sequence number. */
   if(packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO)) {
-    params.seq = packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
+    frame.seq = packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
   } else {
-    params.seq = mac_dsn++;
-    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, params.seq);
+    frame.seq = mac_dsn++;
+    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, frame.seq);
   }
 /*   params.seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID); */
 
@@ -129,13 +116,12 @@ create(void)
      \todo For phase 1 the addresses are all long. We'll need a mechanism
      in the rime attributes to tell the mac to use long or short for phase 2.
   */
-  if(sizeof(rimeaddr_t) == 2) {
-    /* Use short address mode if rimeaddr size is short. */
-    params.fcf.src_addr_mode = FRAME802154_SHORTADDRMODE;
-  } else {
-    params.fcf.src_addr_mode = FRAME802154_LONGADDRMODE;
-  }
-  params.dest_pid = mac_dst_pan_id;
+#if (RIMEADDR_SIZE == 2)
+  frame.fcf.src_addr_mode = FRAME802154_SHORTADDRMODE;
+#else
+  frame.fcf.src_addr_mode = FRAME802154_LONGADDRMODE;
+#endif
+  frame.dest_pid = IEEE802154_PANID;
 
   /*
    *  If the output address is NULL in the Rime buf, then it is broadcast
@@ -143,38 +129,38 @@ create(void)
    */
   if(rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), &rimeaddr_null)) {
     /* Broadcast requires short address mode. */
-    params.fcf.dest_addr_mode = FRAME802154_SHORTADDRMODE;
-    params.dest_addr[0] = 0xFF;
-    params.dest_addr[1] = 0xFF;
+    frame.fcf.dest_addr_mode = FRAME802154_SHORTADDRMODE;
+    frame.dest_addr[0] = 0xFF;
+    frame.dest_addr[1] = 0xFF;
 
   } else {
-    rimeaddr_copy((rimeaddr_t *)&params.dest_addr,
-                  packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+    rimeaddr_copy((rimeaddr_t *)&frame.dest_addr,
+        packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     /* Use short address mode if rimeaddr size is small */
-    if(sizeof(rimeaddr_t) == 2) {
-      params.fcf.dest_addr_mode = FRAME802154_SHORTADDRMODE;
-    } else {
-      params.fcf.dest_addr_mode = FRAME802154_LONGADDRMODE;
-    }
+#if (RIMEADDR_SIZE == 2)
+    frame.fcf.dest_addr_mode = FRAME802154_SHORTADDRMODE;
+#else
+    frame.fcf.dest_addr_mode = FRAME802154_LONGADDRMODE;
+#endif
   }
 
   /* Set the source PAN ID to the global variable. */
-  params.src_pid = mac_src_pan_id;
+  frame.src_pid = IEEE802154_PANID;
 
   /*
    * Set up the source address using only the long address mode for
    * phase 1.
    */
-  rimeaddr_copy((rimeaddr_t *)&params.src_addr, &rimeaddr_node_addr);
+  rimeaddr_copy((rimeaddr_t *)&frame.src_addr, &rimeaddr_node_addr);
 
-  params.payload = packetbuf_dataptr();
-  params.payload_len = packetbuf_datalen();
-  len = frame802154_hdrlen(&params);
+  frame.payload = packetbuf_dataptr();
+  frame.payload_len = packetbuf_datalen();
+  len = frame802154_hdrlen(&frame);
   if(packetbuf_hdralloc(len)) {
-    frame802154_create(&params, packetbuf_hdrptr(), len);
+    frame802154_create(&frame, packetbuf_hdrptr(), len);
 
-    PRINTF("15.4-OUT: %2X", params.fcf.frame_type);
-    PRINTADDR(params.dest_addr.u8);
+    PRINTF("15.4-OUT: %2X", frame.fcf.frame_type);
+    PRINTADDR(frame.dest_addr.u8);
     PRINTF("%u %u (%u)\n", len, packetbuf_datalen(), packetbuf_totlen());
 
     return len;
@@ -187,13 +173,11 @@ create(void)
 static int
 parse(void)
 {
-  frame802154_t frame;
-  int len;
   len = packetbuf_datalen();
   if(frame802154_parse(packetbuf_dataptr(), len, &frame) &&
      packetbuf_hdrreduce(len - frame.payload_len)) {
     if(frame.fcf.dest_addr_mode) {
-      if(frame.dest_pid != mac_src_pan_id &&
+      if(frame.dest_pid != IEEE802154_PANID &&
          frame.dest_pid != FRAME802154_BROADCASTPANDID) {
         /* Packet to another PAN */
         PRINTF("15.4: for another pan %u\n", frame.dest_pid);

@@ -30,7 +30,6 @@
  *
  * Author: Adam Dunkels <adam@sics.se>
  *
- * $Id: httpd-cfs.c,v 1.26 2011/01/25 20:13:41 oliverschmidt Exp $
  */
 
 #include <stdio.h>
@@ -103,16 +102,11 @@ PT_THREAD(send_string(struct httpd_state *s, const char *str))
   PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/
-static
-PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
+static const char *
+get_content_type(const char *filename)
 {
   const char *ptr;
-
-  PSOCK_BEGIN(&s->sout);
-
-  SEND_STRING(&s->sout, statushdr);
-
-  ptr = strrchr(s->filename, ISO_period);
+  ptr = strrchr(filename, ISO_period);
   if(ptr == NULL) {
     ptr = http_content_type_plain;
   } else if(strcmp(http_htm, ptr) == 0) {
@@ -128,7 +122,17 @@ PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
   } else {
     ptr = http_content_type_binary;
   }
-  SEND_STRING(&s->sout, ptr);
+  return ptr;
+}
+/*---------------------------------------------------------------------------*/
+static
+PT_THREAD(send_headers(struct httpd_state *s, const char *statushdr))
+{
+  PSOCK_BEGIN(&s->sout);
+
+  SEND_STRING(&s->sout, statushdr);
+  SEND_STRING(&s->sout, get_content_type(s->filename));
+
   PSOCK_END(&s->sout);
 }
 /*---------------------------------------------------------------------------*/

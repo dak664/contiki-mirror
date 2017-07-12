@@ -32,7 +32,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * $Id: sicslowpan.c,v 1.52 2011/01/04 20:22:21 joxe Exp $
  */
 /**
  * \file
@@ -356,6 +355,15 @@ const uint8_t llprefix[] = {0xfe, 0x80};
 /* TTL uncompression values */
 static const uint8_t ttl_values[] = {0, 1, 64, 255};
 
+/*--------------------------------------------------------------------*/
+#if SICSLOWPAN_CONF_FRAG
+/* UGH - Horrid fix to reduce 8051 stack depth */
+void
+dummy()
+{
+  return;
+}
+#endif
 /*--------------------------------------------------------------------*/
 /** \name HC06 related functions
  * @{                                                                 */
@@ -1357,10 +1365,12 @@ static uint8_t
 output(uip_lladdr_t *localdest)
 {
   /* The MAC address of the destination of the packet */
-  rimeaddr_t dest;
+  static rimeaddr_t dest;
 
+#if SICSLOWPAN_CONF_FRAG
   /* Number of bytes processed. */
-  uint16_t processed_ip_out_len;
+  static uint16_t processed_ip_out_len;
+#endif
 
   /* init */
   uncomp_hdr_len = 0;
@@ -1449,7 +1459,7 @@ output(uip_lladdr_t *localdest)
 /*     RIME_FRAG_BUF->dispatch_size = */
 /*       uip_htons((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len); */
     SET16(RIME_FRAG_PTR, RIME_FRAG_DISPATCH_SIZE,
-          ((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len));
+        ((uint16_t)((SICSLOWPAN_DISPATCH_FRAG1 << 8) | uip_len)));
 /*     RIME_FRAG_BUF->tag = uip_htons(my_tag); */
     SET16(RIME_FRAG_PTR, RIME_FRAG_TAG, my_tag);
     my_tag++;
@@ -1491,7 +1501,7 @@ output(uip_lladdr_t *localdest)
 /*     RIME_FRAG_BUF->dispatch_size = */
 /*       uip_htons((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len); */
     SET16(RIME_FRAG_PTR, RIME_FRAG_DISPATCH_SIZE,
-          ((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len));
+        ((uint16_t)((SICSLOWPAN_DISPATCH_FRAGN << 8) | uip_len)));
     rime_payload_len = (MAC_MAX_PAYLOAD - rime_hdr_len) & 0xf8;
     while(processed_ip_out_len < uip_len) {
       PRINTFO("sicslowpan output: fragment ");
@@ -1531,6 +1541,10 @@ output(uip_lladdr_t *localdest)
     return 0;
 #endif /* SICSLOWPAN_CONF_FRAG */
   } else {
+    /* Ugly 8051 stack depth fix */
+#if SICSLOWPAN_CONF_FRAG
+    dummy();
+#endif
     /*
      * The packet does not need to be fragmented
      * copy "payload" and send
@@ -1565,8 +1579,12 @@ input(void)
   uint8_t frag_offset = 0;
 #if SICSLOWPAN_CONF_FRAG
   /* tag of the fragment */
-  uint16_t frag_tag = 0;
-  uint8_t first_fragment = 0, last_fragment = 0;
+  static uint16_t frag_tag;
+  static uint8_t first_fragment;
+  static uint8_t last_fragment;
+  frag_tag = 0;
+  first_fragment = 0;
+  last_fragment = 0;
 #endif /*SICSLOWPAN_CONF_FRAG*/
 
   /* init */
@@ -1649,7 +1667,7 @@ input(void)
     if((frag_size > 0) && (frag_size <= UIP_BUFSIZE)) {
       sicslowpan_len = frag_size;
       reass_tag = frag_tag;
-      timer_set(&reass_timer, SICSLOWPAN_REASS_MAXAGE*CLOCK_SECOND);
+      timer_set(&reass_timer, SICSLOWPAN_REASS_MAXAGE * CLOCK_SECOND / 16);
       PRINTFI("sicslowpan input: INIT FRAGMENTATION (len %d, tag %d)\n",
              sicslowpan_len, reass_tag);
       rimeaddr_copy(&frag_sender, packetbuf_addr(PACKETBUF_ADDR_SENDER));
@@ -1660,6 +1678,8 @@ input(void)
     /* this is a FRAGN, skip the header compression dispatch section */
     goto copypayload;
   }
+  /* Ugly 8051 stack depth fix */
+  dummy();
 #endif /* SICSLOWPAN_CONF_FRAG */
 
   /* Process next dispatch and headers */

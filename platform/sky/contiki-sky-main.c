@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * @(#)$Id: contiki-sky-main.c,v 1.87 2011/01/09 21:03:42 adamdunkels Exp $
  */
 
 #include <stdio.h>
@@ -50,7 +49,7 @@
 
 #include "net/rime.h"
 
-#include "node-id.h"
+#include "sys/node-id.h"
 #include "cfs-coffee-arch.h"
 #include "cfs/cfs-coffee.h"
 #include "sys/autostart.h"
@@ -204,9 +203,6 @@ main(int argc, char **argv)
 
 
   uart1_init(BAUD2UBR(115200)); /* Must come before first printf */
-#if WITH_UIP
-  slip_arch_init(BAUD2UBR(115200));
-#endif /* WITH_UIP */
 
   leds_on(LEDS_GREEN);
   ds2411_init();
@@ -252,6 +248,10 @@ main(int argc, char **argv)
   process_start(&etimer_process, NULL);
 
   ctimer_init();
+
+#if WITH_UIP
+  slip_arch_init(BAUD2UBR(115200));
+#endif /* WITH_UIP */
 
   init_platform();
 

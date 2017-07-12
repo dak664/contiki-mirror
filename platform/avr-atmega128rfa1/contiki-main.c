@@ -45,14 +45,6 @@
 #define PRINTD(...)
 #endif
 
-/* Track interrupt flow through mac, rdc and radio driver */
-#if DEBUGFLOWSIZE
-uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
-#define DEBUGFLOW(c) if (debugflowsize<(DEBUGFLOWSIZE-1)) debugflow[debugflowsize++]=c
-#else
-#define DEBUGFLOW(c)
-#endif
-
 #include <avr/pgmspace.h>
 #include <avr/fuse.h>
 #include <avr/eeprom.h>
@@ -97,6 +89,15 @@ uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
 #endif
 
 #include "net/rime.h"
+
+/* Track interrupt flow through mac, rdc and radio driver */
+//#define DEBUGFLOWSIZE 32
+#if DEBUGFLOWSIZE
+uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
+#define DEBUGFLOW(c) if (debugflowsize<(DEBUGFLOWSIZE-1)) debugflow[debugflowsize++]=c
+#else
+#define DEBUGFLOW(c)
+#endif
 
 /* Get periodic prints from idle loop, from clock seconds or rtimer interrupts */
 /* Use of rtimer will conflict with other rtimer interrupts such as contikimac radio cycling */
@@ -187,8 +188,12 @@ void initialize(void)
 
   /* Second rs232 port for debugging or slip alternative */
   rs232_init(RS232_PORT_1, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
-  /* Redirect stdout to second port */
+  /* Redirect stdout */
+#if RF230BB_CONF_LEDONPORTE1 || defined(RAVEN_LCD_INTERFACE)
   rs232_redirect_stdout(RS232_PORT_1);
+#else
+  rs232_redirect_stdout(RS232_PORT_0);
+#endif
   clock_init();
 
   if(MCUSR & (1<<PORF )) PRINTD("Power-on reset.\n");
@@ -531,17 +536,22 @@ extern uip_ds6_netif_t uip_ds6_if;
   }
   if (j) PRINTF("  <none>");
   PRINTF("\nRoutes [%u max]\n",UIP_DS6_ROUTE_NB);
-  for(i = 0,j=1; i < UIP_DS6_ROUTE_NB; i++) {
-    if(uip_ds6_routing_table[i].isused) {
-      ipaddr_add(&uip_ds6_routing_table[i].ipaddr);
-      PRINTF("/%u (via ", uip_ds6_routing_table[i].length);
-      ipaddr_add(&uip_ds6_routing_table[i].nexthop);
+  {
+    uip_ds6_route_t *r;
+    PRINTF("\nRoutes [%u max]\n",UIP_DS6_ROUTE_NB);
+    j = 1;
+    for(r = uip_ds6_route_list_head();
+        r != NULL;
+        r = list_item_next(r)) {
+      ipaddr_add(&r->ipaddr);
+      PRINTF("/%u (via ", r->length);
+      ipaddr_add(&r->nexthop);
  //     if(uip_ds6_routing_table[i].state.lifetime < 600) {
-        PRINTF(") %lus\n", uip_ds6_routing_table[i].state.lifetime);
- //     } else {
- //       PRINTF(")\n");
- //     }
-      j=0;
+      PRINTF(") %lus\n", r->state.lifetime);
+      //     } else {
+      //       PRINTF(")\n");
+      //     }
+      j = 0;
     }
   }
   if (j) PRINTF("  <none>");

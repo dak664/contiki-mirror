@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * @(#)$Id: clock.c,v 1.25 2010/04/04 12:29:50 adamdunkels Exp $
  */
 
 #include "contiki-conf.h"
@@ -201,7 +200,7 @@ clock_delay(unsigned int i)
 /*---------------------------------------------------------------------------*/
 #ifdef __GNUC__
 void
-__delay_cycles(int c)
+__delay_cycles(unsigned long c)
 {
   c /= 4;
   asm("add #-1, r15");

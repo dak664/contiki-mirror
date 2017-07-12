@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: MoteInterfaceHandler.java,v 1.9 2010/03/14 19:50:34 fros4943 Exp $
  */
 
 package se.sics.cooja;
@@ -105,8 +104,8 @@ public class MoteInterfaceHandler {
    */
   public <N extends MoteInterface> N getInterfaceOfType(Class<N> interfaceType) {
     for (MoteInterface intf : moteInterfaces) {
-      if (interfaceType.isAssignableFrom(intf.getClass())) {
-        return (N) intf;
+      if (interfaceType.isInstance(intf)) {
+        return interfaceType.cast(intf);
       }
     }
 

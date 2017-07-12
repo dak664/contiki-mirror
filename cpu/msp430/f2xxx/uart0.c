@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * @(#)$Id: uart0x.c,v 1.1 2010/08/24 16:23:20 joxe Exp $
  */
 
 /*
@@ -40,7 +39,6 @@
 #include "dev/uart0.h"
 #include "dev/watchdog.h"
 #include "lib/ringbuf.h"
-#include "dev/leds.h"
 #include "isr_compat.h"
 
 static int (*uart0_input_handler)(unsigned char c);
@@ -144,7 +142,6 @@ ISR(USCIAB0RX, uart0_rx_interrupt)
   uint8_t c;
 
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
-  leds_toggle(LEDS_RED);
   if(UCA0STAT & UCRXERR) {
     c = UCA0RXBUF;   /* Clear error flags by forcing a dummy read. */
   } else {

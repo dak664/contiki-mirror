@@ -83,6 +83,13 @@ void RPL_DEBUG_DAO_OUTPUT(rpl_parent_t *);
 
 static uint8_t dao_sequence = RPL_LOLLIPOP_INIT;
 
+static uint8_t dao_sequence;
+static uip_ipaddr_t addr;
+static uip_ipaddr_t prefix;
+static rpl_dio_t dio;
+static uip_ipaddr_t from;
+static uip_ipaddr_t dao_sender_addr;
+
 /* some debug callbacks useful when debugging RPL networks */
 #ifdef RPL_DEBUG_DIO_INPUT
 void RPL_DEBUG_DIO_INPUT(uip_ipaddr_t *, rpl_dio_t *);
@@ -175,7 +182,7 @@ void
 dis_output(uip_ipaddr_t *addr)
 {
   unsigned char *buffer;
-  uip_ipaddr_t tmpaddr;
+  static uip_ipaddr_t tmpaddr;
 
   /* DAG Information Solicitation  - 2 bytes reserved      */
   /*      0                   1                   2        */
@@ -204,11 +211,9 @@ dio_input(void)
 {
   unsigned char *buffer;
   uint8_t buffer_length;
-  rpl_dio_t dio;
   uint8_t subopt_type;
   int i;
   int len;
-  uip_ipaddr_t from;
   uip_ds6_nbr_t *nbr;
 
   memset(&dio, 0, sizeof(dio));
@@ -405,11 +410,8 @@ void
 dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 {
   unsigned char *buffer;
-  int pos;
+  static int pos;
   rpl_dag_t *dag = instance->current_dag;
-#if !RPL_LEAF_ONLY
-  uip_ipaddr_t addr;
-#endif /* !RPL_LEAF_ONLY */
 
 #if RPL_LEAF_ONLY
   /* In leaf mode, we send DIO message only as unicasts in response to 
@@ -547,22 +549,20 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 static void
 dao_input(void)
 {
-  uip_ipaddr_t dao_sender_addr;
   rpl_dag_t *dag;
   rpl_instance_t *instance;
   unsigned char *buffer;
-  uint16_t sequence;
-  uint8_t instance_id;
-  uint8_t lifetime;
-  uint8_t prefixlen;
+  static uint16_t sequence;
+  static uint8_t instance_id;
+  static uint8_t lifetime;
+  static uint8_t prefixlen;
   uint8_t flags;
   uint8_t subopt_type;
   uint8_t pathcontrol;
   uint8_t pathsequence;
-  uip_ipaddr_t prefix;
   uip_ds6_route_t *rep;
-  uint8_t buffer_length;
-  int pos;
+  static uint8_t buffer_length;
+  static int pos;
   int len;
   int i;
   int learned_from;
@@ -704,7 +704,6 @@ dao_output(rpl_parent_t *n, uint8_t lifetime)
   rpl_instance_t *instance;
   unsigned char *buffer;
   uint8_t prefixlen;
-  uip_ipaddr_t prefix;
   int pos;
 
   /* Destination Advertisement Object */

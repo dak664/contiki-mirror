@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: ContikiMoteCompileDialog.java,v 1.8 2010/11/10 13:11:43 fros4943 Exp $
  */
 
 package se.sics.cooja.dialogs;
@@ -152,7 +151,7 @@ public class ContikiMoteCompileDialog extends AbstractCompileDialog {
     ((ContikiMoteType)moteType).javaClassName = CoreComm.getAvailableClassName();
 
     if (((ContikiMoteType)moteType).javaClassName == null) {
-      logger.fatal("Could not allocate a core communicator!");
+      logger.fatal("Could not allocate a core communicator.");
       return "";
     }
 

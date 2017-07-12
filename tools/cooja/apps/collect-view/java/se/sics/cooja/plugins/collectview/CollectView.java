@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: CollectView.java,v 1.4 2010/11/12 16:50:38 nifi Exp $
  */
 package se.sics.cooja.plugins.collectview;
 import java.awt.BorderLayout;
@@ -51,7 +50,7 @@ import org.jdom.Element;
 
 import se.sics.cooja.ClassDescription;
 import se.sics.cooja.GUI;
-import se.sics.cooja.GUI.HasQuickHelp;
+import se.sics.cooja.HasQuickHelp;
 import se.sics.cooja.Mote;
 import se.sics.cooja.MotePlugin;
 import se.sics.cooja.PluginType;

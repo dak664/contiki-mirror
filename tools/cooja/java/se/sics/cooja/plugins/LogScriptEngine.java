@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: LogScriptEngine.java,v 1.25 2010/11/10 13:05:18 fros4943 Exp $
  */
 
 package se.sics.cooja.plugins;
@@ -340,6 +339,7 @@ public class LogScriptEngine {
     engine.put("global", hash);
     engine.put("sim", simulation);
     engine.put("gui", simulation.getGUI());
+    engine.put("msg", new String(""));
 
     scriptMote = new ScriptMote();
     engine.put("node", scriptMote);
@@ -404,7 +404,7 @@ public class LogScriptEngine {
       new Thread() {
         public void run() {
           try { Thread.sleep(2000); } catch (InterruptedException e) { }
-          logger.warn("Killing COOJA");
+          logger.warn("Killing Cooja");
           System.exit(1);
         };
       }.start();
@@ -450,7 +450,7 @@ public class LogScriptEngine {
       deactivateScript();
 
       if (GUI.isVisualized()) {
-        log("[if test was run without visualization, COOJA would now have been terminated]\n");
+        log("[if test was run without visualization, Cooja would now have been terminated]\n");
         stopSimulation = true;
         simulation.invokeSimulationThread(stopSimulationRunnable);
       } else {

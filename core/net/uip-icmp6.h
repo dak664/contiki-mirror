@@ -130,7 +130,7 @@ uip_icmp6_error_output(uint8_t type, uint8_t code, uint32_t param);
  * \param payload_len length of the payload
  */
 void
-uip_icmp6_send(uip_ipaddr_t *dest, int type, int code, int payload_len);
+uip_icmp6_send(uip_ipaddr_t *dest, uint8_t type, uint8_t code, uint8_t payload_len);
 
 
 /** @} */

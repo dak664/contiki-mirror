@@ -26,7 +26,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: MicaZRadio.java,v 1.7 2010/02/05 08:24:57 fros4943 Exp $
  */
 
 package se.sics.cooja.avrmote.interfaces;
@@ -111,7 +110,7 @@ public class MicaZRadio extends Radio802154 {
       return (int) cc2420.getFrequency();
   }
 
-  public boolean isReceiverOn() {
+  public boolean isRadioOn() {
       FiniteStateMachine fsm = cc2420.getFiniteStateMachine();
       /* based on reading the source code it seems that the fsm state = 3 means on */
       //System.out.println("COOJA: cc2420 FSM: " + fsm.getCurrentState());

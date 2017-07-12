@@ -372,8 +372,8 @@ eventhandler(process_event_t ev, process_data_t data)
   static unsigned char i;
   register struct listenport *l;
 #endif /*UIP_TCP*/
-  struct process *p;
-   
+  static struct process *p;
+
   switch(ev) {
     case PROCESS_EVENT_EXITED:
       /* This is the event we get if a process has exited. We go through
@@ -471,13 +471,13 @@ eventhandler(process_event_t ev, process_data_t data)
         }*/
 #if !UIP_CONF_ROUTER
         if(data == &uip_ds6_timer_rs &&
-           etimer_expired(&uip_ds6_timer_rs)){
+           etimer_expired(&uip_ds6_timer_rs)) {
           uip_ds6_send_rs();
           tcpip_ipv6_output();
         }
 #endif /* !UIP_CONF_ROUTER */
         if(data == &uip_ds6_timer_periodic &&
-           etimer_expired(&uip_ds6_timer_periodic)){
+           etimer_expired(&uip_ds6_timer_periodic)) {
           uip_ds6_periodic();
           tcpip_ipv6_output();
         }
@@ -526,7 +526,15 @@ eventhandler(process_event_t ev, process_data_t data)
 void
 tcpip_input(void)
 {
+#if NETSTACK_CONF_SHORTCUTS
+/* calling process_post_sync, adds many bytes onto stack with the
+ * only affect being process.c::process_current modified and restored
+ * this is unnessary overhead, since it always leads to packet_input
+ */
+  packet_input();
+#else
   process_post_synch(&tcpip_process, PACKET_INPUT, NULL);
+#endif
   uip_len = 0;
 #if UIP_CONF_IPV6
   uip_ext_len = 0;
@@ -537,8 +545,8 @@ tcpip_input(void)
 void
 tcpip_ipv6_output(void)
 {
-  uip_ds6_nbr_t *nbr = NULL;
-  uip_ipaddr_t *nexthop;
+  static uip_ds6_nbr_t *nbr = NULL;
+  static uip_ipaddr_t *nexthop;
 
   if(uip_len == 0) {
     return;
@@ -586,6 +594,11 @@ tcpip_ipv6_output(void)
       } else {
 	nexthop = &locrt->nexthop;
       }
+#if TCPIP_CONF_ANNOTATE_TRANSMISSIONS
+      if(nexthop != NULL) {
+	printf("#L %u 1; red\n", nexthop->u8[sizeof(uip_ipaddr_t) - 1]);
+      }
+#endif /* TCPIP_CONF_ANNOTATE_TRANSMISSIONS */
     }
     /* End of next hop determination */
 #if UIP_CONF_IPV6_RPL
@@ -692,7 +705,7 @@ tcpip_poll_tcp(struct uip_conn *conn)
 void
 tcpip_uipcall(void)
 {
-  register uip_udp_appstate_t *ts;
+  static uip_udp_appstate_t *ts;
   
 #if UIP_UDP
   if(uip_conn != NULL) {
@@ -730,7 +743,12 @@ tcpip_uipcall(void)
 #endif /* UIP_TCP */
   
   if(ts->p != NULL) {
+#if NETSTACK_CONF_SHORTCUTS
+    /* Directly invoke the relevant thread to reduce stack usage by 15 bytes */
+    ts->p->thread(&ts->p->pt, tcpip_event, ts->state);
+#else
     process_post_synch(ts->p, tcpip_event, ts->state);
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/

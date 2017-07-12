@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * $Id: csma.c,v 1.27 2011/01/25 14:24:38 adamdunkels Exp $
  */
 
 /**
@@ -110,6 +109,15 @@ LIST(neighbor_list);
 static void packet_sent(void *ptr, int status, int num_transmissions);
 static void transmit_packet_list(void *ptr);
 
+/* This shortcut is only meant to be used with sicslowmac and null RDC */
+#ifndef CSMA_SHORTCUT
+#define CSMA_SHORTCUT NETSTACK_CONF_SHORTCUTS
+#endif
+
+#if CSMA_SHORTCUT
+static void packet_sent_cb(void *ptr, int status);
+static int mac_status;
+#endif
 /*---------------------------------------------------------------------------*/
 static struct
 neighbor_queue *neighbor_queue_from_addr(const rimeaddr_t *addr) {
@@ -151,6 +159,9 @@ transmit_packet_list(void *ptr)
           list_length(n->queued_packet_list));
       /* Send packets in the neighbor's list */
       NETSTACK_RDC.send_list(packet_sent, n, q);
+#if CSMA_SHORTCUT
+      packet_sent_cb(n, mac_status);
+#endif
     }
   }
 }
@@ -183,16 +194,30 @@ free_first_packet(struct neighbor_queue *n)
   }
 }
 /*---------------------------------------------------------------------------*/
+#if CSMA_SHORTCUT
+/* Rename and redefine the original callback and hook our own to the driver
+ * The original will get called by send_packet to reduce stack depth */
 static void
 packet_sent(void *ptr, int status, int num_transmissions)
+{
+  mac_status = status;
+  return;
+}
+/*---------------------------------------------------------------------------*/
+static void
+packet_sent_cb(void *ptr, int status)
+#else
+static void
+packet_sent(void *ptr, int status, int num_transmissions)
+#endif
 {
   struct neighbor_queue *n = ptr;
   struct rdc_buf_list *q = list_head(n->queued_packet_list);
   struct qbuf_metadata *metadata = (struct qbuf_metadata *)q->ptr;
   clock_time_t time = 0;
-  mac_callback_t sent;
-  void *cptr;
-  int num_tx;
+  static mac_callback_t sent;
+  static void *cptr;
+  static int num_tx;
   int backoff_transmissions;
 
   switch(status) {
@@ -276,15 +301,13 @@ send_packet(mac_callback_t sent, void *ptr)
 {
   struct rdc_buf_list *q;
   struct neighbor_queue *n;
-  static uint16_t seqno;
 
-  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, seqno++);
-  
   /* If the packet is a broadcast, do not allocate a queue
      entry. Instead, just send it out.  */
   if(!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                    &rimeaddr_null)) {
-    const rimeaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
+    static const rimeaddr_t *addr;
+    addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
     /* Look for the neighbor entry */
     n = neighbor_queue_from_addr(addr);
@@ -355,7 +378,14 @@ send_packet(mac_callback_t sent, void *ptr)
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR, 1);
   } else {
     PRINTF("csma: send broadcast\n");
+#if CSMA_SHORTCUT
+    NETSTACK_RDC.send(packet_sent, ptr);
+    if(sent) {
+      sent(ptr, mac_status, 1);
+    }
+#else
     NETSTACK_RDC.send(sent, ptr);
+#endif
   }
 }
 /*---------------------------------------------------------------------------*/

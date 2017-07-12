@@ -28,7 +28,6 @@
  *
  * This file is part of the Contiki operating system.
  *
- * $Id: mac.c,v 1.2 2010/02/23 18:49:58 adamdunkels Exp $
  */
 
 #include "net/mac/mac.h"
@@ -42,6 +41,7 @@
 #endif /* DEBUG */
 
 /*---------------------------------------------------------------------------*/
+#if !NETSTACK_CONF_SHORTCUTS
 void
 mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
 {
@@ -65,4 +65,5 @@ mac_call_sent_callback(mac_callback_t sent, void *ptr, int status, int num_tx)
     sent(ptr, status, num_tx);
   }
 }
+#endif
 /*---------------------------------------------------------------------------*/

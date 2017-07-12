@@ -24,7 +24,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ExecuteJAR.java,v 1.10 2010/03/19 15:02:26 fros4943 Exp $
  */
 
 package se.sics.cooja.util;
@@ -348,7 +347,7 @@ public class ExecuteJAR {
         }
       }
 
-      differingSettings.store(out, "COOJA External Tools (User specific)");
+      differingSettings.store(out, "Cooja External Tools (User specific)");
       out.close();
       logger.info("Wrote external tools config: " + externalToolsConfig.getName());
     } catch (Exception e2) {
@@ -368,7 +367,7 @@ public class ExecuteJAR {
         newConfig.setProperty(name, pConfig.getStringValue(name));
       }
       FileOutputStream out = new FileOutputStream(newConfigFile);
-      newConfig.store(out, "COOJA Project Config");
+      newConfig.store(out, "Cooja Project Config");
       logger.info("Wrote project config: " + newConfigFile.getName());
     } catch (Exception e1) {
       e1.printStackTrace();
